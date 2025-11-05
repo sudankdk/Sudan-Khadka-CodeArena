@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 const (
@@ -12,7 +13,7 @@ const (
 )
 
 type User struct {
-	ID                 uuid.UUID `json:"id" gorm:"type:uuid;default:uuid_generate_v4();primaryKey"`
+	ID                 uuid.UUID `json:"id" gorm:"type:uuid;primaryKey"`
 	Username           string    `json:"username" gorm:"unique;not null"`
 	Email              string    `json:"email" gorm:"uniqueIndex;not null"`
 	Password           string    `json:"-" gorm:"not null"`
@@ -29,4 +30,9 @@ type User struct {
 	Expiry             time.Time `json:"expiry,omitempty"`
 	CreatedAt          time.Time `json:"created_at"`
 	UpdatedAt          time.Time `json:"updated_at"`
+}
+
+func (u *User) BeforeCreate(scope *gorm.DB) error {
+	u.ID = uuid.New()
+	return nil
 }
