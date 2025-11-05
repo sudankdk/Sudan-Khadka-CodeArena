@@ -15,7 +15,7 @@ type User struct {
 	ID                 uuid.UUID `json:"id" gorm:"type:uuid;default:uuid_generate_v4();primaryKey"`
 	Username           string    `json:"username" gorm:"unique;not null"`
 	Email              string    `json:"email" gorm:"uniqueIndex;not null"`
-	PasswordHash       string    `json:"-" gorm:"not null"`
+	Password           string    `json:"-" gorm:"not null"`
 	Bio                string    `json:"bio,omitempty" gorm:"type:text"`
 	ProfileImage       string    `json:"profile_image,omitempty"`
 	Rank               int       `json:"rank" gorm:"default:0"`
@@ -25,8 +25,8 @@ type User struct {
 	SubmissionsCount   int       `json:"submissions_count" gorm:"default:0"`
 	LanguagePreference string    `json:"language_preference" gorm:"default:'python'"`
 	Role               string    `json:"role" gorm:"type:varchar(10);default:'regular'"`
-	Code               string    `json:"code,omitempty"`  
-	Expiry             time.Time `json:"expiry,omitempty"` 
+	Code               string    `json:"code,omitempty"`
+	Expiry             time.Time `json:"expiry,omitempty"`
 	CreatedAt          time.Time `json:"created_at"`
 	UpdatedAt          time.Time `json:"updated_at"`
 }
