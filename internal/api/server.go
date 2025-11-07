@@ -9,6 +9,7 @@ import (
 	"github.com/sudankdk/codearena/internal/api/rest"
 	"github.com/sudankdk/codearena/internal/api/rest/handlers"
 	"github.com/sudankdk/codearena/internal/domain"
+	"github.com/sudankdk/codearena/internal/helper"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -24,10 +25,12 @@ func StartServer(cfg configs.AppConfigs) {
 	if err := db.AutoMigrate(&domain.User{}); err != nil {
 		log.Fatalf("error in running migrations %v", err.Error())
 	}
+	auth := helper.SetupAuth(cfg.SECRETKEY)
 	rh := &rest.RestHandlers{
 		App:     app,
 		DB:      db,
 		Configs: cfg,
+		Auth:    *auth,
 	}
 	SetupRoutes(rh)
 	app.Listen(":" + cfg.PORT)

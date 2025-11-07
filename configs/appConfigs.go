@@ -9,8 +9,9 @@ import (
 )
 
 type AppConfigs struct {
-	PORT string
-	DSN  string
+	PORT      string
+	DSN       string
+	SECRETKEY string
 }
 
 func SetUpEnv() (AppConfigs, error) {
@@ -27,9 +28,14 @@ func SetUpEnv() (AppConfigs, error) {
 	if dsn == "" {
 		return AppConfigs{}, errors.New("DSN missing in env")
 	}
+	sk := os.Getenv("SECRETKEY")
+	if sk == "" {
+		return AppConfigs{}, errors.New("Secret key missing in env")
+	}
 	cfg := AppConfigs{
-		PORT: port,
-		DSN:  dsn,
+		PORT:      port,
+		DSN:       dsn,
+		SECRETKEY: sk,
 	}
 	return cfg, nil
 }
