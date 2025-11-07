@@ -44,7 +44,16 @@ func (u *UserHandlers) Register(ctx *fiber.Ctx) error {
 }
 
 func (u *UserHandlers) Login(ctx *fiber.Ctx) error {
-	return nil
+	var req dto.UserLogin
+	if err := ctx.BodyParser(&req); err != nil {
+		return rest.ErrorMessage(ctx, http.StatusBadRequest, fmt.Errorf("Invalid Payload"))
+	}
+	token, err := u.svc.Login(req)
+	if err != nil {
+		return rest.InternalError(ctx, err)
+	}
+	return rest.SuccessMessage(ctx, "Auth complete", token)
+
 }
 
 func (u *UserHandlers) HealthCheck(ctx *fiber.Ctx) error {
