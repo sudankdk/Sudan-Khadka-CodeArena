@@ -1,3 +1,4 @@
+import React from "react";
 
 export interface IAuth{
     loading : boolean | null;
@@ -15,4 +16,8 @@ export interface IUserRegister {
 export interface IUserLogin {
   email: string;
   password: string;
+}
+
+export interface AuthLayoutProp {
+    children : React.ReactNode
 }
