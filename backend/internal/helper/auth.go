@@ -86,21 +86,35 @@ func (a Auth) VerifyToken(token string) (domain.User, error) {
 			return domain.User{}, errors.New("token is expired")
 		}
 		user := domain.User{}
-		user.Email = claims["email"].(string)
-		user.Role = claims["role"].(string)
-		user.ID = claims["id"].(uuid.UUID)
+		if email, ok := claims["email"].(string); ok {
+			user.Email = email
+		}
+		if role, ok := claims["role"].(string); ok {
+			user.Role = role
+		}
+		switch v := claims["id"].(type) {
+		case string:
+			uid, err := uuid.Parse(v)
+			if err != nil {
+				return domain.User{}, errors.New("invalid id format")
+			}
+			user.ID = uid
+		case uuid.UUID:
+			user.ID = v
+		default:
+			return domain.User{}, errors.New("invalid id type")
+		}
 		return user, nil
 	}
 	return domain.User{}, nil
 }
 
 func (a Auth) Authorize(ctx *fiber.Ctx) error {
-	authHeaders := ctx.GetReqHeaders()["Authorization"]
-	var authHeader string
-	if len(authHeaders) > 0 {
-		authHeader = authHeaders[0]
-	}
-	user, err := a.VerifyToken(authHeader)
+	token := ctx.Cookies("token")
+	 if token == "" {
+        return ctx.Status(401).JSON(fiber.Map{"message": "Unauthorized"})
+    }
+	user, err := a.VerifyToken("Bearer "+token)
 	if err != nil {
 		return ctx.Status(401).JSON(&fiber.Map{
 			"message": "Authorization Failed",
@@ -113,6 +127,21 @@ func (a Auth) Authorize(ctx *fiber.Ctx) error {
 
 func (a Auth) CurrentUserInfo(ctx *fiber.Ctx) (domain.User, error) {
 	user := ctx.Locals("user")
-
+	fmt.Println(user)
 	return user.(domain.User), nil
+}
+
+
+func (a Auth) CreateCookie(ctx *fiber.Ctx, name, value string) {
+    cookie := &fiber.Cookie{
+        Name:     name,
+        Value:    value,
+        HTTPOnly: true,
+        Secure:   true,
+        SameSite: "Strict",
+        Path:     "/",
+        MaxAge:   3600, 
+    }
+
+    ctx.Cookie(cookie)
 }

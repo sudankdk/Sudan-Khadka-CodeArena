@@ -1,9 +1,13 @@
 import { server } from "../../../const/server";
-import type { IUserRegister } from "../../../Interfaces/auth/auth";
+import type { IUserLogin, IUserRegister } from "../../../Interfaces/auth/auth";
 import { ApiClient } from "../client";
 
 export const authClient = new ApiClient(server);
 
-export const registerUser = (data: IUserRegister):Promise<any> =>{
-    return authClient.post("/register",data)
-}
+export const registerUser = async (data: IUserRegister): Promise<any> => {
+  return await authClient.post("/users/register", data);
+};
+
+export const loginUser = async (data: IUserLogin): Promise<any> => {
+  return await authClient.post("/users/login", data);
+};

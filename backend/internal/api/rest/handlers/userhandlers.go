@@ -29,6 +29,17 @@ func SetupRoutes(rh *rest.RestHandlers) {
 	pubRoutes := app.Group("/users")
 	pubRoutes.Post("/register", handler.Register)
 	pubRoutes.Post("/login", handler.Login)
+	pubRoutes.Get("/me",rh.Auth.Authorize, func(c *fiber.Ctx) error {
+    user, err := rh.Auth.CurrentUserInfo(c) 
+    if err != nil {
+        return c.Status(401).JSON(fiber.Map{"error": "Not authenticated"})
+    }
+    return c.JSON(fiber.Map{
+        "email": user.Email,
+        "role":  user.Role,
+    })
+})
+
 }
 
 func (u *UserHandlers) Register(ctx *fiber.Ctx) error {
@@ -52,6 +63,7 @@ func (u *UserHandlers) Login(ctx *fiber.Ctx) error {
 	if err != nil {
 		return rest.InternalError(ctx, err)
 	}
+	u.svc.Auth.CreateCookie(ctx,"token",token)
 	return rest.SuccessMessage(ctx, "Auth complete", token)
 
 }
