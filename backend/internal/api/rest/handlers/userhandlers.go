@@ -35,8 +35,7 @@ func SetupRoutes(rh *rest.RestHandlers) {
         return c.Status(401).JSON(fiber.Map{"error": "Not authenticated"})
     }
     return c.JSON(fiber.Map{
-        "email": user.Email,
-        "role":  user.Role,
+        "user":user,
     })
 })
 

@@ -137,8 +137,8 @@ func (a Auth) CreateCookie(ctx *fiber.Ctx, name, value string) {
         Name:     name,
         Value:    value,
         HTTPOnly: true,
-        Secure:   true,
-        SameSite: "Strict",
+        Secure:   false,
+        SameSite: "Lax",  
         Path:     "/",
         MaxAge:   3600, 
     }

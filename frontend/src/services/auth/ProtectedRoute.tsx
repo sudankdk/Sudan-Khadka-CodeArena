@@ -1,27 +1,24 @@
-import { useEffect, useState, type JSX } from "react";
-import { authClient } from "./api/auth";
+import { type JSX } from "react";
 import { Navigate } from "react-router-dom";
+import useAuthStore from "./store/auth.store";
+import { useAuth } from "./hook/useAuth";
 
 const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
-  const [loading, setLoading] = useState<boolean>(true);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  useEffect(() => {
-    const checkAuth = async () => {
-      setLoading(true);
-      try {
-        await authClient.get("/users/me");
-        setIsAuthenticated(true);
-      } catch (error: any) {
-        console.log(error);
-        setIsAuthenticated(false);
-      } finally {
-        setLoading(false);
-      }
-    };
-    checkAuth();
-  }, []);
-  if (loading) return <p>Loading...</p>;
-  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  const { user } = useAuthStore();
+  const { loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-white w-full">
+        <p className="text-gray-600">Loading...</p>
+      </div>
+    );
+  }
+
+  if (!user || !user.id) {
+    return <Navigate to="/login" replace />;
+  }
+
   return children;
 };
 

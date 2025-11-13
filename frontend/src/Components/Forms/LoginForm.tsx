@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../../services/auth/hook/useAuth";
 import { useNavigate } from "react-router-dom";
-import { authClient } from "../../services/auth/api/auth";
+import useAuthStore from "../../services/auth/store/auth.store";
 
 const LoginForm = () => {
   const { login, loading, error, setError } = useAuth();
+  const { user } = useAuthStore();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [checking,setChecking] = useState(true);
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -18,25 +18,15 @@ const LoginForm = () => {
     }
     try {
       await login({ email, password });
-      navigate("/dashboard");
     } catch (error) {
       console.log(error);
     }
   };
- useEffect(()=>{
-  const verify= async()=>{
-    try {
-      authClient.get("/me");
-      navigate("/dashboard");
-    } catch (error) {
-      
+  useEffect(() => {
+    if (user && user.id) {
+      navigate("/dashboard", { replace: true });
     }
-    finally{
-      setChecking(false);
-    }
-  }
-  verify();
- },[])
+  }, [user]);
   const handleNavigation = () => {
     navigate("/register");
   };
