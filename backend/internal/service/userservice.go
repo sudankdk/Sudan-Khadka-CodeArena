@@ -38,23 +38,23 @@ func (u *UserService) Register(dto dto.UserRegister) (domain.User, error) {
 	return newUser, nil
 }
 
-func (u *UserService) Login(dto dto.UserLogin) (string, error) {
+func (u *UserService) Login(dto dto.UserLogin) (string,domain.User, error) {
 	if dto.Email == "" || dto.Password == "" {
-		return "", errors.New("fill all the required fields")
+		return "",domain.User{}, errors.New("fill all the required fields")
 	}
 	user, err := u.Repo.FindUser(dto.Email)
 	if err != nil {
-		return "", err
+		return "",domain.User{}, err
 	}
 	if !u.Auth.VerifyHash(dto.Password, user.Password) {
-		return "", errors.New("incorrect username or password")
+		return "",domain.User{}, errors.New("incorrect username or password")
 	}
 	token, err := u.Auth.GenerateToken(user.ID, user.Email, user.Role)
 	if err != nil {
-		return "", err
+		return "",domain.User{}, err
 	}
 
-	return token, nil
+	return token,user, nil
 }
 
 func (u *UserService) VerifyCode(code string, id uint) error {

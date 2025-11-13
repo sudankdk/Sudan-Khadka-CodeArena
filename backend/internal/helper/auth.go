@@ -127,7 +127,6 @@ func (a Auth) Authorize(ctx *fiber.Ctx) error {
 
 func (a Auth) CurrentUserInfo(ctx *fiber.Ctx) (domain.User, error) {
 	user := ctx.Locals("user")
-	fmt.Println(user)
 	return user.(domain.User), nil
 }
 
@@ -140,7 +139,7 @@ func (a Auth) CreateCookie(ctx *fiber.Ctx, name, value string) {
         Secure:   false,
         SameSite: "Lax",  
         Path:     "/",
-        MaxAge:   3600, 
+        MaxAge:   60, //3600 -> 1hr
     }
 
     ctx.Cookie(cookie)

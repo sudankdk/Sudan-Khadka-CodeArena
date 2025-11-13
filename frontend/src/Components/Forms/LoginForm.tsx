@@ -26,7 +26,7 @@ const LoginForm = () => {
     if (user && user.id) {
       navigate("/dashboard", { replace: true });
     }
-  }, [user]);
+  }, [user, navigate]);
   const handleNavigation = () => {
     navigate("/register");
   };

@@ -13,7 +13,9 @@ export const useAuth = () => {
     setError(null);
     try {
       const res = await loginUser(data);
-      setToken(res.data);
+      console.log(res);
+      setToken(res.data.token);
+      setUser(res.data.user);
     } catch (error: any) {
       console.log(error);
       setError(error.response?.data?.message || "login failed");
@@ -51,5 +53,5 @@ export const useAuth = () => {
       setLoading(false);
     }
   };
-  return { login, loading, error, register, logout,setError };
+  return { login, loading, error, register, logout, setError };
 };

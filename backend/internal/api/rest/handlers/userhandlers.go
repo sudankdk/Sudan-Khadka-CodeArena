@@ -1,10 +1,12 @@
 package handlers
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/shareed2k/goth_fiber"
 	"github.com/sudankdk/codearena/internal/api/rest"
 	"github.com/sudankdk/codearena/internal/dto"
 	"github.com/sudankdk/codearena/internal/repo"
@@ -26,7 +28,9 @@ func SetupRoutes(rh *rest.RestHandlers) {
 		svc: svc,
 	}
 	app.Get("/health", handler.HealthCheck)
-	pubRoutes := app.Group("/users")
+	app.Get("/auth/:provider", handler.OAuthRedirect)
+	app.Get("/auth/:provider/callback", handler.OAuthCallback)
+		pubRoutes := app.Group("/users")
 	pubRoutes.Post("/register", handler.Register)
 	pubRoutes.Post("/login", handler.Login)
 	pubRoutes.Get("/me",rh.Auth.Authorize, func(c *fiber.Ctx) error {
@@ -58,13 +62,34 @@ func (u *UserHandlers) Login(ctx *fiber.Ctx) error {
 	if err := ctx.BodyParser(&req); err != nil {
 		return rest.ErrorMessage(ctx, http.StatusBadRequest, fmt.Errorf("Invalid Payload"))
 	}
-	token, err := u.svc.Login(req)
+	token, user, err := u.svc.Login(req)
 	if err != nil {
 		return rest.InternalError(ctx, err)
 	}
-	u.svc.Auth.CreateCookie(ctx,"token",token)
-	return rest.SuccessMessage(ctx, "Auth complete", token)
+	u.svc.Auth.CreateCookie(ctx, "token", token)
+	return rest.SuccessMessage(ctx, "Auth complete", fiber.Map{
+		"token": token,
+		"user":  user,
+	})
 
+}
+
+
+func (u *UserHandlers) OAuthRedirect(ctx *fiber.Ctx) error {
+	provider := ctx.Params("provider")
+	if provider == "" {
+		return rest.ErrorMessage(ctx, http.StatusBadRequest, errors.New("provider not specified"))
+	}
+
+	return goth_fiber.BeginAuthHandler(ctx)
+}
+
+func (u *UserHandlers) OAuthCallback(ctx *fiber.Ctx) error {
+	user,err:=goth_fiber.CompleteUserAuth(ctx)
+	if err != nil {
+		return rest.ErrorMessage(ctx, http.StatusBadRequest, fmt.Errorf("OAuth failed: %v", err))
+	}
+	return rest.SuccessMessage(ctx, "Auth complete", user)
 }
 
 func (u *UserHandlers) HealthCheck(ctx *fiber.Ctx) error {

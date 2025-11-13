@@ -16,6 +16,7 @@ import (
 )
 
 func StartServer(cfg configs.AppConfigs) {
+	
 	app := fiber.New()
 	app.Use(cors.New(cors.Config{
 	AllowOrigins:     "http://localhost:5173", 

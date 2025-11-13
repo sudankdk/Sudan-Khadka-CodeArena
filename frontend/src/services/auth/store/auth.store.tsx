@@ -19,7 +19,6 @@ const useAuthStore = create<IAuth>((set) => ({
     set({ loading: true });
     try {
       const response = await authClient.get("/users/me");
-      console.log(response.user);
       set({ user: response.user, loading: false, error: null });
     } catch (error) {
       set({ user: null, loading: false, error: null });

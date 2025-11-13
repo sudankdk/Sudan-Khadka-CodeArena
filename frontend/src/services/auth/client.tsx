@@ -1,4 +1,5 @@
 import axios, { type AxiosInstance } from "axios";
+import useAuthStore from "./store/auth.store";
 
 export class ApiClient {
   private client: AxiosInstance;
@@ -10,7 +11,16 @@ export class ApiClient {
       (response) => response,
       (error) => {
         if (axios.isAxiosError(error) && error.response?.status === 401) {
-          window.location.href = "/login";
+          try {
+            useAuthStore.getState().clear();
+          } catch {
+            // ignore if store not available for some reason
+          }
+
+          // only redirect if not already on the login route to avoid reload loop
+          if (window.location.pathname !== "/login") {
+            window.location.replace("/login");
+          }
         }
         return Promise.reject(error);
       }
