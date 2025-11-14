@@ -85,11 +85,35 @@ func (u *UserHandlers) OAuthRedirect(ctx *fiber.Ctx) error {
 }
 
 func (u *UserHandlers) OAuthCallback(ctx *fiber.Ctx) error {
-	user,err:=goth_fiber.CompleteUserAuth(ctx)
+	oAuithUser, err := goth_fiber.CompleteUserAuth(ctx)
 	if err != nil {
 		return rest.ErrorMessage(ctx, http.StatusBadRequest, fmt.Errorf("OAuth failed: %v", err))
 	}
-	return rest.SuccessMessage(ctx, "Auth complete", user)
+	dbUser, _ := u.svc.Repo.FindUser(oAuithUser.Email)
+	if dbUser.ID == [16]byte{} {
+		newUser := dto.UserRegister{
+			Username: oAuithUser.Name,
+			Email: oAuithUser.Email,
+			Password: "",
+		}
+
+		dbUser, err = u.svc.Register(newUser)
+		if err != nil {
+			return rest.InternalError(ctx, err)
+		}
+		
+	}
+	token, err := u.svc.Auth.GenerateToken(dbUser.ID, dbUser.Email, dbUser.Role)
+	if err != nil {
+		return rest.InternalError(ctx, err)
+	}
+	u.svc.Auth.CreateCookie(ctx, "token", token)
+
+	// return rest.SuccessMessage(ctx, "Logged in", fiber.Map{
+	// 	"token": token,
+	// 	"user":  dbUser,
+	// })
+	return ctx.Redirect("http://localhost:5173/oauth/success")
 }
 
 func (u *UserHandlers) HealthCheck(ctx *fiber.Ctx) error {

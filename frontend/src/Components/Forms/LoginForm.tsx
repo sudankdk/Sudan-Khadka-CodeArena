@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "../../services/auth/hook/useAuth";
 import { useNavigate } from "react-router-dom";
 import useAuthStore from "../../services/auth/store/auth.store";
+import { server } from "../../const/server";
 
 const LoginForm = () => {
   const { login, loading, error, setError } = useAuth();
@@ -9,6 +10,10 @@ const LoginForm = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
+
+  const handleOAuth = (provider: "google" | "github") => {
+    window.location.href = server + "auth/" + provider;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,6 +77,8 @@ const LoginForm = () => {
       <p>
         Dont't have an account ?{" "}
         <span onClick={handleNavigation}>Register</span>
+        <span onClick={() => handleOAuth("google")}>Login with google</span>
+        <span onClick={() => handleOAuth("github")}>Login with github</span>
       </p>
     </div>
   );

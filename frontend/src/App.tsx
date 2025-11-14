@@ -5,6 +5,7 @@ import ProtectedRoute from "./services/auth/ProtectedRoute";
 import Dashboard from "./services/users/Dashboard";
 import useAuthStore from "./services/auth/store/auth.store";
 import { useEffect } from "react";
+import OAuth from "./pages/Auth/OAuth";
 
 function App() {
   const initialize = useAuthStore((state) => state.initialize);
@@ -26,6 +27,7 @@ function App() {
       <Routes>
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/oauth/success" element={<OAuth />} />
         <Route
           path="/dashboard"
           element={

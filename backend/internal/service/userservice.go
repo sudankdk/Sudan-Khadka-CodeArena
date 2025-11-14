@@ -18,9 +18,7 @@ type UserService struct {
 }
 
 func (u *UserService) Register(dto dto.UserRegister) (domain.User, error) {
-	if dto.Email == "" || dto.Password == "" {
-		return domain.User{}, errors.New("required fields cannot be empty")
-	}
+	
 	hashedPassword, err := u.Auth.CreateHash(dto.Password)
 	if err != nil {
 		return domain.User{}, fmt.Errorf("error in creating hash: %d", err)
