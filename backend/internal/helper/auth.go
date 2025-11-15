@@ -24,9 +24,9 @@ func SetupAuth(s string) *Auth {
 }
 
 func (a Auth) CreateHash(p string) (string, error) {
-	if len(p) < 6 {
-		return "", errors.New("Password must be more than 6 characters.")
-	}
+	// if len(p) < 6 {
+	// 	return "", errors.New("Password must be more than 6 characters.")
+	// }
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(p), 10)
 	if err != nil {
 		return "", errors.New("error in generating hash")
@@ -139,7 +139,7 @@ func (a Auth) CreateCookie(ctx *fiber.Ctx, name, value string) {
         Secure:   false,
         SameSite: "Lax",  
         Path:     "/",
-        MaxAge:   60, //3600 -> 1hr
+        MaxAge:   3600, //3600 -> 1hr
     }
 
     ctx.Cookie(cookie)

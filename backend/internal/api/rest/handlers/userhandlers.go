@@ -33,6 +33,7 @@ func SetupRoutes(rh *rest.RestHandlers) {
 		pubRoutes := app.Group("/users")
 	pubRoutes.Post("/register", handler.Register)
 	pubRoutes.Post("/login", handler.Login)
+	pubRoutes.Post("/logout",handler.Logout)
 	pubRoutes.Get("/me",rh.Auth.Authorize, func(c *fiber.Ctx) error {
     user, err := rh.Auth.CurrentUserInfo(c) 
     if err != nil {
@@ -74,6 +75,9 @@ func (u *UserHandlers) Login(ctx *fiber.Ctx) error {
 
 }
 
+func (u *UserHandlers) Logout(ctx *fiber.Ctx) error {
+	return  nil
+}
 
 func (u *UserHandlers) OAuthRedirect(ctx *fiber.Ctx) error {
 	provider := ctx.Params("provider")
@@ -107,12 +111,18 @@ func (u *UserHandlers) OAuthCallback(ctx *fiber.Ctx) error {
 	if err != nil {
 		return rest.InternalError(ctx, err)
 	}
-	u.svc.Auth.CreateCookie(ctx, "token", token)
+	cookie := &fiber.Cookie{
+    Name:     "token",
+    Value:    token,
+    HTTPOnly: true,
+    Secure:   true,
+    SameSite: "None",
+    Path:     "/",
+}
+ctx.Cookie(cookie)
 
-	// return rest.SuccessMessage(ctx, "Logged in", fiber.Map{
-	// 	"token": token,
-	// 	"user":  dbUser,
-	// })
+	ctx.Locals("user", dbUser)
+
 	return ctx.Redirect("http://localhost:5173/oauth/success")
 }
 
