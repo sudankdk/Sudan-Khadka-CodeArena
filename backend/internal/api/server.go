@@ -19,6 +19,13 @@ func StartServer(cfg configs.AppConfigs) {
 	
 	
 	app := fiber.New()
+	// store := session.New()
+	// app.Use(func(c *fiber.Ctx) error {
+    //     sess, _ := store.Get(c)
+    //     c.Locals("session", sess)
+    //     return c.Next()
+    // })
+	// goth_fiber.SessionStore = store
 	app.Use(cors.New(cors.Config{
 		AllowCredentials: true,
 		AllowOrigins: "http://localhost:5173",

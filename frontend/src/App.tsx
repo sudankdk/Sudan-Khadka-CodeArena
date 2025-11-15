@@ -3,6 +3,7 @@ import Register from "./pages/Auth/register";
 import Login from "./pages/Auth/Login";
 import ProtectedRoute from "./services/auth/ProtectedRoute";
 import Dashboard from "./services/users/Dashboard";
+import AdminDashboard from "./services/admin/Dashboard";
 import useAuthStore from "./services/auth/store/auth.store";
 import { useEffect } from "react";
 import OAuth from "./pages/Auth/OAuth";
@@ -33,6 +34,14 @@ function App() {
           element={
             <ProtectedRoute>
               <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/dashboard"
+          element={
+            <ProtectedRoute>
+              <AdminDashboard />
             </ProtectedRoute>
           }
         />

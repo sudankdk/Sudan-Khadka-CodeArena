@@ -28,8 +28,11 @@ const LoginForm = () => {
     }
   };
   useEffect(() => {
-    if (user && user.id) {
+    if (user && user.id && user.role == "regular") {
       navigate("/dashboard", { replace: true });
+    }
+    if (user && user.id && user.role == "admin") {
+      navigate("/admin/dashboard", { replace: true });
     }
   }, [user, navigate]);
   const handleNavigation = () => {
@@ -78,7 +81,6 @@ const LoginForm = () => {
         Dont't have an account ?{" "}
         <span onClick={handleNavigation}>Register</span>
         <span onClick={() => handleOAuth("google")}>Login with google</span>
-        <span onClick={() => handleOAuth("github")}>Login with github</span>
       </p>
     </div>
   );

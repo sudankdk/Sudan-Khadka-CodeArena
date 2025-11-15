@@ -1,6 +1,6 @@
 import { useState } from "react";
 import useAuthStore from "../store/auth.store";
-import { loginUser, registerUser } from "../api/auth";
+import { loginUser, logoutUser, registerUser } from "../api/auth";
 import type { IUserLogin, IUserRegister } from "../../../Interfaces/auth/auth";
 
 export const useAuth = () => {
@@ -13,11 +13,9 @@ export const useAuth = () => {
     setError(null);
     try {
       const res = await loginUser(data);
-      console.log(res);
       setToken(res.data.token);
       setUser(res.data.user);
     } catch (error: any) {
-      console.log(error);
       setError(error.response?.data?.message || "login failed");
       throw error;
     } finally {
@@ -30,7 +28,6 @@ export const useAuth = () => {
     setError(null);
     try {
       const res = await registerUser(data);
-      console.log(res);
       setUser(res.data);
     } catch (error: any) {
       console.log(error);
@@ -41,9 +38,10 @@ export const useAuth = () => {
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
     setLoading(true);
     try {
+      await logoutUser();
       clear();
     } catch (error: any) {
       console.log(error);

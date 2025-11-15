@@ -10,9 +10,12 @@ const OAuth = () => {
     const authSuccess = async () => {
       const res = await authClient.get("/users/me");
       console.log(res);
-      if (res.user) {
+      if (res.user && res.user.role == "regular") {
         setUser(res.user);
         navigate("/dashboard", { replace: true });
+      } else if (res.user && res.user.role == "admin") {
+        setUser(res.user);
+        navigate("/admin/dashboard", { replace: true });
       } else {
         navigate("/login", { replace: true });
       }

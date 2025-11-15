@@ -1,7 +1,16 @@
-import React from "react";
+import { useAuth } from "../auth/hook/useAuth";
 
 const Dashboard = () => {
-  return <div>Dashboard</div>;
+  const { logout } = useAuth();
+  const handleLogout = () => {
+    logout();
+  };
+  return (
+    <div>
+      Dashboard
+      <button onClick={handleLogout}>Logout</button>
+    </div>
+  );
 };
 
 export default Dashboard;

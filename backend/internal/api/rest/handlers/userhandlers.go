@@ -33,7 +33,7 @@ func SetupRoutes(rh *rest.RestHandlers) {
 		pubRoutes := app.Group("/users")
 	pubRoutes.Post("/register", handler.Register)
 	pubRoutes.Post("/login", handler.Login)
-	pubRoutes.Post("/logout",handler.Logout)
+	pubRoutes.Post("/logout",rh.Auth.Authorize,handler.Logout)
 	pubRoutes.Get("/me",rh.Auth.Authorize, func(c *fiber.Ctx) error {
     user, err := rh.Auth.CurrentUserInfo(c) 
     if err != nil {
@@ -76,7 +76,19 @@ func (u *UserHandlers) Login(ctx *fiber.Ctx) error {
 }
 
 func (u *UserHandlers) Logout(ctx *fiber.Ctx) error {
-	return  nil
+	ctx.Cookie(&fiber.Cookie{
+        Name:     "token",
+        Value:    "",
+        MaxAge:   -1,
+        HTTPOnly: true,
+        Secure:   false,
+        SameSite: "None",
+        Path:     "/",
+    })
+
+    return ctx.JSON(fiber.Map{
+        "message": "logout successful",
+    })
 }
 
 func (u *UserHandlers) OAuthRedirect(ctx *fiber.Ctx) error {
@@ -89,6 +101,7 @@ func (u *UserHandlers) OAuthRedirect(ctx *fiber.Ctx) error {
 }
 
 func (u *UserHandlers) OAuthCallback(ctx *fiber.Ctx) error {
+	fmt.Println("callback wroking ")
 	oAuithUser, err := goth_fiber.CompleteUserAuth(ctx)
 	if err != nil {
 		return rest.ErrorMessage(ctx, http.StatusBadRequest, fmt.Errorf("OAuth failed: %v", err))
@@ -102,6 +115,7 @@ func (u *UserHandlers) OAuthCallback(ctx *fiber.Ctx) error {
 		}
 
 		dbUser, err = u.svc.Register(newUser)
+		fmt.Println(dbUser)
 		if err != nil {
 			return rest.InternalError(ctx, err)
 		}
@@ -111,6 +125,7 @@ func (u *UserHandlers) OAuthCallback(ctx *fiber.Ctx) error {
 	if err != nil {
 		return rest.InternalError(ctx, err)
 	}
+	fmt.Println("token"+token)
 	cookie := &fiber.Cookie{
     Name:     "token",
     Value:    token,
@@ -118,6 +133,7 @@ func (u *UserHandlers) OAuthCallback(ctx *fiber.Ctx) error {
     Secure:   true,
     SameSite: "None",
     Path:     "/",
+	MaxAge: 3600,
 }
 ctx.Cookie(cookie)
 

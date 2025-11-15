@@ -11,3 +11,7 @@ export const registerUser = async (data: IUserRegister): Promise<any> => {
 export const loginUser = async (data: IUserLogin): Promise<any> => {
   return await authClient.post("/users/login", data);
 };
+
+export const logoutUser = async (): Promise<any> => {
+  return await authClient.post("/users/logout");
+};
