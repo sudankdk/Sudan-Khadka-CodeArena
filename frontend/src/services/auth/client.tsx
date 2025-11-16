@@ -14,13 +14,13 @@ export class ApiClient {
           try {
             useAuthStore.getState().clear();
           } catch {
-            // ignore if store not available for some reason
+            // nothing to write here
           }
 
           // only redirect if not already on the login route to avoid reload loop
-          if (window.location.pathname !== "/login") {
-            window.location.replace("/login");
-          }
+          // if (window.location.pathname !== "/login") {
+          //   window.location.replace("/login");
+          // }
         }
         return Promise.reject(error);
       }
