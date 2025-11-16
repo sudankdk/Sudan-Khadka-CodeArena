@@ -7,6 +7,9 @@ import AdminDashboard from "./pages/admin/Dashboard";
 import useAuthStore from "./services/auth/store/auth.store";
 import { useEffect } from "react";
 import OAuth from "./pages/Auth/OAuth";
+import AdminProblems from "./pages/admin/AdminProblems";
+import AdminContests from "./pages/admin/AdminContests";
+import AdminUsers from "./pages/admin/AdminUsers";
 
 function App() {
   const initialize = useAuthStore((state) => state.initialize);
@@ -42,6 +45,30 @@ function App() {
           element={
             <ProtectedRoute>
               <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/problems"
+          element={
+            <ProtectedRoute>
+              <AdminProblems />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/contest"
+          element={
+            <ProtectedRoute>
+              <AdminContests />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/users"
+          element={
+            <ProtectedRoute>
+              <AdminUsers />
             </ProtectedRoute>
           }
         />
