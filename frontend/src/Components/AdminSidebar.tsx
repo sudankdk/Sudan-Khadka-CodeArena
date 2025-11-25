@@ -38,7 +38,7 @@ const AdminSidebar = () => {
 
         {!collapsed && (
           <div className="h-16 flex items-center px-6 border-b text-xl font-semibold text-gray-800">
-            Admin Panel
+            Admin
           </div>
         )}
 
