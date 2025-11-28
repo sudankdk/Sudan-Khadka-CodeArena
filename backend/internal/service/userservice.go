@@ -58,3 +58,14 @@ func (u *UserService) Login(dto dto.UserLogin) (string,domain.User, error) {
 func (u *UserService) VerifyCode(code string, id uint) error {
 	return nil
 }
+
+
+func (u *UserService) ListUsers()(domain.User,error){
+
+	users,err:=u.Repo.ListUser()
+	if err != nil {
+		return domain.User{},errors.New("Errors in listing users")
+	}
+	return  users,nil
+
+}

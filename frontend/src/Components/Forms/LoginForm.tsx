@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../../services/auth/hook/useAuth";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import useAuthStore from "../../services/auth/store/auth.store";
 import { server } from "../../const/server";
 import { FcGoogle } from "react-icons/fc";
@@ -11,6 +11,7 @@ const LoginForm = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleOAuth = (provider: "google" | "github") => {
     window.location.href = server + "auth/" + provider;
@@ -30,13 +31,15 @@ const LoginForm = () => {
   };
 
   useEffect(() => {
-    if (user?.id && user.role === "regular") {
-      navigate("/dashboard", { replace: true });
+    if (
+      (location.pathname === "/login" || location.pathname === "/register") &&
+      user?.id
+    ) {
+      if (user.role === "regular") navigate("/dashboard", { replace: true });
+      if (user.role === "admin")
+        navigate("/admin/dashboard", { replace: true });
     }
-    if (user?.id && user.role === "admin") {
-      navigate("/admin/dashboard", { replace: true });
-    }
-  }, [user, navigate]);
+  }, [user, location.pathname, navigate]);
 
   const handleNavigation = () => navigate("/register");
 
@@ -90,10 +93,9 @@ const LoginForm = () => {
             onClick={() => handleOAuth("google")}
             className="w-full flex gap-3 justify-center items-center  text-indigo-800 border-b border-indigo-200 py-2 bg-transparent font-medium hover:text-indigo-600 transition"
           >
-            {< FcGoogle />}
+            {<FcGoogle />}
             Login with Google
           </button>
-         
         </div>
       </div>
     </div>

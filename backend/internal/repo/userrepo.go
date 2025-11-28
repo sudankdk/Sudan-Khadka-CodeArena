@@ -13,7 +13,10 @@ type UserRepo interface {
 	FindUser(email string) (domain.User, error)
 	FindUserById(id uint) (domain.User, error)
 	UpdateUser(id uint, user domain.User) (domain.User, error)
+	ListUser()(domain.User,error)
 }
+
+
 
 type userRepo struct {
 	db *gorm.DB
@@ -48,6 +51,14 @@ func (u *userRepo) UpdateUser(id uint, user domain.User) (domain.User, error) {
 		return domain.User{}, errors.New("failed to update user")
 	}
 	return existingUser, nil
+}
+
+func (u *userRepo) ListUser() (domain.User, error) {
+	var users domain.User
+	if err := u.db.Find(&users).Error; err != nil {
+		return domain.User{}, errors.New("failed to list user")
+	}
+	return users, nil
 }
 
 func NewUserRepo(db *gorm.DB) UserRepo {

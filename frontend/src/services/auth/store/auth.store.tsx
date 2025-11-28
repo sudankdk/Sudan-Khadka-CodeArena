@@ -6,7 +6,7 @@ import type { User } from "../../../types/user/user.types";
 const useAuthStore = create<IAuth>((set) => ({
   token: null,
   user: null,
-  loading: false,
+  loading: true,
   error: null,
 
   setUser: (user: User | null) => set({ user }),

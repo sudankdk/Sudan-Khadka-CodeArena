@@ -1,11 +1,9 @@
 import { type JSX } from "react";
 import { Navigate } from "react-router-dom";
 import useAuthStore from "./store/auth.store";
-import { useAuth } from "./hook/useAuth";
 
 const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
-  const { user } = useAuthStore();
-  const { loading } = useAuth();
+  const { user, loading } = useAuthStore();
 
   if (loading) {
     return (

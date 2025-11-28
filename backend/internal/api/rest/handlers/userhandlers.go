@@ -34,6 +34,7 @@ func SetupRoutes(rh *rest.RestHandlers) {
 	pubRoutes.Post("/register", handler.Register)
 	pubRoutes.Post("/login", handler.Login)
 	pubRoutes.Post("/logout",rh.Auth.Authorize,handler.Logout)
+	pubRoutes.Get("/",handler.List)
 	pubRoutes.Get("/me",rh.Auth.Authorize, func(c *fiber.Ctx) error {
     user, err := rh.Auth.CurrentUserInfo(c) 
     if err != nil {
@@ -144,4 +145,13 @@ ctx.Cookie(cookie)
 
 func (u *UserHandlers) HealthCheck(ctx *fiber.Ctx) error {
 	return ctx.Status(http.StatusOK).JSON(fiber.Map{"successfull": "true"})
+}
+
+
+func (u *UserHandlers) List(ctx *fiber.Ctx) error {
+	users,err:=u.svc.ListUsers()
+	if err != nil {
+		return rest.ErrorMessage(ctx, http.StatusBadRequest, fmt.Errorf("Listing of users failed: %v", err))
+	}
+	return rest.SuccessMessage(ctx,"users list found",users)
 }
