@@ -60,11 +60,11 @@ func (u *UserService) VerifyCode(code string, id uint) error {
 }
 
 
-func (u *UserService) ListUsers()(domain.User,error){
+func (u *UserService) ListUsers()([]domain.User,error){
 
 	users,err:=u.Repo.ListUser()
 	if err != nil {
-		return domain.User{},errors.New("Errors in listing users")
+		return []domain.User{},errors.New("Errors in listing users")
 	}
 	return  users,nil
 

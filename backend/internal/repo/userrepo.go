@@ -13,7 +13,7 @@ type UserRepo interface {
 	FindUser(email string) (domain.User, error)
 	FindUserById(id uint) (domain.User, error)
 	UpdateUser(id uint, user domain.User) (domain.User, error)
-	ListUser()(domain.User,error)
+	ListUser()([]domain.User,error)
 }
 
 
@@ -53,10 +53,10 @@ func (u *userRepo) UpdateUser(id uint, user domain.User) (domain.User, error) {
 	return existingUser, nil
 }
 
-func (u *userRepo) ListUser() (domain.User, error) {
-	var users domain.User
+func (u *userRepo) ListUser() ([]domain.User, error) {
+	var users []domain.User
 	if err := u.db.Find(&users).Error; err != nil {
-		return domain.User{}, errors.New("failed to list user")
+		return []domain.User{}, errors.New("failed to list user")
 	}
 	return users, nil
 }
