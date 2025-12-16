@@ -16,19 +16,18 @@ import (
 )
 
 func StartServer(cfg configs.AppConfigs) {
-	
-	
+
 	app := fiber.New()
 	// store := session.New()
 	// app.Use(func(c *fiber.Ctx) error {
-    //     sess, _ := store.Get(c)
-    //     c.Locals("session", sess)
-    //     return c.Next()
-    // })
+	//     sess, _ := store.Get(c)
+	//     c.Locals("session", sess)
+	//     return c.Next()
+	// })
 	// goth_fiber.SessionStore = store
 	app.Use(cors.New(cors.Config{
 		AllowCredentials: true,
-		AllowOrigins: "http://localhost:5173",
+		AllowOrigins:     "http://localhost:5173",
 		AllowMethods:     "GET,POST,PUT,DELETE,OPTIONS",
 		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
 	}))
@@ -38,7 +37,7 @@ func StartServer(cfg configs.AppConfigs) {
 		log.Fatalf("error in connection of db: %v", err)
 	}
 	log.Println("Database connected")
-	if err := db.AutoMigrate(&domain.User{}); err != nil {
+	if err := db.AutoMigrate(&domain.User{}, &domain.Problem{}, &domain.TestCases{}); err != nil {
 		log.Fatalf("error in running migrations %v", err.Error())
 	}
 	auth := helper.SetupAuth(cfg.SECRETKEY)
