@@ -14,7 +14,7 @@ func main() {
 
 	cfg, err := configs.SetUpEnv()
 	configs.InintOAuthConfigs()
-		fmt.Println("Providers:", goth.GetProviders())
+	fmt.Println("Providers:", goth.GetProviders())
 
 	if err != nil {
 		log.Fatalf("configs files not loaded properly : %v\n", err)

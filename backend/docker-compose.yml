@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgres:latest
+    image: postgres:18
     container_name: postgres_codearena
     environment:
       POSTGRES_USER: ${DB_USER}
@@ -9,7 +9,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - db:/var/lib/postgresql/data
+      - db:/var/lib/postgresql
 
 volumes:
   db:

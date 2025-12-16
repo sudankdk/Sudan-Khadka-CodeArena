@@ -45,12 +45,12 @@ const LoginForm = () => {
 
   return (
     <div className="w-full flex items-center justify-center flex-col">
-      <h2 className="text-2xl font-bold text-indigo-900 mb-2">Welcome Back!</h2>
+      <h2 className="text-2xl font-bold  mb-2">Welcome Back!</h2>
       <p className="font-extralight m-0">Let's gets you back</p>
       <form onSubmit={handleSubmit} className="flex m-4 flex-col gap-6">
         <label className="font-bold text-black mb-0 ">Email</label>
         <input
-          className="border border-indigo-300 bg-transparent px-6 py-3 text-lg transition focus:outline-none focus:border-indigo-600 placeholder-indigo-400"
+          className="border  bg-transparent px-6 py-3 text-lg transition focus:outline-none "
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
@@ -58,7 +58,7 @@ const LoginForm = () => {
         />
         <label className="font-bold text-black mb-0 ">Password</label>
         <input
-          className="border border-indigo-300 bg-transparent px-6 py-3 text-lg transition focus:outline-none focus:border-indigo-600 placeholder-indigo-400"
+          className="border  bg-transparent px-6 py-3 text-lg transition focus:outline-none  "
           placeholder="Password"
           type="password"
           value={password}
@@ -68,7 +68,7 @@ const LoginForm = () => {
         <button
           type="submit"
           disabled={loading}
-          className={`bg-indigo-600 text-white py-3 rounded font-semibold text-lg hover:bg-indigo-700 transition ${
+          className={`bg-black text-white py-3 rounded font-semibold text-lg hover:bg-gray-800 transition ${
             loading ? "opacity-50 cursor-not-allowed" : ""
           }`}
         >

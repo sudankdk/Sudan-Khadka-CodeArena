@@ -10,6 +10,7 @@ import OAuth from "./pages/Auth/OAuth";
 import AdminProblems from "./pages/admin/AdminProblems";
 import AdminContests from "./pages/admin/AdminContests";
 import AdminUsers from "./pages/admin/AdminUsers";
+import LandingPage from "./pages/LandingPage";
 
 function App() {
   const initialize = useAuthStore((state) => state.initialize);
@@ -31,6 +32,7 @@ function App() {
       <Routes>
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/" element={<LandingPage />} />
         <Route path="/oauth/success" element={<OAuth />} />
         <Route
           path="/dashboard"

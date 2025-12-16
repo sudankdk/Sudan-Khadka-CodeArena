@@ -39,8 +39,8 @@ const RegisterForm = () => {
 
   return (
     <div className="w-full flex items-center justify-center flex-col">
-      <h2 className="text-2xl font-bold text-indigo-900 mb-1 mt-2">Create Account</h2>
-      <p className="font-light text-sm mb-6 text-indigo-700">
+      <h2 className="text-2xl font-bold mb-1 mt-2">Create Account</h2>
+      <p className="font-light text-sm mb-6 ">
         Join us and start your journey
       </p>
       <form onSubmit={handleSubmit} className="flex m-0 flex-col gap-4 w-full max-w-md">
@@ -51,7 +51,7 @@ const RegisterForm = () => {
           </label>
           <input
             id="register-username"
-            className="border border-indigo-300 bg-transparent px-5 py-2.5 text-base rounded-md transition focus:outline-none focus:border-indigo-600 placeholder-indigo-400"
+            className="border  bg-transparent px-5 py-2.5 text-base rounded-md transition focus:outline-none  "
             placeholder="Username"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
@@ -65,7 +65,7 @@ const RegisterForm = () => {
           </label>
           <input
             id="register-email"
-            className="border border-indigo-300 bg-transparent px-5 py-2.5 text-base rounded-md transition focus:outline-none focus:border-indigo-600 placeholder-indigo-400"
+            className="border  bg-transparent px-5 py-2.5 text-base rounded-md transition focus:outline-none  "
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -79,7 +79,7 @@ const RegisterForm = () => {
           </label>
           <input
             id="register-password"
-            className="border border-indigo-300 bg-transparent px-5 py-2.5 text-base rounded-md transition focus:outline-none focus:border-indigo-600 placeholder-indigo-400"
+            className="border  bg-transparent px-5 py-2.5 text-base rounded-md transition focus:outline-none  "
             placeholder="Password"
             type="password"
             value={password}
@@ -94,7 +94,7 @@ const RegisterForm = () => {
           </label>
           <input
             id="register-confirm"
-            className="border border-indigo-300 bg-transparent px-5 py-2.5 text-base rounded-md transition focus:outline-none focus:border-indigo-600 placeholder-indigo-400"
+            className="border  bg-transparent px-5 py-2.5 text-base rounded-md transition focus:outline-none  "
             placeholder="Confirm Password"
             type="password"
             value={confirm}
@@ -106,7 +106,7 @@ const RegisterForm = () => {
         <button
           type="submit"
           disabled={loading}
-          className={`bg-indigo-600 text-white py-2.5 mt-2 rounded font-semibold text-base hover:bg-indigo-700 transition ${
+          className={`bg-black text-white py-2.5 mt-2 rounded font-semibold text-base hover:bg-gray-800 transition ${
             loading ? "opacity-50 cursor-not-allowed" : ""
           }`}
         >
