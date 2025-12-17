@@ -17,7 +17,6 @@ type UserRepo interface {
 }
 
 
-
 type userRepo struct {
 	db *gorm.DB
 }

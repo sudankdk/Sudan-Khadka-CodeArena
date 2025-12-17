@@ -53,4 +53,5 @@ func StartServer(cfg configs.AppConfigs) {
 
 func SetupRoutes(rh *rest.RestHandlers) {
 	handlers.SetupRoutes(rh)
+	handlers.SetupProblemTestRoutes(rh)
 }
