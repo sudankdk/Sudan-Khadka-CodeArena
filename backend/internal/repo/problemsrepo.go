@@ -2,6 +2,7 @@ package repo
 
 import (
 	"context"
+	"errors"
 
 	"github.com/google/uuid"
 	"github.com/sudankdk/codearena/internal/domain"
@@ -9,7 +10,7 @@ import (
 )
 
 type ProblemsRepo interface {
-	CreateProblem(ctx context.Context, p *domain.Problem) error
+	CreateProblem(p *domain.Problem) error
 	GetProblemByID(ctx context.Context, id uuid.UUID, includeTC bool) (*domain.Problem, error)
 	GetProblemBySlug(ctx context.Context, slug string, includeTC bool) (*domain.Problem, error)
 	ListProblems(ctx context.Context, opts ListProblemsOptions) ([]domain.Problem, error)
@@ -30,8 +31,11 @@ type problemsRepo struct {
 }
 
 // CreateProblem implements [ProblemsRepo].
-func (*problemsRepo) CreateProblem(ctx context.Context, p *domain.Problem) error {
-	panic("unimplemented")
+func (pr *problemsRepo) CreateProblem(p *domain.Problem) error {
+	if err := pr.db.Create(&p).Error; err != nil {
+		return errors.New("Error in createing problem: " + err.Error())
+	}
+	return nil
 }
 
 // GetProblemByID implements [ProblemsRepo].

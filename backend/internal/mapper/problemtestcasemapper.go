@@ -21,3 +21,27 @@ func ToDomain(in dto.CreateProblemDTO) domain.Problem {
 	}
 	return p
 }
+
+func ToProblemResponse(p domain.Problem) dto.ProblemResponseDTO {
+	out := dto.ProblemResponseDTO{
+		ID:          p.ID.String(),
+		MainHeading: p.MainHeading,
+		Slug:        p.Slug,
+		Description: p.Description,
+		Tag:         p.Tag,
+		Difficulty:  p.Difficulty,
+		CreatedAt:   p.CreatedAt,
+		UpdatedAt:   p.UpdatedAt,
+	}
+	for _, tc := range p.TestCases {
+		out.TestCases = append(out.TestCases, dto.TestCaseResponseDTO{
+			ID:        tc.ID.String(),
+			Input:     tc.Input,
+			Expected:  tc.Expected,
+			ProblemID: tc.ProblemID.String(),
+			CreatedAt: tc.CreatedAt,
+			UpdatedAt: tc.UpdatedAt,
+		})
+	}
+	return out
+}
