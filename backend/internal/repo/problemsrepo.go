@@ -13,7 +13,7 @@ type ProblemsRepo interface {
 	CreateProblem(p *domain.Problem) error
 	GetProblemByID(ctx context.Context, id uuid.UUID, includeTC bool) (*domain.Problem, error)
 	GetProblemBySlug(ctx context.Context, slug string, includeTC bool) (*domain.Problem, error)
-	ListProblems(ctx context.Context, opts ListProblemsOptions) ([]domain.Problem, error)
+	ListProblems(opts ListProblemsOptions) ([]domain.Problem, error)
 }
 
 type ListProblemsOptions struct {
@@ -49,8 +49,12 @@ func (p *problemsRepo) GetProblemBySlug(ctx context.Context, slug string, includ
 }
 
 // ListProblems implements [ProblemsRepo].
-func (p *problemsRepo) ListProblems(ctx context.Context, opts ListProblemsOptions) ([]domain.Problem, error) {
-	panic("unimplemented")
+func (p *problemsRepo) ListProblems(opts ListProblemsOptions) ([]domain.Problem, error) {
+	var problems []domain.Problem
+	if err := p.db.Find(&problems).Error; err != nil {
+		return []domain.Problem{}, errors.New("error in lisiting problems")
+	}
+	return problems, nil
 }
 
 func NewProblemsRepo(db *gorm.DB) ProblemsRepo {

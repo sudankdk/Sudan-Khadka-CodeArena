@@ -28,6 +28,7 @@ func SetupProblemTestRoutes(rh *rest.RestHandlers) {
 	// priRoutes := app.Group("/problems", rh.Auth.Authorize)
 	priRoutes := app.Group("/problems")
 	priRoutes.Post("", handler.Create)
+	priRoutes.Get("", handler.List)
 
 }
 
@@ -41,4 +42,13 @@ func (u *ProblemTestHandlers) Create(ctx *fiber.Ctx) error {
 		return rest.InternalError(ctx, err)
 	}
 	return rest.SuccessMessage(ctx, "problem created", "Success")
+}
+
+func (u *ProblemTestHandlers) List(ctx *fiber.Ctx) error {
+	var res []dto.ProblemResponseDTO
+	res, err := u.svc.ListProblems()
+	if err != nil {
+		return rest.InternalError(ctx, err)
+	}
+	return rest.SuccessMessage(ctx, "Problems list", res)
 }
