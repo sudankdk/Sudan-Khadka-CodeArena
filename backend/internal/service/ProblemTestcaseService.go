@@ -1,7 +1,9 @@
 package service
 
 import (
+	"github.com/google/uuid"
 	"github.com/sudankdk/codearena/configs"
+	"github.com/sudankdk/codearena/internal/domain"
 	"github.com/sudankdk/codearena/internal/dto"
 	"github.com/sudankdk/codearena/internal/helper"
 	"github.com/sudankdk/codearena/internal/mapper"
@@ -40,4 +42,13 @@ func (p *ProblemTestService) ListProblems(q dto.ProblemListQueryDTO) (*dto.Probl
 		Page:     (q.Offset / q.Limit) + 1,
 		PageSize: q.Limit,
 	}, nil
+}
+
+func (p *ProblemTestService) GetProblemById(id string, includeTc bool) (domain.Problem, error) {
+
+	problem, err := p.Repo.GetProblemByID(uuid.MustParse(id), includeTc)
+	if err != nil {
+		return domain.Problem{}, err
+	}
+	return *problem, nil
 }

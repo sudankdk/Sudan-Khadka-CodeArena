@@ -31,6 +31,7 @@ func SetupProblemTestRoutes(rh *rest.RestHandlers) {
 	priRoutes := app.Group("/problems")
 	priRoutes.Post("", handler.Create)
 	priRoutes.Get("", handler.List)
+	priRoutes.Get(":id", handler.GetProblemByID)
 
 }
 
@@ -72,4 +73,17 @@ func (u *ProblemTestHandlers) List(ctx *fiber.Ctx) error {
 		return rest.InternalError(ctx, err)
 	}
 	return rest.SuccessMessage(ctx, "Problems list", res)
+}
+
+func (u *ProblemTestHandlers) GetProblemByID(ctx *fiber.Ctx) error {
+	id := ctx.Params("id")
+	if id == "" {
+		return rest.ErrorMessage(ctx, http.StatusBadRequest, errors.New("id is required"))
+	}
+	includeTc := ctx.QueryBool("include_tc", false)
+	problem, err := u.svc.GetProblemById(id, includeTc)
+	if err != nil {
+		return rest.InternalError(ctx, err)
+	}
+	return rest.SuccessMessage(ctx, "Problem", problem)
 }
