@@ -19,12 +19,12 @@ func (p *ProblemTestService) CreateProblem(dto dto.CreateProblemDTO) error {
 	if err := p.Repo.CreateProblem(&problem); err != nil {
 		return err
 	}
-	p.Repo.CreateProblem(&problem)
 	return nil
 }
 
-func (p *ProblemTestService) ListProblems() ([]dto.ProblemResponseDTO, error) {
-	problems, err := p.Repo.ListProblems(repo.ListProblemsOptions{})
+func (p *ProblemTestService) ListProblems(q dto.ProblemListQueryDTO) ([]dto.ProblemResponseDTO, error) {
+	
+	problems, err := p.Repo.ListProblems(q)
 	if err != nil {
 		return []dto.ProblemResponseDTO{}, err
 	}

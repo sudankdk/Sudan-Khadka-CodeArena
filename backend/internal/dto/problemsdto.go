@@ -36,3 +36,11 @@ type ProblemResponseDTO struct {
 	CreatedAt   time.Time             `json:"created_at"`
 	UpdatedAt   time.Time             `json:"updated_at"`
 }
+
+type ProblemListQueryDTO struct {
+	Limit      int    `query:"limit"`
+	Offset     int    `query:"offset"`
+	Difficulty string `query:"difficulty"`
+	Search     string `query:"search"`
+	Testcases  bool   `query:"test-cases"`
+}
