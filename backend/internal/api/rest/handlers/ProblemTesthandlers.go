@@ -20,9 +20,10 @@ type ProblemTestHandlers struct {
 func SetupProblemTestRoutes(rh *rest.RestHandlers) {
 	app := rh.App
 	svc := service.ProblemTestService{
-		Repo:   repo.NewProblemsRepo(rh.DB),
-		Auth:   rh.Auth,
-		Config: rh.Configs,
+		Repo:     repo.NewProblemsRepo(rh.DB),
+		TestRepo: repo.NewTestcase(rh.DB),
+		Auth:     rh.Auth,
+		Config:   rh.Configs,
 	}
 	handler := ProblemTestHandlers{
 		svc: svc,
@@ -32,6 +33,8 @@ func SetupProblemTestRoutes(rh *rest.RestHandlers) {
 	priRoutes.Post("", handler.Create)
 	priRoutes.Get("", handler.List)
 	priRoutes.Get(":id", handler.GetProblemByID)
+	testRoutes := app.Group("/testcase")
+	testRoutes.Post("", handler.CreateTestCases)
 
 }
 
@@ -86,4 +89,15 @@ func (u *ProblemTestHandlers) GetProblemByID(ctx *fiber.Ctx) error {
 		return rest.InternalError(ctx, err)
 	}
 	return rest.SuccessMessage(ctx, "Problem", problem)
+}
+
+func (u *ProblemTestHandlers) CreateTestCases(ctx *fiber.Ctx) error {
+	var req dto.CreateTestCaseWithProblemDTO
+	if err := ctx.BodyParser(&req); err != nil {
+		return rest.ErrorMessage(ctx, http.StatusBadRequest, err)
+	}
+	if err := u.svc.CreateTestCase(req); err != nil {
+		return rest.InternalError(ctx, err)
+	}
+	return rest.SuccessMessage(ctx, "testcase createion", "successful")
 }

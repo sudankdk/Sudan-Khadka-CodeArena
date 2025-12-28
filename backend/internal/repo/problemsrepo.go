@@ -2,6 +2,7 @@ package repo
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/sudankdk/codearena/internal/domain"
@@ -42,6 +43,7 @@ func (pr *problemsRepo) CreateProblem(p *domain.Problem) error {
 
 // GetProblemByID implements [ProblemsRepo].
 func (p *problemsRepo) GetProblemByID(id uuid.UUID, includeTC bool) (*domain.Problem, error) {
+	fmt.Println(id)
 	var problem domain.Problem
 	query := p.db.Model(&problem)
 	if includeTC {

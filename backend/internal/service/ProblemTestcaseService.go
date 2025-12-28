@@ -1,6 +1,9 @@
 package service
 
 import (
+	"errors"
+	"fmt"
+
 	"github.com/google/uuid"
 	"github.com/sudankdk/codearena/configs"
 	"github.com/sudankdk/codearena/internal/domain"
@@ -11,9 +14,10 @@ import (
 )
 
 type ProblemTestService struct {
-	Repo   repo.ProblemsRepo
-	Auth   helper.Auth
-	Config configs.AppConfigs
+	Repo     repo.ProblemsRepo
+	TestRepo repo.TestcaseRepo
+	Auth     helper.Auth
+	Config   configs.AppConfigs
 }
 
 func (p *ProblemTestService) CreateProblem(dto dto.CreateProblemDTO) error {
@@ -51,4 +55,18 @@ func (p *ProblemTestService) GetProblemById(id string, includeTc bool) (domain.P
 		return domain.Problem{}, err
 	}
 	return *problem, nil
+}
+
+func (p *ProblemTestService) CreateTestCase(dto dto.CreateTestCaseWithProblemDTO) error {
+	fmt.Println(dto.ProblemID.ID())
+	_, err := p.Repo.GetProblemByID(dto.ProblemID, false)
+	if err != nil {
+		return errors.New("problem does not exist")
+	}
+
+	return p.TestRepo.CreateTestcase(domain.TestCases{
+		Input:     dto.Input,
+		Expected:  dto.Expected,
+		ProblemID: dto.ProblemID,
+	})
 }

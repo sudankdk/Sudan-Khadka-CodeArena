@@ -1,10 +1,20 @@
 package dto
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type CreateTestCaseDTO struct {
 	Input    string `json:"input" binding:"required"`
 	Expected string `json:"expected" binding:"required"`
+}
+
+type CreateTestCaseWithProblemDTO struct {
+	Input     string    `json:"input" binding:"required"`
+	Expected  string    `json:"expected" binding:"required"`
+	ProblemID uuid.UUID `json:"problem_id" binding:"required"`
 }
 
 type CreateProblemDTO struct {
