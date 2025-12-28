@@ -18,7 +18,7 @@ type testcaseRepo struct {
 
 // CreateTestcase implements TestcaseRepo.
 func (t *testcaseRepo) CreateTestcase(testcases domain.TestCases) error {
-	if err := t.db.Create(&testcases); err != nil {
+	if err := t.db.Create(&testcases).Error; err != nil {
 		return errors.New("error in creating testcases")
 	}
 	return nil
