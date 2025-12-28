@@ -3,6 +3,7 @@ package handlers
 import (
 	"errors"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
@@ -57,12 +58,15 @@ func (u *ProblemTestHandlers) Create(ctx *fiber.Ctx) error {
 }
 
 func (u *ProblemTestHandlers) List(ctx *fiber.Ctx) error {
-	// var res []dto.ProblemResponseDTO
+	pageSize := 3
+	page, _ := strconv.Atoi(ctx.Query("page", "1"))
 	var q dto.ProblemListQueryDTO
 	if err := ctx.QueryParser(&q); err != nil {
 		return rest.ErrorMessage(ctx, http.StatusBadRequest, err)
 	}
 
+	q.Limit = pageSize
+	q.Offset = (page - 1) * pageSize
 	res, err := u.svc.ListProblems(q)
 	if err != nil {
 		return rest.InternalError(ctx, err)

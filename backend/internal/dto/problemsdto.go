@@ -43,4 +43,12 @@ type ProblemListQueryDTO struct {
 	Difficulty string `query:"difficulty"`
 	Search     string `query:"search"`
 	Testcases  bool   `query:"test-cases"`
+	Page       string `query:"page"`
+}
+
+type ProblemListResponse struct {
+	Problems []ProblemResponseDTO `json:"problems"`
+	Total    int64                `json:"total"`
+	Page     int                  `json:"page"`
+	PageSize int                  `json:"page_size"`
 }
