@@ -12,7 +12,7 @@ import (
 type ProblemsRepo interface {
 	CreateProblem(p *domain.Problem) error
 	GetProblemByID(id uuid.UUID, includeTC bool) (*domain.Problem, error)
-	ListProblems(opts dto.ProblemListQueryDTO) ([]domain.Problem, error)
+	ListProblems(opts dto.ProblemListQueryDTO) ([]domain.Problem, int64, error)
 }
 
 type problemsRepo struct {
@@ -54,9 +54,24 @@ func (p *problemsRepo) GetProblemByID(id uuid.UUID, includeTC bool) (*domain.Pro
 }
 
 // ListProblems implements [ProblemsRepo].
-func (p *problemsRepo) ListProblems(opts dto.ProblemListQueryDTO) ([]domain.Problem, error) {
+func (p *problemsRepo) ListProblems(opts dto.ProblemListQueryDTO) ([]domain.Problem, int64, error) {
 	var problems []domain.Problem
-	query := p.db.Model(&problems)
+	var total int64
+
+	// Count total records matching filters
+	countQuery := p.db.Model(&domain.Problem{})
+	if opts.Difficulty != "" {
+		countQuery = countQuery.Where("difficulty = ?", opts.Difficulty)
+	}
+	if opts.Search != "" {
+		countQuery = countQuery.Where("title ILIKE ?", "%"+opts.Search+"%")
+	}
+	if err := countQuery.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	// Fetch paginated results
+	query := p.db.Model(&domain.Problem{})
 	if opts.Testcases {
 		query = query.Preload("TestCases")
 	}
@@ -64,19 +79,20 @@ func (p *problemsRepo) ListProblems(opts dto.ProblemListQueryDTO) ([]domain.Prob
 		query = query.Where("difficulty = ?", opts.Difficulty)
 	}
 	if opts.Search != "" {
-		query = query.Where("title ILIKE ?", "%"+opts.Search+ "%")
+		query = query.Where("title ILIKE ?", "%"+opts.Search+"%")
 	}
 	if opts.Limit > 0 {
 		query = query.Limit(opts.Limit)
 	}
-
 	if opts.Offset >= 0 {
 		query = query.Offset(opts.Offset)
 	}
+
 	if err := query.Order("created_at DESC").Find(&problems).Error; err != nil {
-		return nil, err
+		return nil, 0, err
 	}
-	return problems, nil
+
+	return problems, total, nil
 }
 
 func NewProblemsRepo(db *gorm.DB) ProblemsRepo {
