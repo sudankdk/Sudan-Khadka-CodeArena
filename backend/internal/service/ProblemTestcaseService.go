@@ -21,3 +21,17 @@ func (p *ProblemTestService) CreateProblem(dto dto.CreateProblemDTO) error {
 	}
 	return nil
 }
+
+func (p *ProblemTestService) ListProblems(q dto.ProblemListQueryDTO) ([]dto.ProblemResponseDTO, error) {
+	
+	problems, err := p.Repo.ListProblems(q)
+	if err != nil {
+		return []dto.ProblemResponseDTO{}, err
+	}
+	res := make([]dto.ProblemResponseDTO, 0, len(problems))
+	for _, problem := range problems {
+		res = append(res, mapper.ToProblemResponse(problem))
+	}
+
+	return res, nil
+}

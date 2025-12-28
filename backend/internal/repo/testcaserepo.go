@@ -1,6 +1,8 @@
 package repo
 
 import (
+	"errors"
+
 	"github.com/sudankdk/codearena/internal/domain"
 	"gorm.io/gorm"
 )
@@ -16,7 +18,10 @@ type testcaseRepo struct {
 
 // CreateTestcase implements TestcaseRepo.
 func (t *testcaseRepo) CreateTestcase(testcases domain.TestCases) error {
-	panic("unimplemented")
+	if err := t.db.Create(&testcases); err != nil {
+		return errors.New("error in creating testcases")
+	}
+	return nil
 }
 
 // ListTestcase implements TestcaseRepo.

@@ -1,7 +1,12 @@
 import type React from "react";
 import AdminSidebar from "./AdminSidebar";
+import { useAuth } from "@/services/auth/hook/useAuth";
 
 const AdminDashboardLayout = ({ children }: { children: React.ReactNode }) => {
+   const { logout } = useAuth();
+    const handleLogout = () => {
+      logout();
+    };
   return (
     <div className="flex h-screen w-full bg-gray-50">
       <AdminSidebar />
@@ -15,6 +20,9 @@ const AdminDashboardLayout = ({ children }: { children: React.ReactNode }) => {
           <div className="flex items-center gap-4">
             <button className="p-2 rounded-lg hover:bg-gray-100">
               Profile
+            </button>
+            <button onClick={logout}>
+              Logout
             </button>
           </div>
         </header>

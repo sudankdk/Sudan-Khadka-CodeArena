@@ -18,7 +18,7 @@ type UserService struct {
 }
 
 func (u *UserService) Register(dto dto.UserRegister) (domain.User, error) {
-	
+
 	hashedPassword, err := u.Auth.CreateHash(dto.Password)
 	if err != nil {
 		return domain.User{}, fmt.Errorf("error in creating hash: %d", err)
@@ -36,36 +36,35 @@ func (u *UserService) Register(dto dto.UserRegister) (domain.User, error) {
 	return newUser, nil
 }
 
-func (u *UserService) Login(dto dto.UserLogin) (string,domain.User, error) {
+func (u *UserService) Login(dto dto.UserLogin) (string, domain.User, error) {
 	if dto.Email == "" || dto.Password == "" {
-		return "",domain.User{}, errors.New("fill all the required fields")
+		return "", domain.User{}, errors.New("fill all the required fields")
 	}
 	user, err := u.Repo.FindUser(dto.Email)
 	if err != nil {
-		return "",domain.User{}, err
+		return "", domain.User{}, err
 	}
 	if !u.Auth.VerifyHash(dto.Password, user.Password) {
-		return "",domain.User{}, errors.New("incorrect username or password")
+		return "", domain.User{}, errors.New("incorrect username or password")
 	}
 	token, err := u.Auth.GenerateToken(user.ID, user.Email, user.Role)
 	if err != nil {
-		return "",domain.User{}, err
+		return "", domain.User{}, err
 	}
 
-	return token,user, nil
+	return token, user, nil
 }
 
 func (u *UserService) VerifyCode(code string, id uint) error {
 	return nil
 }
 
+func (u *UserService) ListUsers() ([]domain.User, error) {
 
-func (u *UserService) ListUsers()([]domain.User,error){
-
-	users,err:=u.Repo.ListUser()
+	users, err := u.Repo.ListUser()
 	if err != nil {
-		return []domain.User{},errors.New("Errors in listing users")
+		return []domain.User{}, errors.New("Errors in listing users")
 	}
-	return  users,nil
+	return users, nil
 
 }
