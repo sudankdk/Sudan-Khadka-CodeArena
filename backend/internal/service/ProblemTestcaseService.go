@@ -70,3 +70,11 @@ func (p *ProblemTestService) CreateTestCase(dto dto.CreateTestCaseWithProblemDTO
 		ProblemID: dto.ProblemID,
 	})
 }
+
+func (p *ProblemTestService) ListTestCasesOfProblems(id string) ([]domain.TestCases, error) {
+	testcases, err := p.TestRepo.ListTestcase(uuid.MustParse(id))
+	if err != nil {
+		return []domain.TestCases{}, err
+	}
+	return testcases, nil
+}

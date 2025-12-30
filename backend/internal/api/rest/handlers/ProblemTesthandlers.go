@@ -35,6 +35,7 @@ func SetupProblemTestRoutes(rh *rest.RestHandlers) {
 	priRoutes.Get(":id", handler.GetProblemByID)
 	testRoutes := app.Group("/testcase")
 	testRoutes.Post("", handler.CreateTestCases)
+	testRoutes.Get(":id", handler.ListTestCasesOfProblems)
 
 }
 
@@ -100,4 +101,16 @@ func (u *ProblemTestHandlers) CreateTestCases(ctx *fiber.Ctx) error {
 		return rest.InternalError(ctx, err)
 	}
 	return rest.SuccessMessage(ctx, "testcase createion", "successful")
+}
+
+func (u *ProblemTestHandlers) ListTestCasesOfProblems(ctx *fiber.Ctx) error {
+	id := ctx.Params("id")
+	if id == "" {
+		return rest.ErrorMessage(ctx, http.StatusBadRequest, errors.New("id param is missing"))
+	}
+	testcases, err := u.svc.ListTestCasesOfProblems(id)
+	if err != nil {
+		return rest.InternalError(ctx, err)
+	}
+	return rest.SuccessMessage(ctx, "Success", testcases)
 }
