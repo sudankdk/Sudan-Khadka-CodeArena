@@ -20,6 +20,8 @@ type problemsRepo struct {
 	db *gorm.DB
 }
 
+var _ ProblemsRepo = (*problemsRepo)(nil)  // compile-time interface check
+
 // CreateProblem implements [ProblemsRepo].
 func (pr *problemsRepo) CreateProblem(p *domain.Problem) error {
 	var count int64

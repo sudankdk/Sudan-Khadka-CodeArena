@@ -2,7 +2,14 @@ import { Route, Routes } from "react-router-dom";
 import Register from "./pages/Auth/register";
 import Login from "./pages/Auth/Login";
 import ProtectedRoute from "./services/auth/ProtectedRoute";
-import Dashboard from "./services/users/Dashboard";
+import UserDashboard from "./pages/user/UserDashboard";
+import Problems from "./pages/user/Problems";
+import Arena from "./pages/user/Arena";
+import Profile from "./pages/user/Profile";
+import Kings from "./pages/user/Kings";
+import Discussion from "./pages/user/Discussion";
+import Duel from "./pages/user/Duel";
+import Roadmap from "./pages/user/Roadmap";
 import AdminDashboard from "./pages/admin/Dashboard";
 import useAuthStore from "./services/auth/store/auth.store";
 import { useEffect } from "react";
@@ -38,7 +45,63 @@ function App() {
           path="/dashboard"
           element={
             <ProtectedRoute>
-              <Dashboard />
+              <UserDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/problems"
+          element={
+            <ProtectedRoute>
+              <Problems />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/contests"
+          element={
+            <ProtectedRoute>
+              <Arena />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/leaderboard"
+          element={
+            <ProtectedRoute>
+              <Kings />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/discussion"
+          element={
+            <ProtectedRoute>
+              <Discussion />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/duel"
+          element={
+            <ProtectedRoute>
+              <Duel />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/roadmap"
+          element={
+            <ProtectedRoute>
+              <Roadmap />
             </ProtectedRoute>
           }
         />

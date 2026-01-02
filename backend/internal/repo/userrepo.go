@@ -21,6 +21,8 @@ type userRepo struct {
 	db *gorm.DB
 }
 
+var _ UserRepo = (*userRepo)(nil)  // compile-time interface check
+
 func (u *userRepo) CreateUser(user domain.User) (domain.User, error) {
 	if err := u.db.Create(&user).Error; err != nil {
 		return domain.User{}, errors.New("error in createing new user")

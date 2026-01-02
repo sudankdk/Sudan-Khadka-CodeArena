@@ -17,6 +17,8 @@ type testcaseRepo struct {
 	db *gorm.DB
 }
 
+var _ TestcaseRepo = (*testcaseRepo)(nil)  // compile-time interface check
+
 // CreateTestcase implements TestcaseRepo.
 func (t *testcaseRepo) CreateTestcase(testcases domain.TestCases) error {
 	if err := t.db.Create(&testcases).Error; err != nil {
