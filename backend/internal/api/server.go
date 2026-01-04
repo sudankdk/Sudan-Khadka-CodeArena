@@ -1,9 +1,6 @@
 package api
 
 import (
-	"fmt"
-	"log"
-
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/sudankdk/codearena/configs"
@@ -11,6 +8,9 @@ import (
 	"github.com/sudankdk/codearena/internal/api/rest/handlers"
 	"github.com/sudankdk/codearena/internal/domain"
 	"github.com/sudankdk/codearena/internal/helper"
+	"github.com/sudankdk/codearena/internal/logger"
+	"github.com/sudankdk/codearena/internal/middleware"
+	"go.uber.org/zap"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -18,6 +18,10 @@ import (
 func StartServer(cfg configs.AppConfigs) {
 
 	app := fiber.New()
+
+	// Add logging middleware
+	app.Use(middleware.LoggingMiddleware(logger.Log))
+
 	// store := session.New()
 	// app.Use(func(c *fiber.Ctx) error {
 	//     sess, _ := store.Get(c)
@@ -31,24 +35,34 @@ func StartServer(cfg configs.AppConfigs) {
 		AllowMethods:     "GET,POST,PUT,DELETE,OPTIONS",
 		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
 	}))
-	fmt.Println(cfg.DSN)
+
+	logger.Info("Connecting to database", zap.String("dsn", cfg.DSN))
 	db, err := gorm.Open(postgres.Open(cfg.DSN), &gorm.Config{})
 	if err != nil {
-		log.Fatalf("error in connection of db: %v", err)
+		logger.Fatal("Failed to connect to database", zap.Error(err))
 	}
-	log.Println("Database connected")
+	logger.Info("Database connected successfully")
+
+	logger.Info("Running database migrations")
 	if err := db.AutoMigrate(&domain.User{}, &domain.Problem{}, &domain.TestCases{}); err != nil {
-		log.Fatalf("error in running migrations %v", err.Error())
+		logger.Fatal("Failed to run migrations", zap.Error(err))
 	}
+	logger.Info("Database migrations completed")
+
 	auth := helper.SetupAuth(cfg.SECRETKEY)
 	rh := &rest.RestHandlers{
 		App:     app,
 		DB:      db,
 		Configs: cfg,
 		Auth:    *auth,
+		Logger:  logger.Log,
 	}
 	SetupRoutes(rh)
-	app.Listen(":" + cfg.PORT)
+
+	logger.Info("Server starting", zap.String("port", cfg.PORT))
+	if err := app.Listen(":" + cfg.PORT); err != nil {
+		logger.Fatal("Failed to start server", zap.Error(err))
+	}
 }
 
 func SetupRoutes(rh *rest.RestHandlers) {
