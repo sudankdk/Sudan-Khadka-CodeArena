@@ -10,6 +10,7 @@ import Kings from "./pages/user/Kings";
 import Discussion from "./pages/user/Discussion";
 import Duel from "./pages/user/Duel";
 import Roadmap from "./pages/user/Roadmap";
+import ProblemSolve from "./pages/user/ProblemSolve";
 import AdminDashboard from "./pages/admin/Dashboard";
 import useAuthStore from "./services/auth/store/auth.store";
 import { useEffect } from "react";
@@ -54,6 +55,14 @@ function App() {
           element={
             <ProtectedRoute>
               <Problems />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/problems/:id"
+          element={
+            <ProtectedRoute>
+              <ProblemSolve />
             </ProtectedRoute>
           }
         />
