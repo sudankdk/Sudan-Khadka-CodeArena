@@ -1,0 +1,107 @@
+import { useState, useEffect } from "react";
+import { getProblemTests, createProblemTest } from "@/services/auth/api/problemtest";
+import type { IProblemTest, ITestCase } from "@/Interfaces/problemstest/problemtest";
+
+const initialFormData: IProblemTest = {
+  main_heading: "",
+  slug: "",
+  description: "",
+  tag: "",
+  difficulty: "easy",
+  test_cases: [{ input: "", expected: "" }]
+};
+
+export const useProblems = () => {
+  const [problems, setProblems] = useState<IProblemTest[]>([]);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState<IProblemTest>(initialFormData);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(3);
+  const [total, setTotal] = useState(0);
+
+  useEffect(() => {
+    fetchProblems();
+  }, [currentPage]);
+
+  const fetchProblems = async () => {
+    setLoading(true);
+    try {
+      const response = await getProblemTests(currentPage, pageSize);
+      console.log("Fetched data:", response);
+      setProblems(response.problems);
+      setTotal(response.total);
+    } catch (error) {
+      console.error("Error fetching problems:", error);
+      setProblems([]);
+      setTotal(0);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleTestCaseChange = (index: number, field: keyof ITestCase, value: string) => {
+    const newTestCases = [...formData.test_cases];
+    newTestCases[index] = { ...newTestCases[index], [field]: value };
+    setFormData(prev => ({ ...prev, test_cases: newTestCases }));
+  };
+
+  const addTestCase = () => {
+    setFormData(prev => ({
+      ...prev,
+      test_cases: [...prev.test_cases, { input: "", expected: "" }]
+    }));
+  };
+
+  const removeTestCase = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      test_cases: prev.test_cases.filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await createProblemTest(formData);
+      setIsDialogOpen(false);
+      setFormData(initialFormData);
+      setCurrentPage(1);
+      fetchProblems();
+    } catch (error) {
+      console.error("Error creating problem:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const totalPages = Math.ceil(total / pageSize);
+
+  return {
+    problems,
+    isDialogOpen,
+    setIsDialogOpen,
+    loading,
+    formData,
+    handleInputChange,
+    handleTestCaseChange,
+    addTestCase,
+    removeTestCase,
+    handleSubmit,
+    currentPage,
+    pageSize,
+    total,
+    totalPages,
+    handlePageChange
+  };
+};
