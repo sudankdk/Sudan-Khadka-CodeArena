@@ -1,4 +1,5 @@
 import UserDashboardLayout from "@/Components/UserDashboardLayout";
+import { useProblems } from "@/hooks/useProblems";
 import { useState } from "react";
 import { NavLink } from "react-router-dom";
 
@@ -20,7 +21,8 @@ const Problems = () => {
     { name: "HEAP", count: 29, color: "#E54B4B" },
     { name: "GREEDY", count: 56, color: "#F7D046" },
   ];
-
+  const {problems: fetchedProblems}=useProblems()
+  console.log(fetchedProblems)
   const problems = [
     { id: 1, name: "TWO SUM", difficulty: "EASY", acceptance: "49.2%", status: "solved", tags: ["ARRAY", "HASH"] },
     { id: 2, name: "ADD TWO NUMBERS", difficulty: "MED", acceptance: "40.1%", status: "solved", tags: ["LINKED LIST", "MATH"] },
