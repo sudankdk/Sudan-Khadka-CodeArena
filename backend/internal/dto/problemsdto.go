@@ -18,12 +18,13 @@ type CreateTestCaseWithProblemDTO struct {
 }
 
 type CreateProblemDTO struct {
-	MainHeading string              `json:"main_heading" binding:"required"`
-	Slug        string              `json:"slug" binding:"omitempty"`
-	Description string              `json:"description" binding:"omitempty"`
-	Tag         string              `json:"tag" binding:"omitempty"`
-	Difficulty  string              `json:"difficulty" binding:"omitempty,oneof=easy medium hard"`
-	TestCases   []CreateTestCaseDTO `json:"test_cases" binding:"omitempty,dive"`
+	MainHeading  string                 `json:"main_heading" binding:"required"`
+	Slug         string                 `json:"slug" binding:"omitempty"`
+	Description  string                 `json:"description" binding:"omitempty"`
+	Tag          string                 `json:"tag" binding:"omitempty"`
+	Difficulty   string                 `json:"difficulty" binding:"omitempty,oneof=easy medium hard"`
+	TestCases    []CreateTestCaseDTO    `json:"test_cases" binding:"omitempty,dive"`
+	Boilerplates []CreateBoilerplateDTO `json:"boilerplates" binding:"omitempty,dive"`
 }
 
 type TestCaseResponseDTO struct {
@@ -36,15 +37,16 @@ type TestCaseResponseDTO struct {
 }
 
 type ProblemResponseDTO struct {
-	ID          string                `json:"id"`
-	MainHeading string                `json:"main_heading"`
-	Slug        string                `json:"slug"`
-	Description string                `json:"description"`
-	Tag         string                `json:"tag"`
-	Difficulty  string                `json:"difficulty"`
-	TestCases   []TestCaseResponseDTO `json:"test_cases,omitempty"`
-	CreatedAt   time.Time             `json:"created_at"`
-	UpdatedAt   time.Time             `json:"updated_at"`
+	ID           string                   `json:"id"`
+	MainHeading  string                   `json:"main_heading"`
+	Slug         string                   `json:"slug"`
+	Description  string                   `json:"description"`
+	Tag          string                   `json:"tag"`
+	Difficulty   string                   `json:"difficulty"`
+	TestCases    []TestCaseResponseDTO    `json:"test_cases,omitempty"`
+	Boilerplates []BoilerplateResponseDTO `json:"boilerplates,omitempty"`
+	CreatedAt    time.Time                `json:"created_at"`
+	UpdatedAt    time.Time                `json:"updated_at"`
 }
 
 type ProblemListQueryDTO struct {
@@ -61,4 +63,18 @@ type ProblemListResponse struct {
 	Total    int64                `json:"total"`
 	Page     int                  `json:"page"`
 	PageSize int                  `json:"page_size"`
+}
+
+type CreateBoilerplateDTO struct {
+	Language string `json:"language" binding:"required"` // e.g., "python", "go"
+	Code     string `json:"code" binding:"required"`
+}
+
+type BoilerplateResponseDTO struct {
+	ID        string    `json:"id"`
+	Language  string    `json:"language"`
+	Code      string    `json:"code"`
+	ProblemID string    `json:"problem_id"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }

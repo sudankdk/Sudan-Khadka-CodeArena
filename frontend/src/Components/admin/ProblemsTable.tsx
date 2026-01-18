@@ -1,4 +1,6 @@
 import type { IProblemTest } from "@/Interfaces/problemstest/problemtest";
+import { useNavigate } from "react-router-dom";
+
 
 interface ProblemsTableProps {
   problems: IProblemTest[];
@@ -14,7 +16,12 @@ const getDifficultyColor = (difficulty: string) => {
   }
 };
 
+
+
+
 export const ProblemsTable = ({ problems, loading }: ProblemsTableProps) => {
+  const nav = useNavigate();
+
   if (loading) {
     return <div className="p-12 text-center text-gray-500">Loading problems...</div>;
   }
@@ -49,7 +56,7 @@ export const ProblemsTable = ({ problems, loading }: ProblemsTableProps) => {
           {problems.map((problem, index) => (
             <tr key={index} className="hover:bg-gray-50">
               <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm font-medium text-gray-900">{problem.main_heading}</div>
+                <div className="text-sm font-medium text-gray-900" onClick={() => nav(`/admin/problems/${problem.slug}`)}>{problem.main_heading}</div>
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
                 <div className="text-sm text-gray-500">{problem.slug}</div>

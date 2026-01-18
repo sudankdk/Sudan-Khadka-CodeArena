@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { getProblemTests, createProblemTest } from "@/services/auth/api/problemtest";
-import type { IProblemTest, ITestCase } from "@/Interfaces/problemstest/problemtest";
+import type { IProblemTest, ITestCase, IBoilerplate } from "@/Interfaces/problemstest/problemtest";
 
 const initialFormData: IProblemTest = {
   main_heading: "",
@@ -8,7 +8,8 @@ const initialFormData: IProblemTest = {
   description: "",
   tag: "",
   difficulty: "easy",
-  test_cases: [{ input: "", expected: "" }]
+  test_cases: [{ input: "", expected: "" }],
+  boilerplate: [{ code: "", Language: "" }]
 };
 
 export const useProblems = () => {
@@ -65,6 +66,26 @@ export const useProblems = () => {
     }));
   };
 
+  const handleBoilerplateChange = (index: number, field: keyof IBoilerplate, value: string) => {
+    const newBoilerplates = [...formData.boilerplate];
+    newBoilerplates[index] = { ...newBoilerplates[index], [field]: value };
+    setFormData(prev => ({ ...prev, boilerplate: newBoilerplates }));
+  };
+
+  const addBoilerplate = () => {
+    setFormData(prev => ({
+      ...prev,
+      boilerplate: [...prev.boilerplate, { code: "", Language: "" }]
+    }));
+  };
+
+  const removeBoilerplate = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      boilerplate: prev.boilerplate.filter((_, i) => i !== index)
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -97,6 +118,9 @@ export const useProblems = () => {
     handleTestCaseChange,
     addTestCase,
     removeTestCase,
+    handleBoilerplateChange,
+    addBoilerplate,
+    removeBoilerplate,
     handleSubmit,
     currentPage,
     pageSize,

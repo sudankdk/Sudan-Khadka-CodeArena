@@ -4,7 +4,8 @@ import { Input } from "@/Components/ui/input";
 import { Textarea } from "@/Components/ui/textarea";
 import { Label } from "@/Components/ui/label";
 import { TestCaseForm } from "./TestCaseForm";
-import type { IProblemTest, ITestCase } from "@/Interfaces/problemstest/problemtest";
+import { BoilerplateForm } from "./BoilerplateForm";
+import type { IProblemTest, ITestCase, IBoilerplate } from "@/Interfaces/problemstest/problemtest";
 
 interface CreateProblemDialogProps {
   isOpen: boolean;
@@ -16,6 +17,9 @@ interface CreateProblemDialogProps {
   onTestCaseChange: (index: number, field: keyof ITestCase, value: string) => void;
   onAddTestCase: () => void;
   onRemoveTestCase: (index: number) => void;
+  onBoilerplateChange: (index: number, field: keyof IBoilerplate, value: string) => void;
+  onAddBoilerplate: () => void;
+  onRemoveBoilerplate: (index: number) => void;
 }
 
 export const CreateProblemDialog = ({
@@ -27,7 +31,10 @@ export const CreateProblemDialog = ({
   onInputChange,
   onTestCaseChange,
   onAddTestCase,
-  onRemoveTestCase
+  onRemoveTestCase,
+  onBoilerplateChange,
+  onAddBoilerplate,
+  onRemoveBoilerplate
 }: CreateProblemDialogProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -36,6 +43,7 @@ export const CreateProblemDialog = ({
           <DialogTitle>Create New Problem</DialogTitle>
         </DialogHeader>
         <form onSubmit={onSubmit} className="space-y-4">
+
           <div>
             <Label htmlFor="main_heading">Problem Title</Label>
             <Input
@@ -72,6 +80,13 @@ export const CreateProblemDialog = ({
               required
             />
           </div>
+
+          <BoilerplateForm
+            boilerplates={formData.boilerplate}
+            onBoilerplateChange={onBoilerplateChange}
+            onAddBoilerplate={onAddBoilerplate}
+            onRemoveBoilerplate={onRemoveBoilerplate}
+          />
 
           <div className="grid grid-cols-2 gap-4">
             <div>
