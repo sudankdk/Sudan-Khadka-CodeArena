@@ -2,7 +2,6 @@ package repo
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/sudankdk/codearena/internal/domain"
@@ -13,6 +12,7 @@ import (
 type ProblemsRepo interface {
 	CreateProblem(p *domain.Problem) error
 	GetProblemByID(id uuid.UUID, includeTC bool) (*domain.Problem, error)
+	GetProblemBySlug(slug string, includeTC bool) (*domain.Problem, error)
 	ListProblems(opts dto.ProblemListQueryDTO) ([]domain.Problem, int64, error)
 }
 
@@ -20,7 +20,7 @@ type problemsRepo struct {
 	db *gorm.DB
 }
 
-var _ ProblemsRepo = (*problemsRepo)(nil)  // compile-time interface check
+var _ ProblemsRepo = (*problemsRepo)(nil) // compile-time interface check
 
 // CreateProblem implements [ProblemsRepo].
 func (pr *problemsRepo) CreateProblem(p *domain.Problem) error {
@@ -45,13 +45,24 @@ func (pr *problemsRepo) CreateProblem(p *domain.Problem) error {
 
 // GetProblemByID implements [ProblemsRepo].
 func (p *problemsRepo) GetProblemByID(id uuid.UUID, includeTC bool) (*domain.Problem, error) {
-	fmt.Println(id)
 	var problem domain.Problem
 	query := p.db.Model(&problem)
 	if includeTC {
 		query = query.Preload("TestCases")
 	}
 	if err := query.First(&problem, "id = ?", id).Error; err != nil {
+		return nil, err
+	}
+	return &problem, nil
+}
+
+func (p *problemsRepo) GetProblemBySlug(slug string, includeTC bool) (*domain.Problem, error) {
+	var problem domain.Problem
+	query := p.db.Model(&problem)
+	if includeTC {
+		query = query.Preload("TestCases")
+	}
+	if err := query.First(&problem, "slug = ?", slug).Error; err != nil {
 		return nil, err
 	}
 	return &problem, nil

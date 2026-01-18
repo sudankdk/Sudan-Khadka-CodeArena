@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, NavLink } from "react-router-dom";
 import Editor from "@monaco-editor/react";
 import { useAuth } from "@/services/auth/hook/useAuth";
 import useAuthStore from "@/services/auth/store/auth.store";
 import { Icons } from "@/const/Icons";
+import { getProblemTestBySlug } from "@/services/auth/api/problemtest";
 
 const ProblemSolve = () => {
   const { id } = useParams();
@@ -22,8 +23,12 @@ const ProblemSolve = () => {
     { id: "python", name: "PYTHON" },
     { id: "javascript", name: "JAVASCRIPT" },
     { id: "go", name: "GO" },
-    { id: "cpp", name: "C++" },
   ];
+
+  const problemsTestCase = async()=>{
+   const data= await getProblemTestBySlug("two-sum");
+   console.log("Problem Data:",data);
+  }
 
   // Mock problem data
   const problem = {
@@ -100,6 +105,10 @@ You can return the answer in any order.`,
     if (problem.difficulty === "MEDIUM") return "text-[#F7D046] border-[#F7D046]";
     return "text-[#E54B4B] border-[#E54B4B]";
   };
+
+  useEffect(()=>{
+    problemsTestCase();
+  })
 
   return (
     <div className="h-screen w-full bg-[#0d0d0d] flex flex-col">
