@@ -48,7 +48,7 @@ func (p *problemsRepo) GetProblemByID(id uuid.UUID, includeTC bool) (*domain.Pro
 	var problem domain.Problem
 	query := p.db.Model(&problem)
 	if includeTC {
-		query = query.Preload("TestCases")
+		query = query.Preload("TestCases").Preload("Boilerplates")
 	}
 	if err := query.First(&problem, "id = ?", id).Error; err != nil {
 		return nil, err
@@ -60,7 +60,7 @@ func (p *problemsRepo) GetProblemBySlug(slug string, includeTC bool) (*domain.Pr
 	var problem domain.Problem
 	query := p.db.Model(&problem)
 	if includeTC {
-		query = query.Preload("TestCases")
+		query = query.Preload("TestCases").Preload("Boilerplates")
 	}
 	if err := query.First(&problem, "slug = ?", slug).Error; err != nil {
 		return nil, err
@@ -88,7 +88,7 @@ func (p *problemsRepo) ListProblems(opts dto.ProblemListQueryDTO) ([]domain.Prob
 	// Fetch paginated results
 	query := p.db.Model(&domain.Problem{})
 	if opts.Testcases {
-		query = query.Preload("TestCases")
+		query = query.Preload("TestCases").Preload("Boilerplates")
 	}
 	if opts.Difficulty != "" {
 		query = query.Where("difficulty = ?", opts.Difficulty)

@@ -44,7 +44,7 @@ func StartServer(cfg configs.AppConfigs) {
 	logger.Info("Database connected successfully")
 
 	logger.Info("Running database migrations")
-	if err := db.AutoMigrate(&domain.User{}, &domain.Problem{}, &domain.TestCases{}); err != nil {
+	if err := db.AutoMigrate(&domain.User{}, &domain.Problem{}, &domain.TestCases{}, &domain.BoilerPlate{}); err != nil {
 		logger.Fatal("Failed to run migrations", zap.Error(err))
 	}
 	logger.Info("Database migrations completed")
