@@ -36,6 +36,7 @@ func SetupProblemTestRoutes(rh *rest.RestHandlers) {
 	priRoutes.Post("", handler.Create)
 	priRoutes.Get("", handler.List)
 	priRoutes.Get(":id", handler.GetProblemByID)
+	priRoutes.Get("/slug/:slug", handler.GetProblemBySlug)
 	testRoutes := app.Group("/testcase")
 	testRoutes.Post("", handler.CreateTestCases)
 	testRoutes.Get(":id", handler.ListTestCasesOfProblems)
@@ -110,6 +111,26 @@ func (u *ProblemTestHandlers) GetProblemByID(ctx *fiber.Ctx) error {
 	}
 
 	u.logger.Info("Problem fetched successfully", zap.String("id", id))
+	return rest.SuccessMessage(ctx, "Problem", problem)
+}
+
+func (u *ProblemTestHandlers) GetProblemBySlug(ctx *fiber.Ctx) error {
+	slug := ctx.Params("slug")
+	if slug == "" {
+		u.logger.Warn("Problem slug is required")
+		return rest.ErrorMessage(ctx, http.StatusBadRequest, errors.New("slug is required"))
+	}
+
+	includeTc := ctx.QueryBool("include_tc", false)
+	u.logger.Info("Fetching problem by Slug", zap.String("slug", slug), zap.Bool("include_tc", includeTc))
+
+	problem, err := u.svc.GetProblemBySlug(slug, includeTc)
+	if err != nil {
+		u.logger.Error("Failed to fetch problem", zap.String("slug", slug), zap.Error(err))
+		return rest.InternalError(ctx, err)
+	}
+
+	u.logger.Info("Problem fetched successfully", zap.String("slug", slug))
 	return rest.SuccessMessage(ctx, "Problem", problem)
 }
 

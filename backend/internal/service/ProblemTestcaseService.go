@@ -57,6 +57,15 @@ func (p *ProblemTestService) GetProblemById(id string, includeTc bool) (domain.P
 	return *problem, nil
 }
 
+func (p *ProblemTestService) GetProblemBySlug(slug string, includeTc bool) (domain.Problem, error) {
+
+	problem, err := p.Repo.GetProblemBySlug(slug, includeTc)
+	if err != nil {
+		return domain.Problem{}, err
+	}
+	return *problem, nil
+}
+
 func (p *ProblemTestService) CreateTestCase(dto dto.CreateTestCaseWithProblemDTO) error {
 	fmt.Println(dto.ProblemID.ID())
 	_, err := p.Repo.GetProblemByID(dto.ProblemID, false)

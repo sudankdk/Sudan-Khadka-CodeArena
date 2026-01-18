@@ -28,3 +28,9 @@ export const getProblemTests = async (page: number = 1, pageSize: number = 10): 
       page_size: resp?.data?.page_size || pageSize
     };
 }
+
+export const getProblemTestBySlug = async (slug: string): Promise<IProblemTest> => {
+  const resp = await problemtestClient.get<IProblemTest>(`/problems/slug/${slug}?include_tc=true`);
+  console.log("Fetched Problem Test by Slug:", resp);
+  return resp;
+}
