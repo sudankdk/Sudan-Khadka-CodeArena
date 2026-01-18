@@ -19,6 +19,13 @@ func ToDomain(in dto.CreateProblemDTO) domain.Problem {
 			Expected: tc.Expected,
 		})
 	}
+
+	for _, bp := range in.Boilerplates {
+		p.Boilerplates = append(p.Boilerplates, domain.BoilerPlate{
+			Language: bp.Language,
+			Code:     bp.Code,
+		})
+	}
 	return p
 }
 
@@ -41,6 +48,17 @@ func ToProblemResponse(p domain.Problem) dto.ProblemResponseDTO {
 			ProblemID: tc.ProblemID.String(),
 			CreatedAt: tc.CreatedAt,
 			UpdatedAt: tc.UpdatedAt,
+		})
+	}
+
+	for _, bp := range p.Boilerplates {
+		out.Boilerplates = append(out.Boilerplates, dto.BoilerplateResponseDTO{
+			ID:        bp.ID.String(),
+			Language:  bp.Language,
+			Code:      bp.Code,
+			ProblemID: bp.ProblemID.String(),
+			CreatedAt: bp.CreatedAt,
+			UpdatedAt: bp.UpdatedAt,
 		})
 	}
 	return out

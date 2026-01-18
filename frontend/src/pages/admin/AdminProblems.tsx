@@ -16,6 +16,9 @@ const AdminProblems = () => {
     handleTestCaseChange,
     addTestCase,
     removeTestCase,
+    handleBoilerplateChange,
+    addBoilerplate,
+    removeBoilerplate,
     handleSubmit,
     currentPage,
     pageSize,
@@ -57,6 +60,9 @@ const AdminProblems = () => {
           onTestCaseChange={handleTestCaseChange}
           onAddTestCase={addTestCase}
           onRemoveTestCase={removeTestCase}
+          onBoilerplateChange={handleBoilerplateChange}
+          onAddBoilerplate={addBoilerplate}
+          onRemoveBoilerplate={removeBoilerplate}
         />
       </div>
     </AdminDashboardLayout>

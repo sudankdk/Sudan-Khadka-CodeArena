@@ -5,12 +5,18 @@ export interface IProblemTest {
     tag: string;
     difficulty: "easy" | "medium" | "hard";
     test_cases: ITestCase[];
+    boilerplate: IBoilerplate[];
 }
 
 
 export interface ITestCase {
   input: string;
   expected: string;
+}
+
+export interface IBoilerplate{
+  code: string;
+  Language : string;
 }
 
 //  "main_heading": "Two Sum",
