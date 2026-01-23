@@ -6,6 +6,7 @@ import { NavLink } from "react-router-dom";
 const Problems = () => {
   const [activeFilter, setActiveFilter] = useState("ALL");
   const [searchQuery, setSearchQuery] = useState("");
+  const [page,setPage]=useState(1)
 
   const filters = ["ALL", "EASY", "MED", "HARD", "SOLVED", "TODO"];
 
@@ -21,7 +22,8 @@ const Problems = () => {
     { name: "HEAP", count: 29, color: "#E54B4B" },
     { name: "GREEDY", count: 56, color: "#F7D046" },
   ];
-  const {problems: fetchedProblems}=useProblems()
+  const {problems: fetchedProblems,handlePageChange,pageSize,totalEasy,totalMedium,totalHard}=useProblems()
+  
   console.log(fetchedProblems)
   const problems = [
     { id: 1, name: "TWO SUM", difficulty: "EASY", acceptance: "49.2%", status: "solved", tags: ["ARRAY", "HASH"] },
@@ -37,7 +39,16 @@ const Problems = () => {
     { id: 11, name: "CONTAINER WITH MOST WATER", difficulty: "MED", acceptance: "54.8%", status: "solved", tags: ["ARRAY", "GREEDY"] },
     { id: 12, name: "INTEGER TO ROMAN", difficulty: "MED", acceptance: "62.1%", status: null, tags: ["MATH", "STRING"] },
   ];
-
+  const NavToNextPage=()=>{
+    if (fetchedProblems.length<pageSize)return
+    handlePageChange(page+1)
+    setPage(page+1)
+  }
+    const NavToPrevPage=()=>{
+    if (page<=1)return
+    handlePageChange(page-1)
+    setPage(page-1)
+  }
   const difficultyColor = (d: string) => {
     if (d === "EASY") return "text-[#4ECDC4]";
     if (d === "MED") return "text-[#F7D046]";
@@ -63,21 +74,20 @@ const Problems = () => {
           <h1 className="text-3xl text-white font-bold tracking-tight">
             PROBLEMS<span className="text-[#F7D046] ml-2">♛</span>
           </h1>
-          <p className="text-gray-500 text-xs font-mono mt-2">"THE MORE I PAINT THE MORE I LIKE EVERYTHING" — JMB</p>
         </div>
 
         {/* Stats Bar */}
         <div className="flex gap-6 mb-8 border-b-2 border-dashed border-[#333] pb-6">
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-[#4ECDC4] font-mono">847</span>
+            <span className="text-2xl font-bold text-[#4ECDC4] font-mono">{totalEasy}</span>
             <span className="text-[10px] text-gray-500 tracking-widest">EASY</span>
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-[#F7D046] font-mono">1,762</span>
+            <span className="text-2xl font-bold text-[#F7D046] font-mono">{totalMedium}</span>
             <span className="text-[10px] text-gray-500 tracking-widest">MEDIUM</span>
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-[#E54B4B] font-mono">753</span>
+            <span className="text-2xl font-bold text-[#E54B4B] font-mono">{totalHard}</span>
             <span className="text-[10px] text-gray-500 tracking-widest">HARD</span>
           </div>
           <div className="ml-auto flex items-baseline gap-2">
@@ -128,14 +138,14 @@ const Problems = () => {
                 <div className="col-span-6">TITLE</div>
                 <div className="col-span-2">ACCEPTANCE</div>
                 <div className="col-span-2">DIFFICULTY</div>
-                <div className="col-span-1">©</div>
+                <div className="col-span-1">DESC</div>
               </div>
 
               {/* Rows */}
-              {filteredProblems.map((p, idx) => (
+              {fetchedProblems.map((p, idx) => (
                 <NavLink
                   key={p.id}
-                  to={`/problems/${p.id}`}
+                  to={`/problems/${p.slug}`}
                   className="grid grid-cols-12 gap-4 px-4 py-3 border-b border-[#222] last:border-0 hover:bg-[#F7D046]/5 transition-colors group"
                 >
                   <div className="col-span-1">
@@ -144,16 +154,14 @@ const Problems = () => {
                     {!p.status && <span className="text-[#333]">○</span>}
                   </div>
                   <div className="col-span-6 text-gray-300 text-xs font-mono tracking-wide group-hover:text-white">
-                    {p.id}. {p.name}
+                     {p.main_heading}
                   </div>
                   <div className="col-span-2 text-gray-500 text-xs font-mono">{p.acceptance}</div>
-                  <div className={`col-span-2 text-[10px] tracking-widest ${difficultyColor(p.difficulty)}`}>
-                    {p.difficulty}
+                  <div className={`col-span-2 text-[10px] tracking-widest ${difficultyColor(p.difficulty.toUpperCase())}`}>
+                    {p.difficulty.toUpperCase()}
                   </div>
                   <div className="col-span-1 text-gray-600 text-xs">
-                    {idx % 3 === 0 && "©"}
-                    {idx % 3 === 1 && "™"}
-                    {idx % 3 === 2 && "®"}
+                    {p.description.substring(0, 9)+"..."}
                   </div>
                 </NavLink>
               ))}
@@ -161,15 +169,12 @@ const Problems = () => {
 
             {/* Pagination */}
             <div className="flex justify-center gap-2 mt-6">
-              <button className="px-3 py-2 border border-[#333] text-gray-500 text-xs font-mono hover:border-[#F7D046] hover:text-[#F7D046] transition-colors">
+              <button onClick={NavToPrevPage} className="px-3 py-2 border border-[#333] text-gray-500 text-xs font-mono hover:border-[#F7D046] hover:text-[#F7D046] transition-colors">
                 ← PREV
               </button>
-              <button className="px-3 py-2 bg-[#F7D046] text-black text-xs font-mono">1</button>
-              <button className="px-3 py-2 border border-[#333] text-gray-500 text-xs font-mono hover:border-[#F7D046] hover:text-[#F7D046] transition-colors">2</button>
-              <button className="px-3 py-2 border border-[#333] text-gray-500 text-xs font-mono hover:border-[#F7D046] hover:text-[#F7D046] transition-colors">3</button>
+              <button className="px-3 py-2 bg-[#F7D046] text-black text-xs font-mono">{page}</button>
               <span className="px-3 py-2 text-gray-600 text-xs font-mono">...</span>
-              <button className="px-3 py-2 border border-[#333] text-gray-500 text-xs font-mono hover:border-[#F7D046] hover:text-[#F7D046] transition-colors">42</button>
-              <button className="px-3 py-2 border border-[#333] text-gray-500 text-xs font-mono hover:border-[#F7D046] hover:text-[#F7D046] transition-colors">
+              <button onClick={NavToNextPage} className="px-3 py-2 border border-[#333] text-gray-500 text-xs font-mono hover:border-[#F7D046] hover:text-[#F7D046] transition-colors">
                 NEXT →
               </button>
             </div>
@@ -210,8 +215,7 @@ const Problems = () => {
 
             {/* Basquiat element */}
             <div className="mt-6 text-[#222] text-[8px] font-mono">
-              <p>"I AM NOT A BLACK ARTIST,</p>
-              <p>I AM AN ARTIST."</p>
+             
               <p className="text-[#E54B4B] mt-1">— SAMO© 1982</p>
             </div>
           </div>
