@@ -128,14 +128,14 @@ const Problems = () => {
                 <div className="col-span-6">TITLE</div>
                 <div className="col-span-2">ACCEPTANCE</div>
                 <div className="col-span-2">DIFFICULTY</div>
-                <div className="col-span-1">©</div>
+                <div className="col-span-1">DESC</div>
               </div>
 
               {/* Rows */}
-              {filteredProblems.map((p, idx) => (
+              {fetchedProblems.map((p, idx) => (
                 <NavLink
                   key={p.id}
-                  to={`/problems/${p.id}`}
+                  to={`/problems/${p.slug}`}
                   className="grid grid-cols-12 gap-4 px-4 py-3 border-b border-[#222] last:border-0 hover:bg-[#F7D046]/5 transition-colors group"
                 >
                   <div className="col-span-1">
@@ -144,16 +144,14 @@ const Problems = () => {
                     {!p.status && <span className="text-[#333]">○</span>}
                   </div>
                   <div className="col-span-6 text-gray-300 text-xs font-mono tracking-wide group-hover:text-white">
-                    {p.id}. {p.name}
+                     {p.main_heading}
                   </div>
                   <div className="col-span-2 text-gray-500 text-xs font-mono">{p.acceptance}</div>
                   <div className={`col-span-2 text-[10px] tracking-widest ${difficultyColor(p.difficulty)}`}>
                     {p.difficulty}
                   </div>
                   <div className="col-span-1 text-gray-600 text-xs">
-                    {idx % 3 === 0 && "©"}
-                    {idx % 3 === 1 && "™"}
-                    {idx % 3 === 2 && "®"}
+                    {p.description.substring(0, 9)+"..."}
                   </div>
                 </NavLink>
               ))}
