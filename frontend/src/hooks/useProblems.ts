@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getProblemTests, createProblemTest } from "@/services/auth/api/problemtest";
+import { getProblemTests, createProblemTest, filteredProblemsByDifficulty } from "@/services/auth/api/problemtest";
 import type { IProblemTest, ITestCase, IBoilerplate } from "@/Interfaces/problemstest/problemtest";
 
 const initialFormData: IProblemTest = {
@@ -20,9 +20,13 @@ export const useProblems = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(3);
   const [total, setTotal] = useState(0);
+  const [totalEasy, setTotalEasy] = useState(0);
+  const [totalMedium, setTotalMedium] = useState(0);
+  const [totalHard, setTotalHard] = useState(0);
 
   useEffect(() => {
     fetchProblems();
+    CountProblemsByDifficulty();
   }, [currentPage]);
 
   const fetchProblems = async () => {
@@ -38,6 +42,22 @@ export const useProblems = () => {
       setTotal(0);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const CountProblemsByDifficulty = async () => {
+    try {
+      const easyProblems = await filteredProblemsByDifficulty("easy");
+      setTotalEasy(easyProblems.data.total);
+      const mediumProblems = await filteredProblemsByDifficulty("medium");
+      setTotalMedium(mediumProblems.data.total);
+      const hardProblems = await filteredProblemsByDifficulty("hard");
+      setTotalHard(hardProblems.data.total);
+    } catch (error) {
+      console.error("Error counting problems by difficulty:", error);
+      setTotalEasy(0);
+      setTotalMedium(0);
+      setTotalHard(0);
     }
   };
 
@@ -126,6 +146,9 @@ export const useProblems = () => {
     pageSize,
     total,
     totalPages,
+    totalEasy,
+    totalMedium,
+    totalHard,
     handlePageChange
   };
 };
