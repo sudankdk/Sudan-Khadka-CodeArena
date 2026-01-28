@@ -20,7 +20,6 @@ export interface ProblemTestsResponse {
 export const getProblemTests = async (page: number = 1, pageSize: number = 10): Promise<ProblemTestsResponse> => {
     const resp = await problemtestClient.get<any>(`/problems?test-cases=true&page=${page}&page_size=${pageSize}`);
     console.log("Fetched Problem Tests:", resp);
-    // Return full response with pagination metadata
     return {
       problems: resp?.data?.problems || [],
       total: resp?.data?.total || 0,
