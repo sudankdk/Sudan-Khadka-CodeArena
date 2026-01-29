@@ -27,6 +27,7 @@ func SetUpEnv() (AppConfigs, error) {
 		if err := godotenv.Load(); err != nil {
 			log.Fatal("Error loading .env file")
 		}
+		log.Println("Loaded .env file")
 	}
 
 	cfg := AppConfigs{
@@ -40,6 +41,8 @@ func SetUpEnv() (AppConfigs, error) {
 		// GITHUBCALLBACKURL:  os.Getenv("GITHUB_CALLBACK_URL"),
 		GOOGLECALLBACKURL: os.Getenv("GOOGLE_CALLBACK_URL"),
 	}
+
+	
 
 	switch {
 	case cfg.PORT == "":
