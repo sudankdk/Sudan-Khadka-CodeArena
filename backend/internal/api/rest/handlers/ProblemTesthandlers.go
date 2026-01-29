@@ -72,7 +72,7 @@ func (u *ProblemTestHandlers) Create(ctx *fiber.Ctx) error {
 }
 
 func (u *ProblemTestHandlers) List(ctx *fiber.Ctx) error {
-	pageSize := 3
+	pageSize := 10
 	page, _ := strconv.Atoi(ctx.Query("page", "1"))
 	var q dto.ProblemListQueryDTO
 	if err := ctx.QueryParser(&q); err != nil {
