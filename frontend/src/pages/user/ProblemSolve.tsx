@@ -5,6 +5,7 @@ import { useAuth } from "@/services/auth/hook/useAuth";
 import useAuthStore from "@/services/auth/store/auth.store";
 import { Icons } from "@/const/Icons";
 import { getProblemTestBySlug } from "@/services/auth/api/problemtest";
+import { useExecuteCode } from "@/features/Problems/hooks/useExecute";
 
 const ProblemSolve = () => {
   const { id } = useParams();
@@ -54,24 +55,42 @@ const ProblemSolve = () => {
     setCode(boilerplate?.code || defaultCode[lang as keyof typeof defaultCode] || "");
   };
 
-  const handleRun = () => {
-    setIsRunning(true);
-    setTestTab("OUTPUT");
-    // Simulate running code
-    setTimeout(() => {
-      setOutput("Output: [0, 1]\n\nRuntime: 45ms\nMemory: 14.2 MB");
-      setIsRunning(false);
-    }, 1500);
-  };
+  // const handleRun = () => {
+  //   setIsRunning(true);
+  //   setTestTab("OUTPUT");
+  //   // Simulate running code
+  //   setTimeout(() => {
+  //     setOutput("Output: [0, 1]\n\nRuntime: 45ms\nMemory: 14.2 MB");
+  //     setIsRunning(false);
+  //   }, 1500);
+  // };
 
-  const handleSubmit = () => {
-    setIsRunning(true);
+ const executeMutation = useExecuteCode();
+
+const handleSubmit = async () => {
+  setIsRunning(true);
+  try {
+    const result = await executeMutation.mutateAsync({
+      language,
+      code, 
+      stdin: testCases[activeTestCase].input
+    });
+    const trimmedStdout = result.stdout.trim();
+    const trimmedExpected = testCases[activeTestCase].expected.trim();
+    console.log(trimmedStdout, "===", trimmedExpected);
+    if (trimmedStdout === trimmedExpected) {
+      setOutput("ACCEPTED\n\n" + result.stdout);
+    } else {
+      setOutput("WRONG ANSWER\n\n" + result.stdout);
+    }
+  } catch (error) {
+    setOutput("ERROR: " + error.message);
+  } finally {
+    setIsRunning(false);
     setTestTab("OUTPUT");
-    setTimeout(() => {
-      setOutput("✓ ACCEPTED\n\nRuntime: 45ms - Beats 89.2%\nMemory: 14.2 MB - Beats 76.4%\n\n3/3 Test Cases Passed");
-      setIsRunning(false);
-    }, 2000);
-  };
+  }
+};
+
 
   const getDifficultyColor = (difficulty?: string) => {
     if (difficulty === "easy") return "text-[#4ECDC4] border-[#4ECDC4]";
@@ -301,7 +320,7 @@ const ProblemSolve = () => {
                 <Editor
                   height="100%"
                   language={language}
-                  value={code}
+                  value={code || ""}
                   onChange={(value) => setCode(value || "")}
                   theme="vs-dark"
                   options={{
@@ -346,13 +365,13 @@ const ProblemSolve = () => {
                   </button>
                 </div>
                 <div className="flex gap-2 pr-2">
-                  <button
+                  {/* <button
                     onClick={handleRun}
                     disabled={isRunning}
                     className="px-4 py-1 border-2 border-[#4ECDC4] text-[#4ECDC4] text-[10px] tracking-widest hover:bg-[#4ECDC4] hover:text-black transition-colors disabled:opacity-50"
                   >
                     {isRunning ? "RUNNING..." : "▶ RUN"}
-                  </button>
+                  </button> */}
                   <button
                     onClick={handleSubmit}
                     disabled={isRunning}
@@ -457,8 +476,8 @@ const defaultCode: Record<string, string> = {
  * @return {number[]}
  */
 var twoSum = function(nums, target) {
-    // YOUR CODE HERE ♛
-    // "I START A PICTURE AND I FINISH IT"
+    # YOUR CODE HERE ♛
+    # "I START A PICTURE AND I FINISH IT"
     
     const seen = new Map();
     for (let i = 0; i < nums.length; i++) {
@@ -473,8 +492,8 @@ var twoSum = function(nums, target) {
 };
 `,
   go: `func twoSum(nums []int, target int) []int {
-    // YOUR CODE HERE ♛
-    // "I START A PICTURE AND I FINISH IT"
+    # YOUR CODE HERE ♛
+    # "I START A PICTURE AND I FINISH IT"
     
     seen := make(map[int]int)
     for i, num := range nums {
@@ -491,8 +510,8 @@ var twoSum = function(nums, target) {
   cpp: `class Solution {
 public:
     vector<int> twoSum(vector<int>& nums, int target) {
-        // YOUR CODE HERE ♛
-        // "I START A PICTURE AND I FINISH IT"
+        # YOUR CODE HERE ♛
+        # "I START A PICTURE AND I FINISH IT"
         
         unordered_map<int, int> seen;
         for (int i = 0; i < nums.size(); i++) {
