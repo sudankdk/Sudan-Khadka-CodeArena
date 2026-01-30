@@ -3,7 +3,7 @@ import Register from "./pages/Auth/register";
 import Login from "./pages/Auth/Login";
 import ProtectedRoute from "./services/auth/ProtectedRoute";
 import UserDashboard from "./pages/user/UserDashboard";
-import Problems from "./pages/user/Problems";
+import Problems from "./features/Problems/pages/Problems";
 import Arena from "./pages/user/Arena";
 import Profile from "./pages/user/Profile";
 import Kings from "./pages/user/Kings";

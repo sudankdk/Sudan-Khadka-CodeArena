@@ -5,6 +5,7 @@ import { useAuth } from "@/services/auth/hook/useAuth";
 import useAuthStore from "@/services/auth/store/auth.store";
 import { Icons } from "@/const/Icons";
 import { getProblemTestBySlug } from "@/services/auth/api/problemtest";
+import { useExecuteCode } from "@/features/Problems/hooks/useExecute";
 
 const ProblemSolve = () => {
   const { id } = useParams();
@@ -17,98 +18,97 @@ const ProblemSolve = () => {
   const [isRunning, setIsRunning] = useState(false);
   const [output, setOutput] = useState<string | null>(null);
   const [activeTestCase, setActiveTestCase] = useState(0);
+  const [data, setData] = useState<any>(null);
 
   const tabs = ["DESCRIPTION", "SOLUTIONS", "SUBMISSIONS"];
   const languages = [
-    { id: "python", name: "PYTHON" },
-    { id: "javascript", name: "JAVASCRIPT" },
-    { id: "go", name: "GO" },
+    { id: "python", name: "py" },
+    { id: "javascript", name: "js" },
+    { id: "go", name: "go" },
   ];
 
   const problemsTestCase = async()=>{
-   const data= await getProblemTestBySlug("two-sum");
-   console.log("Problem Data:",data);
+   const data= await getProblemTestBySlug(location.pathname.split("/")[2]);
+    setData(data.data);
+   console.log("Problem Data:",data.data);
   }
 
-  // Mock problem data
-  const problem = {
-    id: Number(id) || 1,
-    title: "TWO SUM",
-    difficulty: "EASY",
-    acceptance: "49.2%",
-    likes: 12453,
-    dislikes: 234,
-    description: `Given an array of integers **nums** and an integer **target**, return indices of the two numbers such that they add up to target.
+  // Mock problem data - replaced with API data
+  // const problem = { ... };
 
-You may assume that each input would have **exactly one solution**, and you may not use the same element twice.
-
-You can return the answer in any order.`,
-    examples: [
-      {
-        input: "nums = [2,7,11,15], target = 9",
-        output: "[0,1]",
-        explanation: "Because nums[0] + nums[1] == 9, we return [0, 1].",
-      },
-      {
-        input: "nums = [3,2,4], target = 6",
-        output: "[1,2]",
-        explanation: null,
-      },
-      {
-        input: "nums = [3,3], target = 6",
-        output: "[0,1]",
-        explanation: null,
-      },
-    ],
-    constraints: [
-      "2 <= nums.length <= 10^4",
-      "-10^9 <= nums[i] <= 10^9",
-      "-10^9 <= target <= 10^9",
-      "Only one valid answer exists.",
-    ],
-    tags: ["ARRAY", "HASH TABLE"],
-    companies: ["GOOGLE", "AMAZON", "META", "APPLE"],
-  };
-
-  const testCases = [
+  const testCases = data?.test_cases || [
     { input: "[2,7,11,15]\n9", expected: "[0,1]" },
     { input: "[3,2,4]\n6", expected: "[1,2]" },
     { input: "[3,3]\n6", expected: "[0,1]" },
   ];
 
+  const getApiLanguage = (lang: string) => {
+    if (lang === 'python') return 'py';
+    if (lang === 'javascript') return 'js';
+    return lang; // go remains go
+  };
+
   const handleLanguageChange = (lang: string) => {
     setLanguage(lang);
-    setCode(defaultCode[lang as keyof typeof defaultCode] || "");
+    const apiLang = getApiLanguage(lang);
+    const boilerplate = data?.boilerplates?.find(b => b.language === apiLang);
+    setCode(boilerplate?.code || defaultCode[lang as keyof typeof defaultCode] || "");
   };
 
-  const handleRun = () => {
-    setIsRunning(true);
+  // const handleRun = () => {
+  //   setIsRunning(true);
+  //   setTestTab("OUTPUT");
+  //   // Simulate running code
+  //   setTimeout(() => {
+  //     setOutput("Output: [0, 1]\n\nRuntime: 45ms\nMemory: 14.2 MB");
+  //     setIsRunning(false);
+  //   }, 1500);
+  // };
+
+ const executeMutation = useExecuteCode();
+
+const handleSubmit = async () => {
+  setIsRunning(true);
+  try {
+    const result = await executeMutation.mutateAsync({
+      language,
+      code, 
+      stdin: testCases[activeTestCase].input
+    });
+    const trimmedStdout = result.stdout.trim();
+    const trimmedExpected = testCases[activeTestCase].expected.trim();
+    console.log(trimmedStdout, "===", trimmedExpected);
+    if (trimmedStdout === trimmedExpected) {
+      setOutput("ACCEPTED\n\n" + result.stdout);
+    } else {
+      setOutput("WRONG ANSWER\n\n" + result.stdout);
+    }
+  } catch (error) {
+    setOutput("ERROR: " + error.message);
+  } finally {
+    setIsRunning(false);
     setTestTab("OUTPUT");
-    // Simulate running code
-    setTimeout(() => {
-      setOutput("Output: [0, 1]\n\nRuntime: 45ms\nMemory: 14.2 MB");
-      setIsRunning(false);
-    }, 1500);
-  };
+  }
+};
 
-  const handleSubmit = () => {
-    setIsRunning(true);
-    setTestTab("OUTPUT");
-    setTimeout(() => {
-      setOutput("✓ ACCEPTED\n\nRuntime: 45ms - Beats 89.2%\nMemory: 14.2 MB - Beats 76.4%\n\n3/3 Test Cases Passed");
-      setIsRunning(false);
-    }, 2000);
-  };
 
-  const getDifficultyColor = () => {
-    if (problem.difficulty === "EASY") return "text-[#4ECDC4] border-[#4ECDC4]";
-    if (problem.difficulty === "MEDIUM") return "text-[#F7D046] border-[#F7D046]";
+  const getDifficultyColor = (difficulty?: string) => {
+    if (difficulty === "easy") return "text-[#4ECDC4] border-[#4ECDC4]";
+    if (difficulty === "medium") return "text-[#F7D046] border-[#F7D046]";
     return "text-[#E54B4B] border-[#E54B4B]";
   };
 
   useEffect(()=>{
     problemsTestCase();
-  })
+  },[])
+
+  useEffect(() => {
+    const apiLang = getApiLanguage(language);
+    const boilerplate = data?.boilerplates?.find(b => b.language === apiLang);
+    if (boilerplate?.code) {
+      setCode(boilerplate.code);
+    }
+  }, [data, language]);
 
   return (
     <div className="h-screen w-full bg-[#0d0d0d] flex flex-col">
@@ -149,18 +149,18 @@ You can return the answer in any order.`,
               ← BACK
             </NavLink>
             <div className="flex items-center gap-3">
-              <span className="text-gray-500 font-mono">{problem.id}.</span>
-              <h1 className="text-white font-bold tracking-wider">{problem.title}</h1>
-              <span className={`px-2 py-1 text-[10px] tracking-widest border ${getDifficultyColor()}`}>
-                {problem.difficulty}
+              {/* <span className="text-gray-500 font-mono">{data?.id || '1'}.</span> */}
+              <h1 className="text-white font-bold tracking-wider">{data?.main_heading || 'Loading...'}</h1>
+              <span className={`px-2 py-1 text-[10px] tracking-widest border ${getDifficultyColor(data?.difficulty)}`}>
+                {data?.difficulty || 'UNKNOWN'}
               </span>
             </div>
           </div>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2 text-xs text-gray-500">
-              <span>♥ {problem.likes}</span>
+              <span>♥ {data?.likes || 0}</span>
               <span>|</span>
-              <span>↓ {problem.dislikes}</span>
+              <span>↓ {data?.dislikes || 0}</span>
             </div>
             <span className="text-[10px] text-gray-600 tracking-widest">© SAMO</span>
           </div>
@@ -194,19 +194,11 @@ You can return the answer in any order.`,
                   {/* Description */}
                   <div>
                     <p className="text-gray-300 text-sm leading-relaxed whitespace-pre-line">
-                      {problem.description.split("**").map((part, idx) =>
-                        idx % 2 === 1 ? (
-                          <code key={idx} className="text-[#F7D046] bg-[#F7D046]/10 px-1">
-                            {part}
-                          </code>
-                        ) : (
-                          part
-                        )
-                      )}
+                      {data?.description}
                     </p>
                   </div>
 
-                  {/* Examples */}
+                  {/* Examples
                   <div className="space-y-4">
                     {problem.examples.map((ex, idx) => (
                       <div key={idx} className="border border-[#333] p-3">
@@ -232,7 +224,7 @@ You can return the answer in any order.`,
                   </div>
 
                   {/* Constraints */}
-                  <div>
+                  {/* <div>
                     <p className="text-[10px] text-gray-600 tracking-widest mb-2">CONSTRAINTS ®</p>
                     <ul className="space-y-1">
                       {problem.constraints.map((c, idx) => (
@@ -241,25 +233,24 @@ You can return the answer in any order.`,
                         </li>
                       ))}
                     </ul>
-                  </div>
+                  </div> } */}
 
                   {/* Tags */}
                   <div>
                     <p className="text-[10px] text-gray-600 tracking-widest mb-2">TOPICS</p>
                     <div className="flex gap-2">
-                      {problem.tags.map((tag) => (
+                      
                         <span
-                          key={tag}
                           className="px-2 py-1 border border-[#4ECDC4] text-[#4ECDC4] text-[10px] tracking-widest"
                         >
-                          {tag}
+                          {data?.tag}
                         </span>
-                      ))}
+                      
                     </div>
                   </div>
 
                   {/* Companies */}
-                  <div>
+                  {/* <div>
                     <p className="text-[10px] text-gray-600 tracking-widest mb-2">COMPANIES ™</p>
                     <div className="flex gap-2">
                       {problem.companies.map((company) => (
@@ -271,7 +262,7 @@ You can return the answer in any order.`,
                         </span>
                       ))}
                     </div>
-                  </div>
+                  </div> */}
                 </div>
               )}
 
@@ -329,7 +320,7 @@ You can return the answer in any order.`,
                 <Editor
                   height="100%"
                   language={language}
-                  value={code}
+                  value={code || ""}
                   onChange={(value) => setCode(value || "")}
                   theme="vs-dark"
                   options={{
@@ -374,13 +365,13 @@ You can return the answer in any order.`,
                   </button>
                 </div>
                 <div className="flex gap-2 pr-2">
-                  <button
+                  {/* <button
                     onClick={handleRun}
                     disabled={isRunning}
                     className="px-4 py-1 border-2 border-[#4ECDC4] text-[#4ECDC4] text-[10px] tracking-widest hover:bg-[#4ECDC4] hover:text-black transition-colors disabled:opacity-50"
                   >
                     {isRunning ? "RUNNING..." : "▶ RUN"}
-                  </button>
+                  </button> */}
                   <button
                     onClick={handleSubmit}
                     disabled={isRunning}
@@ -397,7 +388,7 @@ You can return the answer in any order.`,
                   <div>
                     {/* Test Case Tabs */}
                     <div className="flex gap-2 mb-3">
-                      {testCases.map((_, idx) => (
+                      {(data?.test_cases || testCases).map((_, idx) => (
                         <button
                           key={idx}
                           onClick={() => setActiveTestCase(idx)}
@@ -420,7 +411,7 @@ You can return the answer in any order.`,
                       <div>
                         <p className="text-[10px] text-gray-600 tracking-widest mb-1">INPUT</p>
                         <textarea
-                          value={testCases[activeTestCase]?.input || ""}
+                          value={(data?.testcases || testCases)[activeTestCase]?.input || ""}
                           readOnly
                           className="w-full bg-[#1a1a1a] border border-[#333] p-2 text-[#4ECDC4] text-sm font-mono resize-none h-16"
                         />
@@ -485,8 +476,8 @@ const defaultCode: Record<string, string> = {
  * @return {number[]}
  */
 var twoSum = function(nums, target) {
-    // YOUR CODE HERE ♛
-    // "I START A PICTURE AND I FINISH IT"
+    # YOUR CODE HERE ♛
+    # "I START A PICTURE AND I FINISH IT"
     
     const seen = new Map();
     for (let i = 0; i < nums.length; i++) {
@@ -501,8 +492,8 @@ var twoSum = function(nums, target) {
 };
 `,
   go: `func twoSum(nums []int, target int) []int {
-    // YOUR CODE HERE ♛
-    // "I START A PICTURE AND I FINISH IT"
+    # YOUR CODE HERE ♛
+    # "I START A PICTURE AND I FINISH IT"
     
     seen := make(map[int]int)
     for i, num := range nums {
@@ -519,8 +510,8 @@ var twoSum = function(nums, target) {
   cpp: `class Solution {
 public:
     vector<int> twoSum(vector<int>& nums, int target) {
-        // YOUR CODE HERE ♛
-        // "I START A PICTURE AND I FINISH IT"
+        # YOUR CODE HERE ♛
+        # "I START A PICTURE AND I FINISH IT"
         
         unordered_map<int, int> seen;
         for (int i = 0; i < nums.size(); i++) {
