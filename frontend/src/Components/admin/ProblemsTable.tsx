@@ -1,4 +1,4 @@
-import type { IProblemTest } from "@/Interfaces/problemstest/problemtest";
+import type { IProblemTest } from '@/types/problemstest/problemtest';
 import { useNavigate } from "react-router-dom";
 
 

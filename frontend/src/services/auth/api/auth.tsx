@@ -1,5 +1,5 @@
-import { server } from "../../../const/server";
-import type { IUserLogin, IUserRegister } from "../../../Interfaces/auth/auth";
+import { server } from '../../../constants/server';
+import type { IUserLogin, IUserRegister } from '../../../types/auth/auth';
 import { ApiClient } from "../client";
 
 export const authClient = new ApiClient(server);

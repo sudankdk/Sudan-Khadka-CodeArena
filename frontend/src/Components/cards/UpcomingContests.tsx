@@ -1,4 +1,4 @@
-import { Icons } from "@/const/Icons";
+import { Icons } from '@/constants/Icons';
 import { cn } from "@/lib/utils";
 
 interface Contest {

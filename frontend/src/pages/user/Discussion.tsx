@@ -1,4 +1,4 @@
-import UserDashboardLayout from "@/Components/UserDashboardLayout";
+import UserDashboardLayout from '@/components/UserDashboardLayout';
 import { useState } from "react";
 import { NavLink } from "react-router-dom";
 

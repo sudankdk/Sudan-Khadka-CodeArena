@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { getProblemTests, createProblemTest, filteredProblemsByDifficulty } from "@/services/auth/api/problemtest";
-import type { IProblemTest, ITestCase, IBoilerplate } from "@/Interfaces/problemstest/problemtest";
+import type { IProblemTest, ITestCase, IBoilerplate } from '@/types/problemstest/problemtest';
 
 const initialFormData: IProblemTest = {
   main_heading: "",
@@ -50,11 +50,11 @@ export const useProblems = () => {
   const CountProblemsByDifficulty = async () => {
     try {
       const easyProblems = await filteredProblemsByDifficulty("easy");
-      setTotalEasy(easyProblems.data.total);
+      setTotalEasy(easyProblems.length);
       const mediumProblems = await filteredProblemsByDifficulty("medium");
-      setTotalMedium(mediumProblems.data.total);
+      setTotalMedium(mediumProblems.length);
       const hardProblems = await filteredProblemsByDifficulty("hard");
-      setTotalHard(hardProblems.data.total);
+      setTotalHard(hardProblems.length);
     } catch (error) {
       console.error("Error counting problems by difficulty:", error);
       setTotalEasy(0);

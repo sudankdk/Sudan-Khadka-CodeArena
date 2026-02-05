@@ -1,7 +1,7 @@
 import { useState } from "react";
 import useAuthStore from "../store/auth.store";
 import { loginUser, logoutUser, registerUser } from "../api/auth";
-import type { IUserLogin, IUserRegister } from "../../../Interfaces/auth/auth";
+import type { IUserLogin, IUserRegister } from '../../../types/auth/auth';
 
 export const useAuth = () => {
   const [loading, setLoading] = useState<boolean>(false);

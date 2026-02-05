@@ -1,6 +1,6 @@
-import { server } from "../../../const/server";
+import { server } from '../../../constants/server';
 import { ApiClient } from "../client";
-import type { IProblemTest } from "@/Interfaces/problemstest/problemtest";
+import type { IProblemTest } from '@/types/problemstest/problemtest';
 
 export const problemtestClient = new ApiClient(server);
 

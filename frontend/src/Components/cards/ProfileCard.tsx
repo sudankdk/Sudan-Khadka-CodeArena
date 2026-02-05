@@ -1,4 +1,4 @@
-import { Icons } from "@/const/Icons";
+import { Icons } from '@/constants/Icons';
 import useAuthStore from "@/services/auth/store/auth.store";
 
 const ProfileCard = () => {

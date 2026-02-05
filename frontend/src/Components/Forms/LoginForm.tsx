@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "../../services/auth/hook/useAuth";
 import { useLocation, useNavigate } from "react-router-dom";
 import useAuthStore from "../../services/auth/store/auth.store";
-import { server } from "../../const/server";
+import { server } from '../../constants/server';
 import { FcGoogle } from "react-icons/fc";
 
 const LoginForm = () => {

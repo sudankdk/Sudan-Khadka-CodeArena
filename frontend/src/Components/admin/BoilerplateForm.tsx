@@ -1,7 +1,7 @@
-import { Textarea } from "@/Components/ui/textarea";
-import { Button } from "@/Components/ui/button";
-import { Label } from "@/Components/ui/label";
-import type { IBoilerplate } from "@/Interfaces/problemstest/problemtest";
+import Editor from "@monaco-editor/react";
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import type { IBoilerplate } from '@/types/problemstest/problemtest';
 
 interface BoilerplateFormProps {
   boilerplates: IBoilerplate[];
@@ -66,13 +66,18 @@ export const BoilerplateForm = ({
             </div>
             <div>
               <Label htmlFor={`code-${index}`}>Code</Label>
-              <Textarea
-                id={`code-${index}`}
-                placeholder="Enter boilerplate code..."
+              <Editor
+                height="300px"
+                language={boilerplate.Language === "go" ? "go" : boilerplate.Language === "python" ? "python" : "javascript"}
                 value={boilerplate.code}
-                onChange={(e) => onBoilerplateChange(index, "code", e.target.value)}
-                rows={6}
-                required
+                theme="vs-dark"
+                onChange={(value) => onBoilerplateChange(index, "code", value || "")}
+                options={{
+                  minimap: { enabled: false },
+                  fontSize: 14,
+                  scrollBeyondLastLine: false,
+                  automaticLayout: true,
+                }}
               />
             </div>
           </div>

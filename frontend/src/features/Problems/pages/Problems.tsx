@@ -1,4 +1,4 @@
-import UserDashboardLayout from "@/Components/UserDashboardLayout";
+import UserDashboardLayout from '@/components/UserDashboardLayout';
 import { useProblem } from "@/features/Problems/hooks/useProblem";
 import { useProblemCounts } from "@/features/Problems/hooks/useProblemCounts";
 import { useState } from "react";
@@ -7,16 +7,16 @@ import { NavLink } from "react-router-dom";
 const Problems = () => {
   const [activeFilter, setActiveFilter] = useState("ALL");
   const [searchQuery, setSearchQuery] = useState("");
-  const [page,setPage]=useState(1)
-  
-  const pageSize =10
-  const {data,isLoading} = useProblem(page,pageSize)
+  const [page, setPage] = useState(1)
+
+  const pageSize = 10
+  const { data } = useProblem(page, pageSize)
   const { data: counts } = useProblemCounts();
 
-const easy = counts?.easy ?? 0;
-const medium = counts?.medium ?? 0;
-const hard = counts?.hard ?? 0;
-const total = counts?.total ?? 0;
+  const easy = counts?.easy ?? 0;
+  const medium = counts?.medium ?? 0;
+  const hard = counts?.hard ?? 0;
+  const total = counts?.total ?? 0;
   const filters = ["ALL", "EASY", "MED", "HARD", "SOLVED", "TODO"];
 
   const topics = [
@@ -31,31 +31,18 @@ const total = counts?.total ?? 0;
     { name: "HEAP", count: 29, color: "#E54B4B" },
     { name: "GREEDY", count: 56, color: "#F7D046" },
   ];
-  const handlePageChange = (page: number) => setPage(page);
-  
-  const problems = [
-    { id: 1, name: "TWO SUM", difficulty: "EASY", acceptance: "49.2%", status: "solved", tags: ["ARRAY", "HASH"] },
-    { id: 2, name: "ADD TWO NUMBERS", difficulty: "MED", acceptance: "40.1%", status: "solved", tags: ["LINKED LIST", "MATH"] },
-    { id: 3, name: "LONGEST SUBSTRING WITHOUT REPEATING", difficulty: "MED", acceptance: "34.5%", status: "attempted", tags: ["STRING", "HASH"] },
-    { id: 4, name: "MEDIAN OF TWO SORTED ARRAYS", difficulty: "HARD", acceptance: "38.9%", status: null, tags: ["ARRAY", "BINARY"] },
-    { id: 5, name: "LONGEST PALINDROMIC SUBSTRING", difficulty: "MED", acceptance: "32.8%", status: null, tags: ["STRING", "DP"] },
-    { id: 6, name: "ZIGZAG CONVERSION", difficulty: "MED", acceptance: "45.2%", status: "solved", tags: ["STRING"] },
-    { id: 7, name: "REVERSE INTEGER", difficulty: "MED", acceptance: "27.8%", status: null, tags: ["MATH"] },
-    { id: 8, name: "STRING TO INTEGER (ATOI)", difficulty: "MED", acceptance: "17.2%", status: "attempted", tags: ["STRING"] },
-    { id: 9, name: "PALINDROME NUMBER", difficulty: "EASY", acceptance: "54.3%", status: "solved", tags: ["MATH"] },
-    { id: 10, name: "REGULAR EXPRESSION MATCHING", difficulty: "HARD", acceptance: "28.1%", status: null, tags: ["STRING", "DP"] },
-    { id: 11, name: "CONTAINER WITH MOST WATER", difficulty: "MED", acceptance: "54.8%", status: "solved", tags: ["ARRAY", "GREEDY"] },
-    { id: 12, name: "INTEGER TO ROMAN", difficulty: "MED", acceptance: "62.1%", status: null, tags: ["MATH", "STRING"] },
-  ];
-  const NavToNextPage=()=>{
-    if (data?.total<pageSize)return
+
+
+
+  const NavToNextPage = () => {
+    if ((data?.total || 0) < pageSize) return
     // handlePageChange(page+1)
-    setPage((p)=>p+1)
+    setPage((p) => p + 1)
   }
-    const NavToPrevPage=()=>{
-    if (page<=1)return
+  const NavToPrevPage = () => {
+    if (page <= 1) return
     // handlePageChange(page-1)
-    setPage((p)=>p-1)
+    setPage((p) => p - 1)
   }
   const difficultyColor = (d: string) => {
     if (d === "EASY") return "text-[#4ECDC4]";
@@ -127,11 +114,10 @@ const total = counts?.total ?? 0;
                 <button
                   key={f}
                   onClick={() => setActiveFilter(f)}
-                  className={`px-4 py-2 text-[10px] font-mono tracking-widest transition-all ${
-                    activeFilter === f
-                      ? "bg-[#F7D046] text-black"
-                      : "text-gray-500 hover:text-white border border-[#333] hover:border-[#F7D046]"
-                  }`}
+                  className={`px-4 py-2 text-[10px] font-mono tracking-widest transition-all ${activeFilter === f
+                    ? "bg-[#F7D046] text-black"
+                    : "text-gray-500 hover:text-white border border-[#333] hover:border-[#F7D046]"
+                    }`}
                 >
                   {f}
                 </button>
@@ -162,14 +148,14 @@ const total = counts?.total ?? 0;
                     {!p.status && <span className="text-[#333]">○</span>}
                   </div> */}
                   <div className="col-span-6 text-gray-300 text-xs font-mono tracking-wide group-hover:text-white">
-                     {p.main_heading || 'Untitled'}
+                    {p.main_heading || 'Untitled'}
                   </div>
                   <div className="col-span-2 text-gray-500 text-xs font-mono">{p.acceptance || 'N/A'}</div>
                   <div className={`col-span-2 text-[10px] tracking-widest ${difficultyColor((p.difficulty || '').toUpperCase())}`}>
                     {(p.difficulty || 'UNKNOWN').toUpperCase()}
                   </div>
                   <div className="col-span-1 text-gray-600 text-xs">
-                    {p.description.substring(0, 15)+"..."}
+                    {p.description.substring(0, 15) + "..."}
                   </div>
                 </NavLink>
               ))}
@@ -227,7 +213,7 @@ const total = counts?.total ?? 0;
               </button>
             </div>
 
-           
+
           </div>
         </div>
       </div>

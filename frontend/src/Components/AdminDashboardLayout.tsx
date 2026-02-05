@@ -1,12 +1,10 @@
-import type React from "react";
+
 import AdminSidebar from "./AdminSidebar";
 import { useAuth } from "@/services/auth/hook/useAuth";
 
 const AdminDashboardLayout = ({ children }: { children: React.ReactNode }) => {
-   const { logout } = useAuth();
-    const handleLogout = () => {
-      logout();
-    };
+  const { logout } = useAuth();
+
   return (
     <div className="flex h-screen w-full bg-gray-50">
       <AdminSidebar />

@@ -1,5 +1,5 @@
-import UserDashboardLayout from "@/Components/UserDashboardLayout";
-import { useState } from "react";
+import React, { useState } from "react";
+import UserDashboardLayout from '@/components/UserDashboardLayout';
 
 interface Topic {
   id: string;
@@ -83,7 +83,7 @@ const Roadmap = () => {
   };
 
   const drawConnections = () => {
-    const lines: JSX.Element[] = [];
+    const lines: React.JSX.Element[] = [];
     neetcodeTopics.forEach((topic) => {
       topic.dependencies.forEach((depId) => {
         const dep = neetcodeTopics.find((t) => t.id === depId);
@@ -150,11 +150,10 @@ const Roadmap = () => {
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-5 py-2 text-[10px] font-mono tracking-widest transition-all ${
-                activeTab === tab
-                  ? "bg-[#F7D046] text-black"
-                  : "text-gray-500 hover:text-white border border-[#333] hover:border-[#F7D046]"
-              }`}
+              className={`px-5 py-2 text-[10px] font-mono tracking-widest transition-all ${activeTab === tab
+                ? "bg-[#F7D046] text-black"
+                : "text-gray-500 hover:text-white border border-[#333] hover:border-[#F7D046]"
+                }`}
             >
               {tab}
             </button>
@@ -180,9 +179,8 @@ const Roadmap = () => {
                 <button
                   key={topic.id}
                   onClick={() => topic.status !== "locked" && setSelectedTopic(topic)}
-                  className={`absolute transform -translate-x-1/2 px-3 py-2 border-2 text-[10px] font-mono tracking-wider transition-all z-10 ${getStatusColor(topic.status)} ${
-                    topic.status === "locked" ? "cursor-not-allowed" : "hover:scale-105 cursor-pointer"
-                  }`}
+                  className={`absolute transform -translate-x-1/2 px-3 py-2 border-2 text-[10px] font-mono tracking-wider transition-all z-10 ${getStatusColor(topic.status)} ${topic.status === "locked" ? "cursor-not-allowed" : "hover:scale-105 cursor-pointer"
+                    }`}
                   style={{ left: `${topic.x}%`, top: `${topic.y}%` }}
                   disabled={topic.status === "locked"}
                 >
@@ -320,7 +318,7 @@ const Roadmap = () => {
           <div className="max-w-2xl mx-auto">
             <div className="border-2 border-[#F7D046] p-6 relative">
               <span className="absolute -top-3 left-4 bg-[#0d0d0d] px-2 text-[#F7D046] text-xs tracking-widest">CREATE ROADMAP</span>
-              
+
               <div className="space-y-6 mt-4">
                 <div>
                   <label className="text-[10px] text-gray-500 tracking-widest block mb-2">ROADMAP NAME</label>

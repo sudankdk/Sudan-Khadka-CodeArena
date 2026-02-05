@@ -1,6 +1,6 @@
 import React from "react";
-import type { AuthLayoutProp } from "../Interfaces/auth/auth";
-import { logo } from "@/const/Images"
+import type { AuthLayoutProp } from '../types/auth/auth';
+import { logo } from '@/constants/Images'
 
 
 const AuthLayout: React.FC<AuthLayoutProp> = ({ children }) => {

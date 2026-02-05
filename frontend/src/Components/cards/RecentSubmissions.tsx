@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { Icons } from "@/const/Icons";
+import { Icons } from '@/constants/Icons';
 
 interface Submission {
   id: string;

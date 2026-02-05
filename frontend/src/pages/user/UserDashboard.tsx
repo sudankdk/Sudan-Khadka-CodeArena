@@ -1,4 +1,4 @@
-import UserDashboardLayout from "@/Components/UserDashboardLayout";
+import UserDashboardLayout from '@/components/UserDashboardLayout';
 import useAuthStore from "@/services/auth/store/auth.store";
 import { NavLink } from "react-router-dom";
 

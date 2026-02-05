@@ -1,11 +1,11 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/Components/ui/dialog";
-import { Button } from "@/Components/ui/button";
-import { Input } from "@/Components/ui/input";
-import { Textarea } from "@/Components/ui/textarea";
-import { Label } from "@/Components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { TestCaseForm } from "./TestCaseForm";
 import { BoilerplateForm } from "./BoilerplateForm";
-import type { IProblemTest, ITestCase, IBoilerplate } from "@/Interfaces/problemstest/problemtest";
+import type { IProblemTest, ITestCase, IBoilerplate } from '@/types/problemstest/problemtest';
 
 interface CreateProblemDialogProps {
   isOpen: boolean;

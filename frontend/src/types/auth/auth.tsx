@@ -9,7 +9,7 @@ export interface IAuth {
   setUser: (user: User | null) => void;
   clear: () => void;
   initialize: () => Promise<void>;
-  error: null;
+  error: string | null;
 }
 
 export interface IUserRegister {
