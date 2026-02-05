@@ -1,4 +1,4 @@
-import {  server2 } from "../../../const/server";
+import {  server2 } from '../../../constants/server';
 import { ApiClient } from "../client";
 export const ceeClient = new ApiClient(server2);
 

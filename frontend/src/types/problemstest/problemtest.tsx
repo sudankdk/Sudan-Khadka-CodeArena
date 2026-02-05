@@ -1,11 +1,13 @@
 export interface IProblemTest {
-    main_heading: string;
-    slug: string;
-    description: string;
-    tag: string;
-    difficulty: "easy" | "medium" | "hard";
-    test_cases: ITestCase[];
-    boilerplate: IBoilerplate[];
+  main_heading: string;
+  slug: string;
+  description: string;
+  tag: string;
+  difficulty: "easy" | "medium" | "hard";
+  test_cases: ITestCase[];
+  boilerplate: IBoilerplate[];
+  acceptance?: string;
+  status?: string | null;
 }
 
 
@@ -14,9 +16,9 @@ export interface ITestCase {
   expected: string;
 }
 
-export interface IBoilerplate{
+export interface IBoilerplate {
   code: string;
-  Language : string;
+  Language: string;
 }
 
 //  "main_heading": "Two Sum",

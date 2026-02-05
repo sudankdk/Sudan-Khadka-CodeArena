@@ -1,13 +1,13 @@
-import AdminDashboardLayout from "../../Components/AdminDashboardLayout";
-import { Button } from "@/Components/ui/button";
-import { ProblemsTable } from "@/Components/admin/ProblemsTable";
-import { CreateProblemDialog } from "@/Components/admin/CreateProblemDialog";
-import { Pagination } from "@/Components/ui/pagination";
-import { use, useState } from "react";
+import AdminDashboardLayout from '../../components/AdminDashboardLayout';
+import { Button } from '@/components/ui/button';
+import { ProblemsTable } from '@/components/admin/ProblemsTable';
+import { CreateProblemDialog } from '@/components/admin/CreateProblemDialog';
+import { Pagination } from '@/components/ui/pagination';
+import { useState } from "react";
 import { useProblem } from "@/features/Problems/hooks/useProblem";
 import { useCreateProblem } from "@/features/Problems/hooks/useCreateProblem";
 import { useProblemCounts } from "@/features/Problems/hooks/useProblemCounts";
-import type { IBoilerplate, IProblemTest, ITestCase } from "@/Interfaces/problemstest/problemtest";
+import type { IBoilerplate, IProblemTest, ITestCase } from '@/types/problemstest/problemtest';
 
 const initialFormData: IProblemTest = {
   main_heading: "",
@@ -27,71 +27,71 @@ const AdminProblems = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formData, setFormData] = useState(initialFormData);
 
-  
+
   //server state
-  const {data,isLoading} = useProblem(currentPage, pageSize)
-  const createProblemMutation = useCreateProblem(); 
- 
+  const { data, isLoading } = useProblem(currentPage, pageSize)
+  const createProblemMutation = useCreateProblem();
+
   const total = useProblemCounts().data?.total || 0;
   const totalPages = Math.ceil(total / pageSize);
   const problems = data?.problems || [];
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-      const { name, value } = e.target;
-      setFormData(prev => ({ ...prev, [name]: value }));
-    };
-  
-    const handleTestCaseChange = (index: number, field: keyof ITestCase, value: string) => {
-      const newTestCases = [...formData.test_cases];
-      newTestCases[index] = { ...newTestCases[index], [field]: value };
-      setFormData(prev => ({ ...prev, test_cases: newTestCases }));
-    };
-  
-    const addTestCase = () => {
-      setFormData(prev => ({
-        ...prev,
-        test_cases: [...prev.test_cases, { input: "", expected: "" }]
-      }));
-    };
-  
-    const removeTestCase = (index: number) => {
-      setFormData(prev => ({
-        ...prev,
-        test_cases: prev.test_cases.filter((_, i) => i !== index)
-      }));
-    };
-  
-    const handleBoilerplateChange = (index: number, field: keyof IBoilerplate, value: string) => {
-      const newBoilerplates = [...formData.boilerplate];
-      newBoilerplates[index] = { ...newBoilerplates[index], [field]: value };
-      setFormData(prev => ({ ...prev, boilerplate: newBoilerplates }));
-    };
-  
-    const addBoilerplate = () => {
-      setFormData(prev => ({
-        ...prev,
-        boilerplate: [...prev.boilerplate, { code: "", Language: "" }]
-      }));
-    };
-  
-    const removeBoilerplate = (index: number) => {
-      setFormData(prev => ({
-        ...prev,
-        boilerplate: prev.boilerplate.filter((_, i) => i !== index)
-      }));
-    };
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
 
-    const handleSubmit = async (e: React.FormEvent) => {
-      e.preventDefault();
-      createProblemMutation.mutate(formData, {
-        onSuccess: () => {
-          setIsDialogOpen(false);
-          setFormData(initialFormData);
-          setCurrentPage(1);
-        }
-      });
-    };
-    const handlePageChange = (page: number) => setCurrentPage(page);
+  const handleTestCaseChange = (index: number, field: keyof ITestCase, value: string) => {
+    const newTestCases = [...formData.test_cases];
+    newTestCases[index] = { ...newTestCases[index], [field]: value };
+    setFormData(prev => ({ ...prev, test_cases: newTestCases }));
+  };
+
+  const addTestCase = () => {
+    setFormData(prev => ({
+      ...prev,
+      test_cases: [...prev.test_cases, { input: "", expected: "" }]
+    }));
+  };
+
+  const removeTestCase = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      test_cases: prev.test_cases.filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleBoilerplateChange = (index: number, field: keyof IBoilerplate, value: string) => {
+    const newBoilerplates = [...formData.boilerplate];
+    newBoilerplates[index] = { ...newBoilerplates[index], [field]: value };
+    setFormData(prev => ({ ...prev, boilerplate: newBoilerplates }));
+  };
+
+  const addBoilerplate = () => {
+    setFormData(prev => ({
+      ...prev,
+      boilerplate: [...prev.boilerplate, { code: "", Language: "" }]
+    }));
+  };
+
+  const removeBoilerplate = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      boilerplate: prev.boilerplate.filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    createProblemMutation.mutate(formData, {
+      onSuccess: () => {
+        setIsDialogOpen(false);
+        setFormData(initialFormData);
+        setCurrentPage(1);
+      }
+    });
+  };
+  const handlePageChange = (page: number) => setCurrentPage(page);
 
   return (
     <AdminDashboardLayout>
@@ -104,7 +104,7 @@ const AdminProblems = () => {
         </div>
 
         <div className="bg-white shadow rounded-lg overflow-hidden">
-          <ProblemsTable problems={problems} loading={isLoading } />
+          <ProblemsTable problems={problems} loading={isLoading} />
           {!isLoading && problems.length > 0 && (
             <Pagination
               currentPage={currentPage}
@@ -120,7 +120,7 @@ const AdminProblems = () => {
           isOpen={isDialogOpen}
           onClose={() => setIsDialogOpen(false)}
           formData={formData}
-          loading={isLoading || createProblemMutation.isLoading}
+          loading={isLoading || createProblemMutation.isPending}
           onSubmit={handleSubmit}
           onInputChange={handleInputChange}
           onTestCaseChange={handleTestCaseChange}

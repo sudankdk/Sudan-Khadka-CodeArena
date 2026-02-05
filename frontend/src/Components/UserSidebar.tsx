@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Icons } from "../const/Icons";
+import { Icons } from '../constants/Icons';
 import { NavLink } from "react-router-dom";
 
 const UserSidebar = () => {

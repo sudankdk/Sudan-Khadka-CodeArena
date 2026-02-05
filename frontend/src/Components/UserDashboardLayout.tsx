@@ -2,7 +2,7 @@ import type React from "react";
 import UserSidebar from "./UserSidebar";
 import { useAuth } from "@/services/auth/hook/useAuth";
 import useAuthStore from "@/services/auth/store/auth.store";
-import { Icons } from "@/const/Icons";
+import { Icons } from '@/constants/Icons';
 
 const UserDashboardLayout = ({ children }: { children: React.ReactNode }) => {
   const { logout } = useAuth();

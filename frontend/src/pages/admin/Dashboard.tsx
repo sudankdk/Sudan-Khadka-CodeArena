@@ -1,8 +1,8 @@
-import React from "react";
-import AdminDashboardLayout from "../../Components/AdminDashboardLayout";
-import StatsCard from "../../Components/cards/StatsCard";
-import ChartAreaGradient from "@/Components/charts/AdminAreaChart";
-import ChartBarMultiple from "@/Components/charts/AdminBarChart";
+
+import AdminDashboardLayout from '../../components/AdminDashboardLayout';
+import StatsCard from '../../components/cards/StatsCard';
+import ChartAreaGradient from '@/components/charts/AdminAreaChart';
+import ChartBarMultiple from '@/components/charts/AdminBarChart';
 
 const Dashboard = () => {
   return (

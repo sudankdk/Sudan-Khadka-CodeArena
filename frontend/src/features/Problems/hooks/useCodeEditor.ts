@@ -1,6 +1,6 @@
-import type { IBoilerplate } from "@/Interfaces/problemstest/problemtest";
+import type { IBoilerplate } from '@/types/problemstest/problemtest';
 import { useEffect, useState } from "react";
-import { defaultCode } from "../const/defaultcode";
+import { defaultCode } from '../const/defaultcode';
 
 const langMap = {
   python: "py",
@@ -8,25 +8,25 @@ const langMap = {
   go: "go",
 } as const;
 
-export function  useCodeEditor(boilerplates?: IBoilerplate[]) {
-    const [language,setLanguage] = useState<keyof typeof langMap>('python');
-    const [code,setCode] = useState(defaultCode['python'])
-    
-    useEffect(()=>{
-        const apiLang = langMap[language];
-        const boilerplate = boilerplates?.find(b => b.Language === apiLang);
+export function useCodeEditor(boilerplates?: IBoilerplate[]) {
+  const [language, setLanguage] = useState<keyof typeof langMap>('python');
+  const [code, setCode] = useState(defaultCode['python'])
 
-        setCode( boilerplate?.code ??
+  useEffect(() => {
+    const apiLang = langMap[language];
+    const boilerplate = boilerplates?.find(b => b.Language === apiLang);
+
+    setCode(boilerplate?.code ??
       defaultCode[language] ??
       "")
-    },[language,boilerplates])
+  }, [language, boilerplates])
 
 
-    return {
-        language,
-        setLanguage,
-        code,
-        setCode
-    }
+  return {
+    language,
+    setLanguage,
+    code,
+    setCode
+  }
 
 } 

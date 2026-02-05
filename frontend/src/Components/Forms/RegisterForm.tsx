@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useAuth } from "../../services/auth/hook/useAuth";
 import { useNavigate } from "react-router-dom";
 import { FcGoogle } from "react-icons/fc";
-import { server } from "../../const/server";
+import { server } from '../../constants/server';
 
 const RegisterForm = () => {
   const { register, loading, error, setError } = useAuth();

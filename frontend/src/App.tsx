@@ -19,7 +19,7 @@ import AdminProblems from "./pages/admin/AdminProblems";
 import AdminContests from "./pages/admin/AdminContests";
 import AdminUsers from "./pages/admin/AdminUsers";
 import LandingPage from "./pages/LandingPage";
-import AdminSingleProblem from "./pages/admin/AdminSingleProblem";
+
 
 function App() {
   const initialize = useAuthStore((state) => state.initialize);
@@ -136,7 +136,7 @@ function App() {
           element={
             <ProtectedRoute>
               {/* <AdminSingleProblem /> */}
-                            <ProblemSolve />
+              <ProblemSolve />
 
             </ProtectedRoute>
           }

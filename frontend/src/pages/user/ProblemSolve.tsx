@@ -3,12 +3,12 @@ import { useParams, NavLink } from "react-router-dom";
 import Editor from "@monaco-editor/react";
 import { useAuth } from "@/services/auth/hook/useAuth";
 import useAuthStore from "@/services/auth/store/auth.store";
-import { Icons } from "@/const/Icons";
+import { Icons } from '@/constants/Icons';
 import { getProblemTestBySlug } from "@/services/auth/api/problemtest";
 import { useExecuteCode } from "@/features/Problems/hooks/useExecute";
 
 const ProblemSolve = () => {
-  const { id } = useParams();
+  useParams();
   const { logout } = useAuth();
   const user = useAuthStore((state) => state.user);
   const [activeTab, setActiveTab] = useState("DESCRIPTION");
@@ -27,10 +27,14 @@ const ProblemSolve = () => {
     { id: "go", name: "go" },
   ];
 
-  const problemsTestCase = async()=>{
-   const data= await getProblemTestBySlug(location.pathname.split("/")[2]);
-    setData(data.data);
-   console.log("Problem Data:",data.data);
+  const problemsTestCase = async () => {
+    try {
+      const result = await getProblemTestBySlug(location.pathname.split("/")[2]);
+      setData(result);
+      console.log("Problem Data:", result);
+    } catch (e) {
+      console.error("Failed to fetch problem data:", e);
+    }
   }
 
   // Mock problem data - replaced with API data
@@ -51,7 +55,7 @@ const ProblemSolve = () => {
   const handleLanguageChange = (lang: string) => {
     setLanguage(lang);
     const apiLang = getApiLanguage(lang);
-    const boilerplate = data?.boilerplates?.find(b => b.language === apiLang);
+    const boilerplate = data?.boilerplates?.find((b: any) => b.language === apiLang);
     setCode(boilerplate?.code || defaultCode[lang as keyof typeof defaultCode] || "");
   };
 
@@ -65,31 +69,31 @@ const ProblemSolve = () => {
   //   }, 1500);
   // };
 
- const executeMutation = useExecuteCode();
+  const executeMutation = useExecuteCode();
 
-const handleSubmit = async () => {
-  setIsRunning(true);
-  try {
-    const result = await executeMutation.mutateAsync({
-      language,
-      code, 
-      stdin: testCases[activeTestCase].input
-    });
-    const trimmedStdout = result.stdout.trim();
-    const trimmedExpected = testCases[activeTestCase].expected.trim();
-    console.log(trimmedStdout, "===", trimmedExpected);
-    if (trimmedStdout === trimmedExpected) {
-      setOutput("ACCEPTED\n\n" + result.stdout);
-    } else {
-      setOutput("WRONG ANSWER\n\n" + result.stdout);
+  const handleSubmit = async () => {
+    setIsRunning(true);
+    try {
+      const result = await executeMutation.mutateAsync({
+        language,
+        code,
+        stdin: testCases[activeTestCase].input
+      });
+      const trimmedStdout = result.stdout.trim();
+      const trimmedExpected = testCases[activeTestCase].expected.trim();
+      console.log(trimmedStdout, "===", trimmedExpected);
+      if (trimmedStdout === trimmedExpected) {
+        setOutput("ACCEPTED\n\n" + result.stdout);
+      } else {
+        setOutput("WRONG ANSWER\n\n" + result.stdout);
+      }
+    } catch (error: any) {
+      setOutput("ERROR: " + error.message);
+    } finally {
+      setIsRunning(false);
+      setTestTab("OUTPUT");
     }
-  } catch (error) {
-    setOutput("ERROR: " + error.message);
-  } finally {
-    setIsRunning(false);
-    setTestTab("OUTPUT");
-  }
-};
+  };
 
 
   const getDifficultyColor = (difficulty?: string) => {
@@ -98,13 +102,13 @@ const handleSubmit = async () => {
     return "text-[#E54B4B] border-[#E54B4B]";
   };
 
-  useEffect(()=>{
+  useEffect(() => {
     problemsTestCase();
-  },[])
+  }, [])
 
   useEffect(() => {
     const apiLang = getApiLanguage(language);
-    const boilerplate = data?.boilerplates?.find(b => b.language === apiLang);
+    const boilerplate = data?.boilerplates?.find((b: any) => b.language === apiLang);
     if (boilerplate?.code) {
       setCode(boilerplate.code);
     }
@@ -124,7 +128,7 @@ const handleSubmit = async () => {
             PROBLEMS
           </NavLink>
         </div>
-        
+
         <div className="flex items-center gap-3">
           <span className="text-[10px] text-gray-600 tracking-widest">♛ SAMO©</span>
           <div className="h-4 w-px bg-[#333]"></div>
@@ -176,11 +180,10 @@ const handleSubmit = async () => {
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`px-4 py-2 text-[10px] font-mono tracking-widest transition-all ${
-                    activeTab === tab
-                      ? "bg-[#F7D046] text-black"
-                      : "text-gray-500 hover:text-white"
-                  }`}
+                  className={`px-4 py-2 text-[10px] font-mono tracking-widest transition-all ${activeTab === tab
+                    ? "bg-[#F7D046] text-black"
+                    : "text-gray-500 hover:text-white"
+                    }`}
                 >
                   {tab}
                 </button>
@@ -239,13 +242,13 @@ const handleSubmit = async () => {
                   <div>
                     <p className="text-[10px] text-gray-600 tracking-widest mb-2">TOPICS</p>
                     <div className="flex gap-2">
-                      
-                        <span
-                          className="px-2 py-1 border border-[#4ECDC4] text-[#4ECDC4] text-[10px] tracking-widest"
-                        >
-                          {data?.tag}
-                        </span>
-                      
+
+                      <span
+                        className="px-2 py-1 border border-[#4ECDC4] text-[#4ECDC4] text-[10px] tracking-widest"
+                      >
+                        {data?.tag}
+                      </span>
+
                     </div>
                   </div>
 
@@ -295,11 +298,10 @@ const handleSubmit = async () => {
                     <button
                       key={lang.id}
                       onClick={() => handleLanguageChange(lang.id)}
-                      className={`px-3 py-1 text-[10px] font-mono tracking-widest transition-all ${
-                        language === lang.id
-                          ? "bg-[#4ECDC4] text-black"
-                          : "text-gray-500 hover:text-white border border-[#333] hover:border-[#4ECDC4]"
-                      }`}
+                      className={`px-3 py-1 text-[10px] font-mono tracking-widest transition-all ${language === lang.id
+                        ? "bg-[#4ECDC4] text-black"
+                        : "text-gray-500 hover:text-white border border-[#333] hover:border-[#4ECDC4]"
+                        }`}
                     >
                       {lang.name}
                     </button>
@@ -349,17 +351,15 @@ const handleSubmit = async () => {
                 <div className="flex">
                   <button
                     onClick={() => setTestTab("TESTCASE")}
-                    className={`px-4 py-2 text-[10px] font-mono tracking-widest transition-all ${
-                      testTab === "TESTCASE" ? "bg-[#333] text-white" : "text-gray-500 hover:text-white"
-                    }`}
+                    className={`px-4 py-2 text-[10px] font-mono tracking-widest transition-all ${testTab === "TESTCASE" ? "bg-[#333] text-white" : "text-gray-500 hover:text-white"
+                      }`}
                   >
                     TESTCASE
                   </button>
                   <button
                     onClick={() => setTestTab("OUTPUT")}
-                    className={`px-4 py-2 text-[10px] font-mono tracking-widest transition-all ${
-                      testTab === "OUTPUT" ? "bg-[#333] text-white" : "text-gray-500 hover:text-white"
-                    }`}
+                    className={`px-4 py-2 text-[10px] font-mono tracking-widest transition-all ${testTab === "OUTPUT" ? "bg-[#333] text-white" : "text-gray-500 hover:text-white"
+                      }`}
                   >
                     OUTPUT
                   </button>
@@ -388,15 +388,14 @@ const handleSubmit = async () => {
                   <div>
                     {/* Test Case Tabs */}
                     <div className="flex gap-2 mb-3">
-                      {(data?.test_cases || testCases).map((_, idx) => (
+                      {(data?.test_cases || testCases).map((_: any, idx: number) => (
                         <button
                           key={idx}
                           onClick={() => setActiveTestCase(idx)}
-                          className={`px-3 py-1 text-[10px] font-mono tracking-widest transition-all ${
-                            activeTestCase === idx
-                              ? "bg-[#F7D046] text-black"
-                              : "text-gray-500 border border-[#333] hover:border-[#F7D046]"
-                          }`}
+                          className={`px-3 py-1 text-[10px] font-mono tracking-widest transition-all ${activeTestCase === idx
+                            ? "bg-[#F7D046] text-black"
+                            : "text-gray-500 border border-[#333] hover:border-[#F7D046]"
+                            }`}
                         >
                           CASE {idx + 1}
                         </button>

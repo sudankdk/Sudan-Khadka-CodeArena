@@ -1,4 +1,4 @@
-import UserDashboardLayout from "@/Components/UserDashboardLayout";
+import UserDashboardLayout from '@/components/UserDashboardLayout';
 import { useState } from "react";
 
 const Duel = () => {

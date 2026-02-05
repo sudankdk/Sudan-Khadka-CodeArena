@@ -1,16 +1,15 @@
 import React from "react";
-import AdminDashboardLayout from "../../Components/AdminDashboardLayout";
-import UserTable from "@/Components/table/userTable";
+import AdminDashboardLayout from '../../components/AdminDashboardLayout';
+import UserTable from '@/components/table/userTable';
 import { fetchUserList } from "@/services/users/api";
 
 const AdminUsers = () => {
-  const [userdata, setData] = React.useState<any[]>([]);
   const [userData, setUserDataState] = React.useState<any[]>([]);
 
   React.useEffect(() => {
     const loadUsers = async () => {
       const res = await fetchUserList();
-      setData(res.data);
+
 
       const mapped = res.data.map((user: any) => ({
         name: user.username,

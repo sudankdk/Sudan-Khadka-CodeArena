@@ -1,7 +1,7 @@
-import { Input } from "@/Components/ui/input";
-import { Button } from "@/Components/ui/button";
-import { Label } from "@/Components/ui/label";
-import type { ITestCase } from "@/Interfaces/problemstest/problemtest";
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import type { ITestCase } from '@/types/problemstest/problemtest';
 
 interface TestCaseFormProps {
   testCases: ITestCase[];

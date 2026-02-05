@@ -23,13 +23,15 @@ type User struct {
 	Rating             float64   `json:"rating" gorm:"default:1000"`
 	MatchesPlayed      int       `json:"matches_played" gorm:"default:0"`
 	MatchesWon         int       `json:"matches_won" gorm:"default:0"`
-	SubmissionsCount   int       `json:"submissions_count" gorm:"default:0"`
+	SubmissionsCount   int       `json:"submissions_count" gorm:"default:0"` //attempted
 	LanguagePreference string    `json:"language_preference" gorm:"default:'python'"`
 	Role               string    `json:"role" gorm:"type:varchar(10);default:'regular'"`
 	Code               string    `json:"code,omitempty"`
 	Expiry             time.Time `json:"expiry,omitempty"`
 	CreatedAt          time.Time `json:"created_at"`
 	UpdatedAt          time.Time `json:"updated_at"`
+	Solvedcount        int       `json:"solved_count" gorm:"default:0"` //solved count
+	Submissions        []int     `json:"submissions" gorm:"type:json;default:'[]';serializer:json"`
 }
 
 func (u *User) BeforeCreate(scope *gorm.DB) error {

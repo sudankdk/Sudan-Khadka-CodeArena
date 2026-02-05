@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { authClient } from "../api/auth"; // ← Add this import
-import type { IAuth } from "../../../Interfaces/auth/auth";
+import type { IAuth } from '../../../types/auth/auth';
 import type { User } from "../../../types/user/user.types";
 
 const useAuthStore = create<IAuth>((set) => ({
@@ -16,12 +16,13 @@ const useAuthStore = create<IAuth>((set) => ({
   clear: () => set({ user: null, token: null }),
 
   initialize: async () => {
-    set({ loading: true });
+    set({ loading: true, error: null });
     try {
-      const response = await authClient.get("/users/me");
+      const response = await authClient.get<{ user: User }>("/users/me");
       set({ user: response.user, loading: false, error: null });
-    } catch (error) {
-      set({ user: null, loading: false, error: null });
+    } catch (error: any) {
+      console.error("Auth initialization error:", error);
+      set({ user: null, loading: false, error: error.message || "Failed to initialize auth" });
     }
   },
 }));

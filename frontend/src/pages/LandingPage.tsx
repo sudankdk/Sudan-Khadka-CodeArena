@@ -1,21 +1,22 @@
-import { logo } from "@/const/Images"
-import AnimatedGridBackground from "@/Components/AnimatedGridBackground"
-import "@fontsource/roboto"
+import { logo } from '@/constants/Images'
+import AnimatedGridBackground from '@/components/AnimatedGridBackground'
+// @ts-ignore
+import "@fontsource/outfit"
 import { useNavigate } from "react-router-dom"
 
 const LandingPage = () => {
-const nav = useNavigate()
-const handleLogin = () => {
-  nav("/login")
-}
-  
+  const nav = useNavigate()
+  const handleLogin = () => {
+    nav("/login")
+  }
+
   return (
     <div className="bg-black text-white font-mono min-h-screen relative overflow-hidden">
       <AnimatedGridBackground />
 
       {/* Header */}
-<header className="border border-white/40 mx-10 mt-10 flex justify-between items-center ">
-        <div className="text-4xl font-bold tracking-wider "><img src={logo} className="h-20"   alt="CODE ARENA" /></div>
+      <header className="border border-white/40 mx-10 mt-10 flex justify-between items-center ">
+        <div className="text-4xl font-bold tracking-wider "><img src={logo} className="h-20" alt="CODE ARENA" /></div>
 
         <button onClick={handleLogin} className="border border-white/40 px-6 mx-4 py-2 flex items-center gap-2 hover:bg-white hover:text-black transition">
           Login
@@ -30,7 +31,7 @@ const handleLogin = () => {
 
       {/* Center Title */}
       <div className="flex items-center justify-center h-[60vh]">
-        <h1 className="text-7xl font-extrabold tracking-wide" style={{ fontFamily: "Roboto" }}>Code Arena</h1>
+        <h1 className="text-7xl font-extrabold tracking-wide" style={{ fontFamily: "Outfit" }}>Code Arena</h1>
       </div>
 
       {/* Bottom-left Description */}

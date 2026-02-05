@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { authClient } from "../../services/auth/api/auth";
 import useAuthStore from "../../services/auth/store/auth.store";
 import { useNavigate } from "react-router-dom";
@@ -8,7 +8,7 @@ const OAuth = () => {
   const navigate = useNavigate();
   useEffect(() => {
     const authSuccess = async () => {
-      const res = await authClient.get("/users/me");
+      const res = await authClient.get<{ user: any }>("/users/me");
       console.log(res);
       if (res.user && res.user.role == "regular") {
         setUser(res.user);

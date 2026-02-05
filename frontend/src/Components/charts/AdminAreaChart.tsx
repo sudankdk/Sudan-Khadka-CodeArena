@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+
 import { TrendingUp } from "lucide-react";
 import {
   AreaChart,
@@ -30,11 +30,7 @@ const chartData = [
   { month: "June", desktop: 214, mobile: 140 },
 ];
 
-// Optional: Chart config (for reference)
-const chartConfig = {
-  desktop: { label: "Desktop", color: "#4f46e5" }, // Indigo-600
-  mobile: { label: "Mobile", color: "#ec4899" }, // Pink-500
-};
+
 
 const ChartAreaGradient = () => {
   return (
