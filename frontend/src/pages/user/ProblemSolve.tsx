@@ -89,7 +89,13 @@ const ProblemSolve = () => {
         code,
         stdin: testCases[activeTestCase].input
       });
-      setOutput(`Test Case ${activeTestCase + 1} Output:\n\n${result.stdout}\n\nExpected:\n${testCases[activeTestCase].expected}`);
+      
+      // Check for errors in stderr
+      if (result.stderr && result.stderr.trim()) {
+        setOutput(`Test Case ${activeTestCase + 1} - Error:\n\n${result.stderr}\n\nOutput:\n${result.stdout || 'No output'}`);
+      } else {
+        setOutput(`Test Case ${activeTestCase + 1} Output:\n\n${result.stdout}\n\nExpected:\n${testCases[activeTestCase].expected}`);
+      }
     } catch (error: any) {
       setOutput("ERROR: " + error.message);
     } finally {
@@ -121,6 +127,11 @@ const ProblemSolve = () => {
         });
         const endTime = performance.now();
         executionTime += (endTime - startTime);
+
+        // Check for runtime errors
+        if (result.stderr && result.stderr.trim()) {
+          throw new Error(`Runtime error in test case ${i + 1}: ${result.stderr}`);
+        }
 
         const trimmedStdout = result.stdout.trim();
         const trimmedExpected = testCases[i].expected.trim();

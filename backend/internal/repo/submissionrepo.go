@@ -1,7 +1,9 @@
 package repo
 
 import (
-	"errors" "github.com/google/uuid"
+	"errors"
+
+	"github.com/google/uuid"
 	"github.com/sudankdk/codearena/internal/domain"
 	"github.com/sudankdk/codearena/internal/dto"
 	"gorm.io/gorm"
@@ -203,13 +205,13 @@ func (sr *submissionRepo) HasUserSolvedProblem(userID, problemID uuid.UUID) (boo
 
 func (sr *submissionRepo) GetTopicStats() ([]dto.TopicStatsDTO, error) {
 	var stats []dto.TopicStatsDTO
-	
+
 	err := sr.db.Model(&domain.Problem{}).
 		Select("tag, COUNT(*) as count").
 		Group("tag").
 		Order("count DESC").
 		Scan(&stats).Error
-	
+
 	if err != nil {
 		return nil, err
 	}
