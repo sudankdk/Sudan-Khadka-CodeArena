@@ -1,6 +1,7 @@
 import UserDashboardLayout from '@/components/UserDashboardLayout';
 import { useProblem } from "@/features/Problems/hooks/useProblem";
 import { useProblemCounts } from "@/features/Problems/hooks/useProblemCounts";
+import { useTopicStats } from "@/hooks/useSubmissions";
 import { useState } from "react";
 import { NavLink } from "react-router-dom";
 
@@ -12,6 +13,7 @@ const Problems = () => {
   const pageSize = 10
   const { data } = useProblem(page, pageSize)
   const { data: counts } = useProblemCounts();
+  const { data: topicStats } = useTopicStats();
 
   const easy = counts?.easy ?? 0;
   const medium = counts?.medium ?? 0;
@@ -19,18 +21,12 @@ const Problems = () => {
   const total = counts?.total ?? 0;
   const filters = ["ALL", "EASY", "MED", "HARD", "SOLVED", "TODO"];
 
-  const topics = [
-    { name: "ARRAY", count: 156, color: "#F7D046" },
-    { name: "STRING", count: 98, color: "#4ECDC4" },
-    { name: "HASH", count: 87, color: "#E54B4B" },
-    { name: "DP", count: 124, color: "#F7D046" },
-    { name: "GRAPH", count: 65, color: "#4ECDC4" },
-    { name: "TREE", count: 72, color: "#E54B4B" },
-    { name: "BINARY", count: 45, color: "#F7D046" },
-    { name: "STACK", count: 38, color: "#4ECDC4" },
-    { name: "HEAP", count: 29, color: "#E54B4B" },
-    { name: "GREEDY", count: 56, color: "#F7D046" },
-  ];
+  const colors = ["#F7D046", "#4ECDC4", "#E54B4B"];
+  const topics = (topicStats || []).map((t, idx) => ({
+    name: t.tag.toUpperCase(),
+    count: t.count,
+    color: colors[idx % colors.length]
+  }));
 
 
 

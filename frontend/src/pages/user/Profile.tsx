@@ -1,58 +1,59 @@
 import UserDashboardLayout from '@/components/UserDashboardLayout';
 import useAuthStore from "@/services/auth/store/auth.store";
 import { useState } from "react";
+import { useUserStats, useSubmissions } from "@/hooks/useSubmissions";
+import { NavLink } from 'react-router-dom';
 
 const Profile = () => {
   const user = useAuthStore((state) => state.user);
   const [activeTab, setActiveTab] = useState("OVERVIEW");
+  const { data: userStats, isLoading: statsLoading } = useUserStats();
+  const { data: submissionsData, isLoading: submissionsLoading } = useSubmissions(1, 20, { user_id: user?.id });
 
   const tabs = ["OVERVIEW", "SUBMISSIONS", "BADGES", "SETTINGS"];
 
   const badges = [
-    { id: 1, name: "FIRST BLOOD", icon: "🩸", desc: "SOLVE YOUR FIRST PROBLEM", earned: true },
-    { id: 2, name: "STREAK KING", icon: "🔥", desc: "7 DAY SOLVING STREAK", earned: true },
-    { id: 3, name: "NIGHT OWL", icon: "🦉", desc: "SOLVE AT MIDNIGHT", earned: true },
+    { id: 1, name: "FIRST BLOOD", icon: "🩸", desc: "SOLVE YOUR FIRST PROBLEM", earned: (userStats?.total_solved || 0) > 0 },
+    { id: 2, name: "STREAK KING", icon: "🔥", desc: "7 DAY SOLVING STREAK", earned: false },
+    { id: 3, name: "NIGHT OWL", icon: "🦉", desc: "SOLVE AT MIDNIGHT", earned: false },
     { id: 4, name: "SPEED DEMON", icon: "⚡", desc: "SOLVE IN UNDER 5 MIN", earned: false },
-    { id: 5, name: "PERFECTIONIST", icon: "💎", desc: "100% TEST CASES FIRST TRY", earned: true },
+    { id: 5, name: "PERFECTIONIST", icon: "💎", desc: "100% TEST CASES FIRST TRY", earned: false },
     { id: 6, name: "ARENA WARRIOR", icon: "⚔", desc: "TOP 100 IN CONTEST", earned: false },
     { id: 7, name: "CROWN HOLDER", icon: "♛", desc: "REACH TOP 10", earned: false },
-    { id: 8, name: "SAMO", icon: "©", desc: "SOLVE 100 PROBLEMS", earned: true },
+    { id: 8, name: "SAMO", icon: "©", desc: "SOLVE 100 PROBLEMS", earned: (userStats?.total_solved || 0) >= 100 },
   ];
 
-  const recentSubmissions = [
-    { id: 1, problem: "TWO SUM", status: "ACCEPTED", lang: "PYTHON", time: "2 HRS AGO", runtime: "45ms" },
-    { id: 2, problem: "ADD TWO NUMBERS", status: "WRONG", lang: "PYTHON", time: "3 HRS AGO", runtime: "-" },
-    { id: 3, problem: "ADD TWO NUMBERS", status: "ACCEPTED", lang: "PYTHON", time: "3 HRS AGO", runtime: "89ms" },
-    { id: 4, problem: "VALID PARENTHESES", status: "ACCEPTED", lang: "GO", time: "1 DAY AGO", runtime: "12ms" },
-    { id: 5, problem: "MERGE TWO LISTS", status: "TLE", lang: "PYTHON", time: "1 DAY AGO", runtime: "-" },
-  ];
+  const recentSubmissions = submissionsData?.data || [];
 
-  const languageStats = [
-    { lang: "PYTHON", solved: 89, percent: 69 },
-    { lang: "GO", solved: 25, percent: 19 },
-    { lang: "JAVASCRIPT", solved: 15, percent: 12 },
-  ];
+  const calculateLanguageStats = () => {
+    if (!submissionsData?.data) return [];
+    
+    const langCount: { [key: string]: number } = {};
+    let total = 0;
+    
+    submissionsData.data.forEach(sub => {
+      if (sub.status === 'accepted') {
+        langCount[sub.language] = (langCount[sub.language] || 0) + 1;
+        total++;
+      }
+    });
+    
+    return Object.entries(langCount)
+      .map(([lang, count]) => ({
+        lang: lang.toUpperCase(),
+        solved: count,
+        percent: total > 0 ? Math.round((count / total) * 100) : 0
+      }))
+      .sort((a, b) => b.solved - a.solved);
+  };
+
+  const languageStats = calculateLanguageStats();
 
   const difficultyStats = [
-    { level: "EASY", solved: 67, total: 847, color: "#4ECDC4" },
-    { level: "MEDIUM", solved: 52, total: 1762, color: "#F7D046" },
-    { level: "HARD", solved: 10, total: 753, color: "#E54B4B" },
+    { level: "EASY", solved: userStats?.easy_solved || 0, total: 847, color: "#4ECDC4" },
+    { level: "MEDIUM", solved: userStats?.medium_solved || 0, total: 1762, color: "#F7D046" },
+    { level: "HARD", solved: userStats?.hard_solved || 0, total: 753, color: "#E54B4B" },
   ];
-
-  const activityData = [
-    [0, 1, 2, 0, 3, 1, 0],
-    [1, 0, 2, 3, 0, 2, 1],
-    [2, 3, 0, 1, 2, 0, 3],
-    [0, 2, 1, 0, 3, 2, 1],
-    [1, 0, 3, 2, 1, 0, 2],
-  ];
-
-  const getActivityColor = (val: number) => {
-    if (val === 0) return "bg-[#1a1a1a]";
-    if (val === 1) return "bg-[#4ECDC4]/30";
-    if (val === 2) return "bg-[#4ECDC4]/60";
-    return "bg-[#4ECDC4]";
-  };
 
   return (
     <UserDashboardLayout>
@@ -83,7 +84,7 @@ const Profile = () => {
             
             <div className="flex gap-8">
               <div>
-                <p className="text-2xl font-bold text-white font-mono">{user?.submissions_count || 129}</p>
+                <p className="text-2xl font-bold text-white font-mono">{userStats?.total_solved || 0}</p>
                 <p className="text-[10px] text-gray-500 tracking-widest">PROBLEMS SOLVED</p>
               </div>
               <div>
@@ -95,8 +96,8 @@ const Profile = () => {
                 <p className="text-[10px] text-gray-500 tracking-widest">GLOBAL RANK</p>
               </div>
               <div>
-                <p className="text-2xl font-bold text-[#E54B4B] font-mono">47</p>
-                <p className="text-[10px] text-gray-500 tracking-widest">CONTESTS</p>
+                <p className="text-2xl font-bold text-[#E54B4B] font-mono">{userStats?.total_submissions || 0}</p>
+                <p className="text-[10px] text-gray-500 tracking-widest">SUBMISSIONS</p>
               </div>
             </div>
           </div>
@@ -135,26 +136,11 @@ const Profile = () => {
               <div className="border-2 border-dashed border-[#333] p-4">
                 <div className="flex justify-between items-center mb-4">
                   <p className="text-[10px] text-gray-600 tracking-widest">ACTIVITY ©</p>
-                  <p className="text-[10px] text-gray-600 tracking-widest">129 SUBMISSIONS IN 2025</p>
+                  <p className="text-[10px] text-gray-600 tracking-widest">{userStats?.total_submissions || 0} SUBMISSIONS IN 2025</p>
                 </div>
-                <div className="flex gap-1">
-                  {Array.from({ length: 52 }).map((_, week) => (
-                    <div key={week} className="flex flex-col gap-1">
-                      {activityData.map((row, day) => (
-                        <div
-                          key={day}
-                          className={`w-2 h-2 ${getActivityColor(row[week % 7])}`}
-                        />
-                      ))}
-                    </div>
-                  ))}
-                </div>
-                <div className="flex justify-end gap-2 mt-3 items-center">
-                  <span className="text-[8px] text-gray-600">LESS</span>
-                  {[0, 1, 2, 3].map((i) => (
-                    <div key={i} className={`w-2 h-2 ${getActivityColor(i)}`} />
-                  ))}
-                  <span className="text-[8px] text-gray-600">MORE</span>
+                <div className="text-center py-8">
+                  <p className="text-gray-500 text-xs">ACTIVITY HEATMAP</p>
+                  <p className="text-gray-600 text-[10px] mt-2">COMING SOON</p>
                 </div>
               </div>
 
@@ -190,21 +176,38 @@ const Profile = () => {
               <div className="border-2 border-dashed border-[#333] p-4">
                 <p className="text-[10px] text-gray-600 tracking-widest mb-4">RECENT WORK ®</p>
                 <div className="space-y-2">
-                  {recentSubmissions.map((s) => (
-                    <div key={s.id} className="flex items-center justify-between py-2 border-b border-[#222] last:border-0">
-                      <div className="flex items-center gap-3">
-                        <span className={`text-xs ${s.status === "ACCEPTED" ? "text-[#4ECDC4]" : s.status === "WRONG" ? "text-[#E54B4B]" : "text-[#F7D046]"}`}>
-                          {s.status === "ACCEPTED" ? "✓" : s.status === "WRONG" ? "✗" : "◐"}
-                        </span>
-                        <span className="text-gray-300 text-xs font-mono">{s.problem}</span>
+                  {statsLoading || submissionsLoading ? (
+                    <p className="text-gray-500 text-xs">Loading submissions...</p>
+                  ) : recentSubmissions.length > 0 ? (
+                    recentSubmissions.slice(0, 5).map((s) => (
+                      <div key={s.id} className="flex items-center justify-between py-2 border-b border-[#222] last:border-0">
+                        <div className="flex items-center gap-3">
+                          <span className={`text-xs ${
+                            s.status === "accepted" ? "text-[#4ECDC4]" : 
+                            s.status === "wrong_answer" ? "text-[#E54B4B]" : 
+                            "text-[#F7D046]"
+                          }`}>
+                            {s.status === "accepted" ? "✓" : s.status === "wrong_answer" ? "✗" : "◐"}
+                          </span>
+                          <NavLink 
+                            to={`/problems/${s.problem_slug}`}
+                            className="text-gray-300 text-xs font-mono hover:text-[#F7D046]"
+                          >
+                            {s.problem_title?.toUpperCase() || "UNKNOWN"}
+                          </NavLink>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <span className="text-[10px] text-gray-600 tracking-widest">{s.language.toUpperCase()}</span>
+                          <span className="text-[10px] text-gray-500 font-mono">{s.execution_time ? `${s.execution_time}ms` : '-'}</span>
+                          <span className="text-[10px] text-gray-600">{new Date(s.created_at).toLocaleString()}</span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-4">
-                        <span className="text-[10px] text-gray-600 tracking-widest">{s.lang}</span>
-                        <span className="text-[10px] text-gray-500 font-mono">{s.runtime}</span>
-                        <span className="text-[10px] text-gray-600">{s.time}</span>
-                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-4">
+                      <p className="text-gray-500 text-xs">No submissions yet</p>
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
             </div>
@@ -216,20 +219,24 @@ const Profile = () => {
                 <span className="absolute -top-2 -right-2 text-[#F7D046] text-xs">♛</span>
                 <p className="text-[10px] text-gray-600 tracking-widest mb-4">WEAPONS OF CHOICE</p>
                 <div className="space-y-3">
-                  {languageStats.map((l) => (
-                    <div key={l.lang}>
-                      <div className="flex justify-between mb-1">
-                        <span className="text-xs text-white font-mono">{l.lang}</span>
-                        <span className="text-xs text-[#4ECDC4] font-mono">{l.solved}</span>
+                  {languageStats.length > 0 ? (
+                    languageStats.slice(0, 3).map((l) => (
+                      <div key={l.lang}>
+                        <div className="flex justify-between mb-1">
+                          <span className="text-xs text-white font-mono">{l.lang}</span>
+                          <span className="text-xs text-[#4ECDC4] font-mono">{l.solved}</span>
+                        </div>
+                        <div className="h-1 bg-[#1a1a1a] w-full">
+                          <div
+                            className="h-full bg-[#F7D046]"
+                            style={{ width: `${l.percent}%` }}
+                          />
+                        </div>
                       </div>
-                      <div className="h-1 bg-[#1a1a1a] w-full">
-                        <div
-                          className="h-full bg-[#F7D046]"
-                          style={{ width: `${l.percent}%` }}
-                        />
-                      </div>
-                    </div>
-                  ))}
+                    ))
+                  ) : (
+                    <p className="text-gray-500 text-xs">No languages used yet</p>
+                  )}
                 </div>
               </div>
 
@@ -315,22 +322,43 @@ const Profile = () => {
               <div className="col-span-2">RUNTIME</div>
               <div className="col-span-3">TIME</div>
             </div>
-            {recentSubmissions.map((s) => (
-              <div
-                key={s.id}
-                className="grid grid-cols-12 gap-4 px-4 py-3 border-b border-[#222] last:border-0 hover:bg-[#F7D046]/5 transition-colors"
-              >
-                <div className="col-span-1">
-                  <span className={`text-sm ${s.status === "ACCEPTED" ? "text-[#4ECDC4]" : s.status === "WRONG" ? "text-[#E54B4B]" : "text-[#F7D046]"}`}>
-                    {s.status === "ACCEPTED" ? "✓" : s.status === "WRONG" ? "✗" : "◐"}
-                  </span>
-                </div>
-                <div className="col-span-4 text-gray-300 text-xs font-mono">{s.problem}</div>
-                <div className="col-span-2 text-gray-500 text-xs font-mono">{s.lang}</div>
-                <div className="col-span-2 text-gray-500 text-xs font-mono">{s.runtime}</div>
-                <div className="col-span-3 text-gray-600 text-xs">{s.time}</div>
+            {submissionsLoading ? (
+              <div className="text-center py-8">
+                <p className="text-gray-500 text-xs">Loading submissions...</p>
               </div>
-            ))}
+            ) : recentSubmissions.length > 0 ? (
+              recentSubmissions.map((s) => (
+                <div
+                  key={s.id}
+                  className="grid grid-cols-12 gap-4 px-4 py-3 border-b border-[#222] last:border-0 hover:bg-[#F7D046]/5 transition-colors"
+                >
+                  <div className="col-span-1">
+                    <span className={`text-sm ${
+                      s.status === "accepted" ? "text-[#4ECDC4]" : 
+                      s.status === "wrong_answer" ? "text-[#E54B4B]" : 
+                      "text-[#F7D046]"
+                    }`}>
+                      {s.status === "accepted" ? "✓" : s.status === "wrong_answer" ? "✗" : "◐"}
+                    </span>
+                  </div>
+                  <div className="col-span-4">
+                    <NavLink 
+                      to={`/problems/${s.problem_slug}`}
+                      className="text-gray-300 text-xs font-mono hover:text-[#F7D046]"
+                    >
+                      {s.problem_title?.toUpperCase() || "UNKNOWN"}
+                    </NavLink>
+                  </div>
+                  <div className="col-span-2 text-gray-500 text-xs font-mono">{s.language.toUpperCase()}</div>
+                  <div className="col-span-2 text-gray-500 text-xs font-mono">{s.execution_time ? `${s.execution_time}ms` : '-'}</div>
+                  <div className="col-span-3 text-gray-600 text-xs">{new Date(s.created_at).toLocaleString()}</div>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-gray-500 text-xs">No submissions yet</p>
+              </div>
+            )}
           </div>
         )}
 
