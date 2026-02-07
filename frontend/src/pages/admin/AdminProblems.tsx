@@ -21,7 +21,8 @@ const initialFormData: IProblemTest = {
 
 const AdminProblems = () => {
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 3;
+  const pageSize = 10;
+  const [searchQuery, setSearchQuery] = useState("");
 
   //local state
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -31,10 +32,18 @@ const AdminProblems = () => {
   //server state
   const { data, isLoading } = useProblem(currentPage, pageSize)
   const createProblemMutation = useCreateProblem();
+  const countsQuery = useProblemCounts();
 
-  const total = useProblemCounts().data?.total || 0;
+  const total = data?.total || 0;
   const totalPages = Math.ceil(total / pageSize);
   const problems = data?.problems || [];
+
+  // Filter problems based on search query
+  const filteredProblems = problems.filter(problem =>
+    problem.main_heading?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    problem.slug?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    problem.tag?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -95,17 +104,107 @@ const AdminProblems = () => {
 
   return (
     <AdminDashboardLayout>
-      <div className="p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-3xl font-bold text-gray-800">Manage Problems</h2>
-          <Button onClick={() => setIsDialogOpen(true)}>
-            + Create Problem
-          </Button>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-8">
+        {/* Header Section */}
+        <div className="mb-8">
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-2">
+                Problem Management
+              </h1>
+              <p className="text-gray-600">Create, manage, and organize coding challenges</p>
+            </div>
+            <Button
+              onClick={() => setIsDialogOpen(true)}
+              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 px-6 py-3 rounded-lg font-semibold"
+            >
+              <svg className="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Create Problem
+            </Button>
+          </div>
+
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Total Problems</p>
+                  <p className="text-3xl font-bold text-gray-900">{total}</p>
+                </div>
+                <div className="bg-blue-100 p-3 rounded-lg">
+                  <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Easy</p>
+                  <p className="text-3xl font-bold text-green-600">{countsQuery.data?.easy || 0}</p>
+                </div>
+                <div className="bg-green-100 p-3 rounded-lg">
+                  <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Medium</p>
+                  <p className="text-3xl font-bold text-yellow-600">{countsQuery.data?.medium || 0}</p>
+                </div>
+                <div className="bg-yellow-100 p-3 rounded-lg">
+                  <svg className="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Hard</p>
+                  <p className="text-3xl font-bold text-red-600">{countsQuery.data?.hard || 0}</p>
+                </div>
+                <div className="bg-red-100 p-3 rounded-lg">
+                  <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Search Bar */}
+          <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
+            <div className="relative">
+              <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <input
+                type="text"
+                placeholder="Search problems by title, slug, or tag..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              />
+            </div>
+          </div>
         </div>
 
-        <div className="bg-white shadow rounded-lg overflow-hidden">
-          <ProblemsTable problems={problems} loading={isLoading} />
-          {!isLoading && problems.length > 0 && (
+        {/* Problems Table */}
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
+          <ProblemsTable problems={filteredProblems} loading={isLoading} />
+          {!isLoading && total > 0 && (
             <Pagination
               currentPage={currentPage}
               totalPages={totalPages}

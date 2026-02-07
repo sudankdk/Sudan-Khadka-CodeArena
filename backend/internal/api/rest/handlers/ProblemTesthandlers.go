@@ -72,8 +72,16 @@ func (u *ProblemTestHandlers) Create(ctx *fiber.Ctx) error {
 }
 
 func (u *ProblemTestHandlers) List(ctx *fiber.Ctx) error {
-	pageSize := 10
 	page, _ := strconv.Atoi(ctx.Query("page", "1"))
+	pageSize, _ := strconv.Atoi(ctx.Query("page_size", "10"))
+
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 {
+		pageSize = 10
+	}
+
 	var q dto.ProblemListQueryDTO
 	if err := ctx.QueryParser(&q); err != nil {
 		u.logger.Warn("Invalid query parameters", zap.Error(err))
@@ -83,14 +91,14 @@ func (u *ProblemTestHandlers) List(ctx *fiber.Ctx) error {
 	q.Limit = pageSize
 	q.Offset = (page - 1) * pageSize
 
-	u.logger.Info("Listing problems", zap.Int("page", page), zap.Int("limit", pageSize))
+	u.logger.Info("Listing problems", zap.Int("page", page), zap.Int("limit", pageSize), zap.String("search", q.Search))
 	res, err := u.svc.ListProblems(q)
 	if err != nil {
 		u.logger.Error("Failed to list problems", zap.Error(err))
 		return rest.InternalError(ctx, err)
 	}
 
-	u.logger.Info("Problems listed successfully")
+	u.logger.Info("Problems listed successfully", zap.Int64("total", res.Total))
 	return rest.SuccessMessage(ctx, "Problems list", res)
 }
 

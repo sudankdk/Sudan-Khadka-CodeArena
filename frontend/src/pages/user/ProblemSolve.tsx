@@ -6,9 +6,11 @@ import useAuthStore from "@/services/auth/store/auth.store";
 import { Icons } from '@/constants/Icons';
 import { getProblemTestBySlug } from "@/services/auth/api/problemtest";
 import { useExecuteCode } from "@/features/Problems/hooks/useExecute";
+import { useCreateSubmission, useProblemStats, useSubmissions } from "@/hooks/useSubmissions";
+import { SubmissionStatus } from "@/types/submission/submission";
 
 const ProblemSolve = () => {
-  useParams();
+  const { id } = useParams();
   const { logout } = useAuth();
   const user = useAuthStore((state) => state.user);
   const [activeTab, setActiveTab] = useState("DESCRIPTION");
@@ -29,7 +31,8 @@ const ProblemSolve = () => {
 
   const problemsTestCase = async () => {
     try {
-      const result = await getProblemTestBySlug(location.pathname.split("/")[2]);
+      if (!id) return;
+      const result = await getProblemTestBySlug(id);
       setData(result);
       console.log("Problem Data:", result);
     } catch (e) {
@@ -70,31 +73,104 @@ const ProblemSolve = () => {
   // };
 
   const executeMutation = useExecuteCode();
+  const createSubmissionMutation = useCreateSubmission();
+  const { data: problemStats } = useProblemStats(data?.id || "");
+  const { data: submissionsData } = useSubmissions(1, 20, { 
+    problem_id: data?.id,
+    user_id: user?.id 
+  });
 
-  const handleSubmit = async () => {
+  const handleRun = async () => {
     setIsRunning(true);
+    setTestTab("OUTPUT");
     try {
       const result = await executeMutation.mutateAsync({
         language,
         code,
         stdin: testCases[activeTestCase].input
       });
-      const trimmedStdout = result.stdout.trim();
-      const trimmedExpected = testCases[activeTestCase].expected.trim();
-      console.log(trimmedStdout, "===", trimmedExpected);
-      if (trimmedStdout === trimmedExpected) {
-        setOutput("ACCEPTED\n\n" + result.stdout);
-      } else {
-        setOutput("WRONG ANSWER\n\n" + result.stdout);
-      }
+      setOutput(`Test Case ${activeTestCase + 1} Output:\n\n${result.stdout}\n\nExpected:\n${testCases[activeTestCase].expected}`);
     } catch (error: any) {
       setOutput("ERROR: " + error.message);
     } finally {
       setIsRunning(false);
-      setTestTab("OUTPUT");
     }
   };
 
+  const handleSubmit = async () => {
+    if (!data?.id) {
+      setOutput("ERROR: Problem data not loaded");
+      return;
+    }
+
+    setIsRunning(true);
+    setTestTab("OUTPUT");
+    
+    try {
+      let passedCount = 0;
+      let failedTestCase = -1;
+      let executionTime = 0;
+
+      // Run all test cases
+      for (let i = 0; i < testCases.length; i++) {
+        const startTime = performance.now();
+        const result = await executeMutation.mutateAsync({
+          language,
+          code,
+          stdin: testCases[i].input
+        });
+        const endTime = performance.now();
+        executionTime += (endTime - startTime);
+
+        const trimmedStdout = result.stdout.trim();
+        const trimmedExpected = testCases[i].expected.trim();
+        
+        if (trimmedStdout === trimmedExpected) {
+          passedCount++;
+        } else {
+          if (failedTestCase === -1) failedTestCase = i;
+        }
+      }
+
+      const totalTestCases = testCases.length;
+      const allPassed = passedCount === totalTestCases;
+      const status = allPassed ? SubmissionStatus.ACCEPTED : SubmissionStatus.WRONG_ANSWER;
+
+      // Create submission record
+      await createSubmissionMutation.mutateAsync({
+        problem_id: data.id,
+        language: language === 'python' ? 'py' : language === 'javascript' ? 'js' : language,
+        code,
+        status,
+        execution_time: Math.round(executionTime),
+        test_cases_passed: passedCount,
+        total_test_cases: totalTestCases,
+      });
+
+      // Display result
+      if (allPassed) {
+        setOutput(`✓ ACCEPTED\n\nAll ${totalTestCases} test cases passed!\n\nExecution Time: ${Math.round(executionTime)}ms`);
+      } else {
+        setOutput(`✗ WRONG ANSWER\n\nPassed: ${passedCount}/${totalTestCases} test cases\n\nFailed at test case ${failedTestCase + 1}`);
+      }
+    } catch (error: any) {
+      // Save failed submission
+      if (data?.id) {
+        await createSubmissionMutation.mutateAsync({
+          problem_id: data.id,
+          language: language === 'python' ? 'py' : language === 'javascript' ? 'js' : language,
+          code,
+          status: SubmissionStatus.RUNTIME_ERROR,
+          test_cases_passed: 0,
+          total_test_cases: testCases.length,
+          error_message: error.message,
+        });
+      }
+      setOutput("ERROR: " + error.message);
+    } finally {
+      setIsRunning(false);
+    }
+  };
 
   const getDifficultyColor = (difficulty?: string) => {
     if (difficulty === "easy") return "text-[#4ECDC4] border-[#4ECDC4]";
@@ -104,7 +180,7 @@ const ProblemSolve = () => {
 
   useEffect(() => {
     problemsTestCase();
-  }, [])
+  }, [id])
 
   useEffect(() => {
     const apiLang = getApiLanguage(language);
@@ -165,6 +241,14 @@ const ProblemSolve = () => {
               <span>♥ {data?.likes || 0}</span>
               <span>|</span>
               <span>↓ {data?.dislikes || 0}</span>
+              {problemStats && (
+                <>
+                  <span>|</span>
+                  <span className="text-[#4ECDC4]">
+                    {problemStats.acceptance_rate.toFixed(1)}% acceptance
+                  </span>
+                </>
+              )}
             </div>
             <span className="text-[10px] text-gray-600 tracking-widest">© SAMO</span>
           </div>
@@ -278,10 +362,53 @@ const ProblemSolve = () => {
               )}
 
               {activeTab === "SUBMISSIONS" && (
-                <div className="text-center py-10">
-                  <p className="text-4xl mb-4">📜</p>
-                  <p className="text-gray-500 text-xs tracking-widest">YOUR SUBMISSIONS</p>
-                  <p className="text-gray-600 text-[10px] mt-2">NO SUBMISSIONS YET</p>
+                <div>
+                  {submissionsData && submissionsData.data.length > 0 ? (
+                    <div className="space-y-2">
+                      {submissionsData.data.map((submission) => (
+                        <div
+                          key={submission.id}
+                          className="border border-[#333] p-3 hover:border-[#F7D046] transition-colors"
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-3">
+                              <span className={`text-sm ${
+                                submission.status === 'accepted' ? 'text-[#4ECDC4]' : 
+                                submission.status === 'wrong_answer' ? 'text-[#E54B4B]' : 
+                                'text-[#F7D046]'
+                              }`}>
+                                {submission.status === 'accepted' ? '✓' : 
+                                 submission.status === 'wrong_answer' ? '✗' : '◐'}
+                              </span>
+                              <span className="text-xs text-white font-mono tracking-widest">
+                                {submission.status.replace('_', ' ').toUpperCase()}
+                              </span>
+                            </div>
+                            <span className="text-[10px] text-gray-600">
+                              {new Date(submission.created_at).toLocaleString()}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-4 text-[10px] text-gray-500">
+                            <span>LANG: {submission.language.toUpperCase()}</span>
+                            <span>|</span>
+                            <span>PASSED: {submission.test_cases_passed}/{submission.total_test_cases}</span>
+                            {submission.execution_time && (
+                              <>
+                                <span>|</span>
+                                <span>{submission.execution_time}ms</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-10">
+                      <p className="text-4xl mb-4">📜</p>
+                      <p className="text-gray-500 text-xs tracking-widest">YOUR SUBMISSIONS</p>
+                      <p className="text-gray-600 text-[10px] mt-2">NO SUBMISSIONS YET</p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -365,19 +492,19 @@ const ProblemSolve = () => {
                   </button>
                 </div>
                 <div className="flex gap-2 pr-2">
-                  {/* <button
+                  <button
                     onClick={handleRun}
                     disabled={isRunning}
                     className="px-4 py-1 border-2 border-[#4ECDC4] text-[#4ECDC4] text-[10px] tracking-widest hover:bg-[#4ECDC4] hover:text-black transition-colors disabled:opacity-50"
                   >
                     {isRunning ? "RUNNING..." : "▶ RUN"}
-                  </button> */}
+                  </button>
                   <button
                     onClick={handleSubmit}
                     disabled={isRunning}
                     className="px-4 py-1 bg-[#F7D046] text-black text-[10px] font-bold tracking-widest hover:bg-[#f5c518] transition-colors disabled:opacity-50"
                   >
-                    SUBMIT ⚡
+                    {isRunning ? "SUBMITTING..." : "SUBMIT ⚡"}
                   </button>
                 </div>
               </div>

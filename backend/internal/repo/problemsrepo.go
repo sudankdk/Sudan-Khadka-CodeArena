@@ -79,7 +79,7 @@ func (p *problemsRepo) ListProblems(opts dto.ProblemListQueryDTO) ([]domain.Prob
 		countQuery = countQuery.Where("difficulty = ?", opts.Difficulty)
 	}
 	if opts.Search != "" {
-		countQuery = countQuery.Where("title ILIKE ?", "%"+opts.Search+"%")
+		countQuery = countQuery.Where("main_heading ILIKE ?", "%"+opts.Search+"%")
 	}
 	if err := countQuery.Count(&total).Error; err != nil {
 		return nil, 0, err
@@ -94,7 +94,7 @@ func (p *problemsRepo) ListProblems(opts dto.ProblemListQueryDTO) ([]domain.Prob
 		query = query.Where("difficulty = ?", opts.Difficulty)
 	}
 	if opts.Search != "" {
-		query = query.Where("title ILIKE ?", "%"+opts.Search+"%")
+		query = query.Where("main_heading ILIKE ?", "%"+opts.Search+"%")
 	}
 	if opts.Limit > 0 {
 		query = query.Limit(opts.Limit)
