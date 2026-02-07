@@ -8,6 +8,7 @@ import Arena from "./pages/user/Arena";
 import Profile from "./pages/user/Profile";
 import Kings from "./pages/user/Kings";
 import Discussion from "./pages/user/Discussion";
+import DiscussionDetail from "./pages/user/DiscussionDetail";
 import Duel from "./pages/user/Duel";
 import Roadmap from "./pages/user/Roadmap";
 import ProblemSolve from "./pages/user/ProblemSolve";
@@ -96,6 +97,14 @@ function App() {
           element={
             <ProtectedRoute>
               <Discussion />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/discussion/:id"
+          element={
+            <ProtectedRoute>
+              <DiscussionDetail />
             </ProtectedRoute>
           }
         />

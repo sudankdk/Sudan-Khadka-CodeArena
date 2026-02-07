@@ -44,9 +44,28 @@ func StartServer(cfg configs.AppConfigs) {
 	logger.Info("Database connected successfully")
 
 	logger.Info("Running database migrations")
-	if err := db.AutoMigrate(&domain.User{}, &domain.Problem{}, &domain.TestCases{}, &domain.BoilerPlate{}, &domain.Submission{}); err != nil {
+	if err := db.AutoMigrate(
+		&domain.User{},
+		&domain.Problem{},
+		&domain.TestCases{},
+		&domain.BoilerPlate{},
+		&domain.Submission{},
+		&domain.Discussion{},
+		&domain.DiscussionComment{},
+		&domain.DiscussionVote{},
+	); err != nil {
 		logger.Fatal("Failed to run migrations", zap.Error(err))
 	}
+
+	// Drop problem_id column from discussions table since it's no longer needed
+	if db.Migrator().HasColumn(&domain.Discussion{}, "problem_id") {
+		if err := db.Migrator().DropColumn(&domain.Discussion{}, "problem_id"); err != nil {
+			logger.Warn("Failed to drop problem_id column from discussions", zap.Error(err))
+		} else {
+			logger.Info("Removed problem_id column from discussions table")
+		}
+	}
+
 	logger.Info("Database migrations completed")
 
 	auth := helper.SetupAuth(cfg.SECRETKEY)
@@ -69,4 +88,5 @@ func SetupRoutes(rh *rest.RestHandlers) {
 	handlers.SetupRoutes(rh)
 	handlers.SetupProblemTestRoutes(rh)
 	handlers.SetupSubmissionRoutes(rh)
+	handlers.SetupDiscussionRoutes(rh)
 }
