@@ -87,3 +87,44 @@ func (p *ProblemTestService) ListTestCasesOfProblems(id string) ([]domain.TestCa
 	}
 	return testcases, nil
 }
+
+func (p *ProblemTestService) UpdateProblem(id string, dto dto.UpdateProblemDTO) error {
+	problemID, err := uuid.Parse(id)
+	if err != nil {
+		return errors.New("invalid problem ID")
+	}
+
+	// Build updates map
+	updates := make(map[string]interface{})
+	if dto.MainHeading != "" {
+		updates["main_heading"] = dto.MainHeading
+	}
+	if dto.Description != "" {
+		updates["description"] = dto.Description
+	}
+	if dto.Tag != "" {
+		updates["tag"] = dto.Tag
+	}
+	if dto.Difficulty != "" {
+		updates["difficulty"] = dto.Difficulty
+	}
+
+	// Update problem
+	if err := p.Repo.UpdateProblem(problemID, updates); err != nil {
+		return err
+	}
+
+	// Handle test cases and boilerplates updates if needed
+	// For now, we'll keep this simple - you can extend to handle nested updates
+
+	return nil
+}
+
+func (p *ProblemTestService) DeleteProblem(id string) error {
+	problemID, err := uuid.Parse(id)
+	if err != nil {
+		return errors.New("invalid problem ID")
+	}
+
+	return p.Repo.DeleteProblem(problemID)
+}

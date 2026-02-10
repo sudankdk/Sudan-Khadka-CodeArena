@@ -20,10 +20,11 @@ type Problem struct {
 	Description  string        `json:"description"`
 	Tag          string        `json:"tag"`
 	Difficulty   string        `json:"difficulty" gorm:"type:varchar(10)"`
-	TestCases    []TestCases   `json:"test_cases" gorm:"foreignKey:ProblemID"`
+	TestCases    []TestCases   `json:"test_cases" gorm:"foreignKey:ProblemID;constraint:OnDelete:CASCADE"`
 	CreatedAt    time.Time     `json:"created_at"`
 	UpdatedAt    time.Time     `json:"updated_at"`
-	Boilerplates []BoilerPlate `json:"boilerplates" gorm:"foreignKey:ProblemID"`
+	Boilerplates []BoilerPlate `json:"boilerplates" gorm:"foreignKey:ProblemID;constraint:OnDelete:CASCADE"`
+	Contests     []Contest     `json:"contests,omitempty" gorm:"many2many:contest_problems;"`
 }
 
 func (u *Problem) BeforeCreate(scope *gorm.DB) error {

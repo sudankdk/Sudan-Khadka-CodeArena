@@ -53,6 +53,9 @@ func StartServer(cfg configs.AppConfigs) {
 		&domain.Discussion{},
 		&domain.DiscussionComment{},
 		&domain.DiscussionVote{},
+		&domain.Contest{},
+		&domain.GlobalLeaderboardEntry{},
+		&domain.ContestLeaderboardEntry{},
 	); err != nil {
 		logger.Fatal("Failed to run migrations", zap.Error(err))
 	}

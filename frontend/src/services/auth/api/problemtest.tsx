@@ -19,18 +19,24 @@ export interface ProblemTestsResponse {
 
 export const getProblemTests = async (page: number = 1, pageSize: number = 10): Promise<ProblemTestsResponse> => {
   const resp = await problemtestClient.get<any>(`/problems?test-cases=true&page=${page}&page_size=${pageSize}`);
-  console.log("Fetched Problem Tests Response:", resp);
-
-  // Handle the case where the data might be at resp.data or just in resp
-  const responseData = resp?.data || resp;
-  const problems = responseData?.problems || [];
-  const total = responseData?.total || 0;
+  console.log("Fetched Problem Tests Full Response:", resp);
+  
+  // Response structure is { message: string, data: ProblemListResponse }
+  // ApiClient already unwraps axios response.data, so resp is the fiber.Map
+  const problemListData = resp?.data || resp;
+  console.log("Problem List Data:", problemListData);
+  
+  const problems = problemListData?.problems || [];
+  console.log("Problems array (should have boilerplates):", problems);
+  console.log("First problem boilerplates:", problems[0]?.boilerplates);
+  
+  const total = problemListData?.total || 0;
 
   return {
     problems: Array.isArray(problems) ? problems : [],
     total: Number(total),
-    page: Number(responseData?.page || page),
-    page_size: Number(responseData?.page_size || pageSize)
+    page: Number(problemListData?.page || page),
+    page_size: Number(problemListData?.page_size || pageSize)
   };
 }
 
@@ -45,4 +51,16 @@ export const filteredProblemsByDifficulty = async (difficulty: string): Promise<
   const resp = await problemtestClient.get<any>(`/problems?difficulty=${difficulty}`);
   console.log("Fetched Filtered Problems:", resp);
   return resp?.data?.problems || [];
+}
+
+export const deleteProblemTest = async (id: string) => {
+  const resp = await problemtestClient.delete(`/problems/${id}`);
+  console.log("Deleted Problem Test:", resp);
+  return resp;
+}
+
+export const updateProblemTest = async (id: string, problemtest: Partial<IProblemTest>) => {
+  const resp = await problemtestClient.put<IProblemTest>(`/problems/${id}`, problemtest);
+  console.log("Updated Problem Test:", resp);
+  return resp;
 }

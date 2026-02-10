@@ -20,6 +20,7 @@ interface CreateProblemDialogProps {
   onBoilerplateChange: (index: number, field: keyof IBoilerplate, value: string) => void;
   onAddBoilerplate: () => void;
   onRemoveBoilerplate: (index: number) => void;
+  isEditing?: boolean;
 }
 
 export const CreateProblemDialog = ({
@@ -34,13 +35,14 @@ export const CreateProblemDialog = ({
   onRemoveTestCase,
   onBoilerplateChange,
   onAddBoilerplate,
-  onRemoveBoilerplate
+  onRemoveBoilerplate,
+  isEditing = false
 }: CreateProblemDialogProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Create New Problem</DialogTitle>
+          <DialogTitle>{isEditing ? 'Edit Problem' : 'Create New Problem'}</DialogTitle>
         </DialogHeader>
         <form onSubmit={onSubmit} className="space-y-4">
 
@@ -65,6 +67,7 @@ export const CreateProblemDialog = ({
               onChange={onInputChange}
               placeholder="e.g., two-sum"
               required
+              disabled={isEditing}
             />
           </div>
 
@@ -82,7 +85,7 @@ export const CreateProblemDialog = ({
           </div>
 
           <BoilerplateForm
-            boilerplates={formData.boilerplate}
+            boilerplates={formData.boilerplates}
             onBoilerplateChange={onBoilerplateChange}
             onAddBoilerplate={onAddBoilerplate}
             onRemoveBoilerplate={onRemoveBoilerplate}
@@ -130,7 +133,10 @@ export const CreateProblemDialog = ({
               Cancel
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? "Creating..." : "Create Problem"}
+              {loading 
+                ? (isEditing ? "Updating..." : "Creating...") 
+                : (isEditing ? "Update Problem" : "Create Problem")
+              }
             </Button>
           </div>
         </form>

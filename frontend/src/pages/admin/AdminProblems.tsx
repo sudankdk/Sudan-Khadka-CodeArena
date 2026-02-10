@@ -6,6 +6,8 @@ import { Pagination } from '@/components/ui/pagination';
 import { useState } from "react";
 import { useProblem } from "@/features/Problems/hooks/useProblem";
 import { useCreateProblem } from "@/features/Problems/hooks/useCreateProblem";
+import { useDeleteProblem } from "@/features/Problems/hooks/useDeleteProblem";
+import { useUpdateProblem } from "@/features/Problems/hooks/useUpdateProblem";
 import { useProblemCounts } from "@/features/Problems/hooks/useProblemCounts";
 import type { IBoilerplate, IProblemTest, ITestCase } from '@/types/problemstest/problemtest';
 
@@ -16,7 +18,7 @@ const initialFormData: IProblemTest = {
   tag: "",
   difficulty: "easy",
   test_cases: [{ input: "", expected: "" }],
-  boilerplate: [{ code: "", Language: "" }]
+  boilerplates: [{ code: "", language: "" }]
 };
 
 const AdminProblems = () => {
@@ -27,16 +29,22 @@ const AdminProblems = () => {
   //local state
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formData, setFormData] = useState(initialFormData);
+  const [editingProblem, setEditingProblem] = useState<IProblemTest | null>(null);
 
 
   //server state
   const { data, isLoading } = useProblem(currentPage, pageSize)
   const createProblemMutation = useCreateProblem();
+  const deleteProblemMutation = useDeleteProblem();
+  const updateProblemMutation = useUpdateProblem();
   const countsQuery = useProblemCounts();
 
   const total = data?.total || 0;
   const totalPages = Math.ceil(total / pageSize);
   const problems = data?.problems || [];
+
+  console.log("Fetched problems:", problems);
+  console.log("First problem boilerplates:", problems[0]?.boilerplates);
 
   // Filter problems based on search query
   const filteredProblems = problems.filter(problem =>
@@ -71,35 +79,77 @@ const AdminProblems = () => {
   };
 
   const handleBoilerplateChange = (index: number, field: keyof IBoilerplate, value: string) => {
-    const newBoilerplates = [...formData.boilerplate];
+    const newBoilerplates = [...formData.boilerplates];
     newBoilerplates[index] = { ...newBoilerplates[index], [field]: value };
-    setFormData(prev => ({ ...prev, boilerplate: newBoilerplates }));
+    setFormData(prev => ({ ...prev, boilerplates: newBoilerplates }));
   };
 
   const addBoilerplate = () => {
     setFormData(prev => ({
       ...prev,
-      boilerplate: [...prev.boilerplate, { code: "", Language: "" }]
+      boilerplates: [...prev.boilerplates, { code: "", language: "" }]
     }));
   };
 
   const removeBoilerplate = (index: number) => {
     setFormData(prev => ({
       ...prev,
-      boilerplate: prev.boilerplate.filter((_, i) => i !== index)
+      boilerplates: prev.boilerplates.filter((_, i) => i !== index)
     }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    createProblemMutation.mutate(formData, {
-      onSuccess: () => {
-        setIsDialogOpen(false);
-        setFormData(initialFormData);
-        setCurrentPage(1);
-      }
-    });
+    if (editingProblem && editingProblem.id) {
+      // Update existing problem
+      updateProblemMutation.mutate(
+        { id: editingProblem.id, data: formData },
+        {
+          onSuccess: () => {
+            setIsDialogOpen(false);
+            setFormData(initialFormData);
+            setEditingProblem(null);
+          }
+        }
+      );
+    } else {
+      // Create new problem
+      createProblemMutation.mutate(formData, {
+        onSuccess: () => {
+          setIsDialogOpen(false);
+          setFormData(initialFormData);
+          setCurrentPage(1);
+        }
+      });
+    }
   };
+
+  const handleDelete = async (id: string) => {
+    deleteProblemMutation.mutate(id);
+  };
+
+  const handleEdit = (problem: IProblemTest) => {
+    console.log("Editing problem:", problem);
+    console.log("Boilerplates:", problem.boilerplates);
+    setEditingProblem(problem);
+    setFormData({
+      main_heading: problem.main_heading,
+      slug: problem.slug,
+      description: problem.description,
+      tag: problem.tag,
+      difficulty: problem.difficulty,
+      test_cases: problem.test_cases || [{ input: "", expected: "" }],
+      boilerplates: problem.boilerplates || [{ code: "", language: "" }]
+    });
+    setIsDialogOpen(true);
+  };
+
+  const handleCloseDialog = () => {
+    setIsDialogOpen(false);
+    setFormData(initialFormData);
+    setEditingProblem(null);
+  };
+
   const handlePageChange = (page: number) => setCurrentPage(page);
 
   return (
@@ -203,7 +253,12 @@ const AdminProblems = () => {
 
         {/* Problems Table */}
         <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
-          <ProblemsTable problems={filteredProblems} loading={isLoading} />
+          <ProblemsTable 
+            problems={filteredProblems} 
+            loading={isLoading}
+            onDelete={handleDelete}
+            onEdit={handleEdit}
+          />
           {!isLoading && total > 0 && (
             <Pagination
               currentPage={currentPage}
@@ -217,9 +272,9 @@ const AdminProblems = () => {
 
         <CreateProblemDialog
           isOpen={isDialogOpen}
-          onClose={() => setIsDialogOpen(false)}
+          onClose={handleCloseDialog}
           formData={formData}
-          loading={isLoading || createProblemMutation.isPending}
+          loading={isLoading || createProblemMutation.isPending || updateProblemMutation.isPending}
           onSubmit={handleSubmit}
           onInputChange={handleInputChange}
           onTestCaseChange={handleTestCaseChange}
@@ -228,6 +283,7 @@ const AdminProblems = () => {
           onBoilerplateChange={handleBoilerplateChange}
           onAddBoilerplate={addBoilerplate}
           onRemoveBoilerplate={removeBoilerplate}
+          isEditing={!!editingProblem}
         />
       </div>
     </AdminDashboardLayout>

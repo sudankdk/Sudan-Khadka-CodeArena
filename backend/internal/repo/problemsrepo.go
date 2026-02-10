@@ -14,6 +14,8 @@ type ProblemsRepo interface {
 	GetProblemByID(id uuid.UUID, includeTC bool) (*domain.Problem, error)
 	GetProblemBySlug(slug string, includeTC bool) (*domain.Problem, error)
 	ListProblems(opts dto.ProblemListQueryDTO) ([]domain.Problem, int64, error)
+	UpdateProblem(id uuid.UUID, updates map[string]interface{}) error
+	DeleteProblem(id uuid.UUID) error
 }
 
 type problemsRepo struct {
@@ -87,9 +89,10 @@ func (p *problemsRepo) ListProblems(opts dto.ProblemListQueryDTO) ([]domain.Prob
 
 	// Fetch paginated results
 	query := p.db.Model(&domain.Problem{})
-	if opts.Testcases {
-		query = query.Preload("TestCases").Preload("Boilerplates")
-	}
+
+	// Always preload test cases and boilerplates for now
+	query = query.Preload("TestCases").Preload("Boilerplates")
+
 	if opts.Difficulty != "" {
 		query = query.Where("difficulty = ?", opts.Difficulty)
 	}
@@ -108,6 +111,57 @@ func (p *problemsRepo) ListProblems(opts dto.ProblemListQueryDTO) ([]domain.Prob
 	}
 
 	return problems, total, nil
+}
+
+// UpdateProblem implements [ProblemsRepo].
+func (pr *problemsRepo) UpdateProblem(id uuid.UUID, updates map[string]interface{}) error {
+	// First check if problem exists
+	var problem domain.Problem
+	if err := pr.db.First(&problem, "id = ?", id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errors.New("problem not found")
+		}
+		return err
+	}
+
+	// Update the problem
+	if err := pr.db.Model(&problem).Updates(updates).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// DeleteProblem implements [ProblemsRepo].
+func (pr *problemsRepo) DeleteProblem(id uuid.UUID) error {
+	// Check if problem exists
+	var problem domain.Problem
+	if err := pr.db.First(&problem, "id = ?", id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errors.New("problem not found")
+		}
+		return err
+	}
+
+	// Use a transaction to ensure all deletes succeed or rollback
+	return pr.db.Transaction(func(tx *gorm.DB) error {
+		// Delete associated test cases
+		if err := tx.Where("problem_id = ?", id).Delete(&domain.TestCases{}).Error; err != nil {
+			return err
+		}
+
+		// Delete associated boilerplates
+		if err := tx.Where("problem_id = ?", id).Delete(&domain.BoilerPlate{}).Error; err != nil {
+			return err
+		}
+
+		// Delete the problem
+		if err := tx.Delete(&problem).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
 }
 
 func NewProblemsRepo(db *gorm.DB) ProblemsRepo {

@@ -32,6 +32,7 @@ type User struct {
 	UpdatedAt          time.Time `json:"updated_at"`
 	Solvedcount        int       `json:"solved_count" gorm:"default:0"` //solved count
 	Submissions        []int     `json:"submissions" gorm:"type:json;default:'[]';serializer:json"`
+	Contests           []Contest `json:"contests,omitempty" gorm:"many2many:contest_participants;"`
 }
 
 func (u *User) BeforeCreate(scope *gorm.DB) error {
