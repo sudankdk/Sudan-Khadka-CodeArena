@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/sudankdk/codearena/internal/domain"
+	"github.com/sudankdk/codearena/internal/dto"
 	"gorm.io/gorm"
 )
 
@@ -13,7 +14,7 @@ type ContestRepo interface {
 	GetByID(id uuid.UUID) (*domain.Contest, error)
 	Update(contest *domain.Contest) error
 	Delete(id uuid.UUID) error
-	List() ([]*domain.Contest, error)
+	List(query dto.ListQuery) ([]*domain.Contest, error)
 	AddProblem(contestID, problemID uuid.UUID, orderIndex int, maxPoints int, partialCredit bool, timeMultiplier float64) error
 	RemoveProblem(contestID, problemID uuid.UUID) error
 	GetProblems(contestID uuid.UUID) ([]*domain.ContestProblem, error)
@@ -110,9 +111,10 @@ func (c *contestRepoImpl) GetProblems(contestID uuid.UUID) ([]*domain.ContestPro
 }
 
 // List implements [ContestRepo].
-func (c *contestRepoImpl) List() ([]*domain.Contest, error) {
+func (c *contestRepoImpl) List(query dto.ListQuery) ([]*domain.Contest, error) {
 	var contests []*domain.Contest
-	if err := c.db.Order("created_at DESC").Find(&contests).Error; err != nil {
+	db := ApplyListQuery[domain.Contest](c.db, query)
+	if err := db.Find(&contests).Error; err != nil {
 		return nil, err
 	}
 	return contests, nil

@@ -1,15 +1,17 @@
 package service
 
 import (
-	"time"
-
 	"github.com/google/uuid"
-	// Import your domain and repo packages
+	"github.com/sudankdk/codearena/internal/domain"
+	"github.com/sudankdk/codearena/internal/dto"
+	"github.com/sudankdk/codearena/internal/repo"
 )
 
 // ContestService handles contest operations and orchestrates scoring
 type ContestService struct {
-	scoringService *ContestScoringService
+	// scoringService *ContestScoringService
+	ContestRepo repo.ContestRepo
+
 	// Add repositories:
 	// contestRepo       repo.ContestRepository
 	// participantRepo   repo.ContestParticipantRepository
@@ -17,12 +19,145 @@ type ContestService struct {
 	// userRepo          repo.UserRepository
 }
 
-// NewContestService creates a new contest service
-func NewContestService() *ContestService {
-	return &ContestService{
-		scoringService: &ContestScoringService{},
-		// Initialize repositories
+// CreateContest creates a new contest
+func (cs *ContestService) CreateContest(dto dto.CreateContestDTO) (*domain.Contest, error) {
+	contest := &domain.Contest{
+		Name:      dto.Name,
+		StartTime: dto.StartTime,
+		EndTime:   dto.EndTime,
 	}
+	if err := cs.ContestRepo.Create(contest); err != nil {
+		return nil, err
+	}
+
+	return contest, nil
+}
+
+// add problems to contest
+func (cs *ContestService) AddProblemsToContest(dto dto.AddProblemToContestDTO) error {
+	contestID, err := uuid.Parse(dto.ContestID)
+	if err != nil {
+		return err
+	}
+	problemID, err := uuid.Parse(dto.ProblemID)
+	if err != nil {
+		return err
+	}
+
+	if _, err := cs.ContestRepo.GetByID(contestID); err != nil {
+		return err
+	}
+
+	return cs.ContestRepo.AddProblem(contestID, problemID, dto.OrderIndex, dto.MaxPoints, dto.PartialCredit, dto.TimeMultiplier)
+}
+
+// remove problem from contest
+func (cs *ContestService) RemoveProblemFromContest(contestIDStr, problemIDStr string) error {
+	contestID, err := uuid.Parse(contestIDStr)
+	if err != nil {
+		return err
+	}
+	problemID, err := uuid.Parse(problemIDStr)
+	if err != nil {
+		return err
+	}
+
+	if _, err := cs.ContestRepo.GetByID(contestID); err != nil {
+		return err
+	}
+
+	return cs.ContestRepo.RemoveProblem(contestID, problemID)
+}
+
+// register participant to contest
+func (cs *ContestService) RegisterParticipant(contestIDStr, userIDStr string) error {
+	contestID, err := uuid.Parse(contestIDStr)
+	if err != nil {
+		return err
+	}
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return err
+	}
+
+	if _, err := cs.ContestRepo.GetByID(contestID); err != nil {
+		return err
+	}
+	return cs.ContestRepo.RegisterParticipant(contestID, userID)
+}
+
+// unregister participant from contest
+func (cs *ContestService) UnregisterParticipant(contestIDStr, userIDStr string) error {
+	contestID, err := uuid.Parse(contestIDStr)
+	if err != nil {
+		return err
+	}
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return err
+	}
+
+	if _, err := cs.ContestRepo.GetByID(contestID); err != nil {
+		return err
+	}
+	return cs.ContestRepo.UnregisterParticipant(contestID, userID)
+}
+
+// GetContestParticipants returns list of participants in a contest
+func (cs *ContestService) GetContestParticipants(contestIDStr string) ([]*domain.ContestParticipant, error) {
+	contestID, err := uuid.Parse(contestIDStr)
+	if err != nil {
+		return nil, err
+	}
+	if _, err := cs.ContestRepo.GetByID(contestID); err != nil {
+		return nil, err
+	}
+	participants, err := cs.ContestRepo.GetParticipants(contestID)
+	if err != nil {
+		return nil, err
+	}
+	return participants, nil
+}
+
+// GetContestProblems returns list of problems in a contest
+func (cs *ContestService) GetContestProblems(contestIDStr string) ([]*domain.ContestProblem, error) {
+	contestID, err := uuid.Parse(contestIDStr)
+	if err != nil {
+		return nil, err
+	}
+	if _, err := cs.ContestRepo.GetByID(contestID); err != nil {
+		return nil, err
+	}
+	problems, err := cs.ContestRepo.GetProblems(contestID)
+	if err != nil {
+		return nil, err
+	}
+	return problems, nil
+}
+
+// getContestLeaderboard returns current leaderboard for a contest
+func (cs *ContestService) GetContestLeaderboard(contestIDStr string, limit int) ([]*domain.ContestLeaderboardEntry, error) {
+	contestID, err := uuid.Parse(contestIDStr)
+	if err != nil {
+		return nil, err
+	}
+	if _, err := cs.ContestRepo.GetByID(contestID); err != nil {
+		return nil, err
+	}
+	leaderboard, err := cs.ContestRepo.GetLeaderboard(contestID)
+	if err != nil {
+		return nil, err
+	}
+	return leaderboard, nil
+}
+
+// list contests with pagination and filtering
+func (cs *ContestService) ListContests(query dto.ListQuery) ([]*domain.Contest, error) {
+	contests, err := cs.ContestRepo.List(query)
+	if err != nil {
+		return nil, err
+	}
+	return contests, nil
 }
 
 // ProcessSubmission handles a new submission in a contest
@@ -81,23 +216,4 @@ func (cs *ContestService) UpdateGlobalLeaderboard(userID uuid.UUID) error {
 	// 3. Recalculate global ranks
 
 	return nil
-}
-
-// GetContestLeaderboard returns current leaderboard for a contest
-func (cs *ContestService) GetContestLeaderboard(contestID uuid.UUID, limit int) ([]LeaderboardEntry, error) {
-	// TODO: Implement
-	return nil, nil
-}
-
-// LeaderboardEntry represents a row in the leaderboard
-type LeaderboardEntry struct {
-	Rank             int        `json:"rank"`
-	UserID           uuid.UUID  `json:"user_id"`
-	Username         string     `json:"username"`
-	TotalPoints      int        `json:"total_points"`
-	ProblemsSolved   int        `json:"problems_solved"`
-	PenaltyTime      int        `json:"penalty_time"`
-	Rating           float64    `json:"rating"`
-	RatingChange     int        `json:"rating_change"`
-	LastSubmissionAt *time.Time `json:"last_submission_at"`
 }
