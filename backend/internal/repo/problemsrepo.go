@@ -13,6 +13,7 @@ type ProblemsRepo interface {
 	CreateProblem(p *domain.Problem) error
 	GetProblemByID(id uuid.UUID, includeTC bool) (*domain.Problem, error)
 	GetProblemBySlug(slug string, includeTC bool) (*domain.Problem, error)
+	GetProblemByTitle(title string) (*domain.Problem, error)
 	ListProblems(opts dto.ProblemListQueryDTO) ([]domain.Problem, int64, error)
 	UpdateProblem(id uuid.UUID, updates map[string]interface{}) error
 	DeleteProblem(id uuid.UUID) error
@@ -65,6 +66,14 @@ func (p *problemsRepo) GetProblemBySlug(slug string, includeTC bool) (*domain.Pr
 		query = query.Preload("TestCases").Preload("Boilerplates")
 	}
 	if err := query.First(&problem, "slug = ?", slug).Error; err != nil {
+		return nil, err
+	}
+	return &problem, nil
+}
+
+func (p *problemsRepo) GetProblemByTitle(title string) (*domain.Problem, error) {
+	var problem domain.Problem
+	if err := p.db.Where("main_heading = ?", title).First(&problem).Error; err != nil {
 		return nil, err
 	}
 	return &problem, nil

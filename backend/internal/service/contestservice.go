@@ -13,6 +13,7 @@ import (
 // ContestService handles contest operations and orchestrates scoring
 type ContestService struct {
 	ContestRepo    repo.ContestRepo
+	ProblemRepo    repo.ProblemsRepo
 	SubmissionRepo repo.SubmissionRepo
 	UserRepo       repo.UserRepo
 	ScoringService *ContestScoringService
@@ -20,10 +21,17 @@ type ContestService struct {
 
 // CreateContest creates a new contest
 func (cs *ContestService) CreateContest(dto dto.CreateContestDTO) (*domain.Contest, error) {
+	// Calculate duration in minutes
+	duration := int(dto.EndTime.Sub(dto.StartTime).Minutes())
+
 	contest := &domain.Contest{
-		Name:      dto.Name,
-		StartTime: dto.StartTime,
-		EndTime:   dto.EndTime,
+		Name:        dto.Title,
+		Description: dto.Description,
+		StartTime:   dto.StartTime,
+		EndTime:     dto.EndTime,
+		Duration:    duration,
+		IsRated:     dto.IsRated,
+		IsActive:    false, // New contests start inactive
 	}
 	if err := cs.ContestRepo.Create(contest); err != nil {
 		return nil, err
@@ -46,21 +54,31 @@ func (cs *ContestService) GetByID(contestIDStr string) (*domain.Contest, error) 
 }
 
 // add problems to contest
-func (cs *ContestService) AddProblemsToContest(dto dto.AddProblemToContestDTO) error {
-	contestID, err := uuid.Parse(dto.ContestID)
+func (cs *ContestService) AddProblemsToContest(contestIDStr string, dto dto.AddProblemToContestDTO) error {
+	contestID, err := uuid.Parse(contestIDStr)
 	if err != nil {
 		return err
 	}
-	problemID, err := uuid.Parse(dto.ProblemID)
+
+	// Get problem by title instead of ID
+	problem, err := cs.ProblemRepo.GetProblemByTitle(dto.ProblemTitle)
 	if err != nil {
-		return err
+		return errors.New("problem not found with title: " + dto.ProblemTitle)
 	}
 
 	if _, err := cs.ContestRepo.GetByID(contestID); err != nil {
 		return err
 	}
 
-	return cs.ContestRepo.AddProblem(contestID, problemID, dto.OrderIndex, dto.MaxPoints, dto.PartialCredit, dto.TimeMultiplier)
+	// Get current problem count to set order index
+	existingProblems, err := cs.ContestRepo.GetProblems(contestID)
+	if err != nil {
+		return err
+	}
+	orderIndex := len(existingProblems) + 1
+
+	// Use time_penalty_minutes directly, set defaults for partial credit and time multiplier
+	return cs.ContestRepo.AddProblem(contestID, problem.ID, orderIndex, dto.MaxPoints, false, 1.0)
 }
 
 // remove problem from contest
@@ -113,6 +131,20 @@ func (cs *ContestService) UnregisterParticipant(contestIDStr, userIDStr string) 
 		return err
 	}
 	return cs.ContestRepo.UnregisterParticipant(contestID, userID)
+}
+
+// check if user is registered for contest
+func (cs *ContestService) IsUserRegistered(contestIDStr, userIDStr string) (bool, error) {
+	contestID, err := uuid.Parse(contestIDStr)
+	if err != nil {
+		return false, err
+	}
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return false, err
+	}
+
+	return cs.ContestRepo.IsUserRegistered(contestID, userID)
 }
 
 // GetContestParticipants returns list of participants in a contest

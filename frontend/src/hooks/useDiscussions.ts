@@ -94,7 +94,7 @@ export const useUpdateComment = () => {
 export const useDeleteComment = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, discussionId }: { id: string; discussionId: string }) => 
+    mutationFn: ({ id }: { id: string; discussionId: string }) => 
       discussionApi.deleteComment(id),
     onSuccess: (_, { discussionId }) => {
       queryClient.invalidateQueries({ queryKey: discussionKeys.comments(discussionId) });

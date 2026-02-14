@@ -16,6 +16,7 @@ type Contest struct {
 	Duration        int       `json:"duration" gorm:"not null"`          // Duration in minutes
 	MaxParticipants int       `json:"max_participants" gorm:"default:0"` // 0 = unlimited
 	IsActive        bool      `json:"is_active" gorm:"default:false"`
+	IsRated         bool      `json:"is_rated" gorm:"default:true"` // Whether contest affects user ratings
 	CreatedAt       time.Time `json:"created_at"`
 	UpdatedAt       time.Time `json:"updated_at"`
 
@@ -44,7 +45,7 @@ type ContestProblem struct {
 type ContestParticipant struct {
 	ID        uuid.UUID `json:"id" gorm:"type:uuid;primaryKey"`
 	ContestID uuid.UUID `json:"contest_id" gorm:"type:uuid;not null;index"`
-	Contest   Contest   `json:"contest" gorm:"foreignKey:ContestID;constraint:OnDelete:CASCADE"`
+	Contest   Contest   `json:"-" gorm:"foreignKey:ContestID;constraint:OnDelete:CASCADE"`
 	UserID    uuid.UUID `json:"user_id" gorm:"type:uuid;not null;index"`
 	User      User      `json:"user" gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE"`
 
@@ -79,5 +80,8 @@ func (cp *ContestProblem) BeforeCreate(tx *gorm.DB) error {
 
 func (cp *ContestParticipant) BeforeCreate(tx *gorm.DB) error {
 	cp.ID = uuid.New()
+	if cp.RegisteredAt.IsZero() {
+		cp.RegisteredAt = time.Now()
+	}
 	return nil
 }

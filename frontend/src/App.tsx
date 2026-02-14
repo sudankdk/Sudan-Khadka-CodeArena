@@ -4,9 +4,7 @@ import Login from "./pages/Auth/Login";
 import ProtectedRoute from "./services/auth/ProtectedRoute";
 import UserDashboard from "./pages/user/UserDashboard";
 import Problems from "./features/Problems/pages/Problems";
-import Arena from "./pages/user/Arena";
 import Profile from "./pages/user/Profile";
-import Kings from "./pages/user/Kings";
 import Discussion from "./pages/user/Discussion";
 import DiscussionDetail from "./pages/user/DiscussionDetail";
 import Duel from "./pages/user/Duel";
@@ -17,9 +15,17 @@ import useAuthStore from "./services/auth/store/auth.store";
 import { useEffect } from "react";
 import OAuth from "./pages/Auth/OAuth";
 import AdminProblems from "./pages/admin/AdminProblems";
-import AdminContests from "./pages/admin/AdminContests";
 import AdminUsers from "./pages/admin/AdminUsers";
 import LandingPage from "./pages/LandingPage";
+
+// Contest pages
+import { 
+  AdminContests, 
+  AdminContestDetail,
+  UserContests,
+  UserContestDetail,
+  GlobalLeaderboard
+} from "./features/Contests";
 
 
 function App() {
@@ -72,7 +78,15 @@ function App() {
           path="/contests"
           element={
             <ProtectedRoute>
-              <Arena />
+              <UserContests />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/contests/:contestId"
+          element={
+            <ProtectedRoute>
+              <UserContestDetail />
             </ProtectedRoute>
           }
         />
@@ -88,7 +102,7 @@ function App() {
           path="/leaderboard"
           element={
             <ProtectedRoute>
-              <Kings />
+              <GlobalLeaderboard />
             </ProtectedRoute>
           }
         />
@@ -155,6 +169,14 @@ function App() {
           element={
             <ProtectedRoute>
               <AdminContests />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/contests/:contestId"
+          element={
+            <ProtectedRoute>
+              <AdminContestDetail />
             </ProtectedRoute>
           }
         />

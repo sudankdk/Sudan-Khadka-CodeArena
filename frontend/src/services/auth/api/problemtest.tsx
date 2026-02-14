@@ -17,8 +17,17 @@ export interface ProblemTestsResponse {
   page_size: number;
 }
 
-export const getProblemTests = async (page: number = 1, pageSize: number = 10): Promise<ProblemTestsResponse> => {
-  const resp = await problemtestClient.get<any>(`/problems?test-cases=true&page=${page}&page_size=${pageSize}`);
+export const getProblemTests = async (
+  page: number = 1, 
+  pageSize: number = 10, 
+  search?: string
+): Promise<ProblemTestsResponse> => {
+  let url = `/problems?test-cases=true&page=${page}&page_size=${pageSize}`;
+  if (search) {
+    url += `&search=${encodeURIComponent(search)}`;
+  }
+  
+  const resp = await problemtestClient.get<any>(url);
   console.log("Fetched Problem Tests Full Response:", resp);
   
   // Response structure is { message: string, data: ProblemListResponse }

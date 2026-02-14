@@ -21,6 +21,7 @@ type ContestRepo interface {
 	GetProblems(contestID uuid.UUID) ([]*domain.ContestProblem, error)
 	RegisterParticipant(contestID, userID uuid.UUID) error
 	UnregisterParticipant(contestID, userID uuid.UUID) error
+	IsUserRegistered(contestID, userID uuid.UUID) (bool, error)
 	GetParticipants(contestID uuid.UUID) ([]*domain.ContestParticipant, error)
 	UpdateParticipantScore(contestID, userID uuid.UUID, points int, problemsSolved int, penaltyTime int) error
 	GetLeaderboard(contestID uuid.UUID) ([]*domain.ContestLeaderboardEntry, error)
@@ -128,7 +129,8 @@ func (c *contestRepoImpl) RegisterParticipant(contestID uuid.UUID, userID uuid.U
 	// Check if participant already exists
 	var existing domain.ContestParticipant
 	if err := c.db.Where("contest_id = ? AND user_id = ?", contestID, userID).First(&existing).Error; err == nil {
-		return errors.New("participant already registered")
+		// Already registered - this is idempotent, return success
+		return nil
 	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
 		return err
 	}
@@ -143,6 +145,18 @@ func (c *contestRepoImpl) RegisterParticipant(contestID uuid.UUID, userID uuid.U
 	}
 
 	return nil
+}
+
+// IsUserRegistered implements [ContestRepo].
+func (c *contestRepoImpl) IsUserRegistered(contestID uuid.UUID, userID uuid.UUID) (bool, error) {
+	var count int64
+	err := c.db.Model(&domain.ContestParticipant{}).
+		Where("contest_id = ? AND user_id = ?", contestID, userID).
+		Count(&count).Error
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
 }
 
 // RemoveProblem implements [ContestRepo].

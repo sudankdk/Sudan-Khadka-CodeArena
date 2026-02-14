@@ -22,6 +22,7 @@ func SetupContestRoutes(rh *rest.RestHandlers) {
 	app := rh.App
 	svc := service.ContestService{
 		ContestRepo:    repo.NewContestRepo(rh.DB),
+		ProblemRepo:    repo.NewProblemsRepo(rh.DB),
 		SubmissionRepo: repo.NewSubmissionRepo(rh.DB),
 		UserRepo:       repo.NewUserRepo(rh.DB),
 		ScoringService: &service.ContestScoringService{},
@@ -46,6 +47,7 @@ func SetupContestRoutes(rh *rest.RestHandlers) {
 	contestRoutes.Delete("/:id/problems/:problemId", handler.RemoveProblemFromContest)
 	contestRoutes.Post("/:id/register", handler.RegisterParticipant)
 	contestRoutes.Delete("/:id/register", handler.UnregisterParticipant)
+	contestRoutes.Get("/:id/registration-status", handler.CheckRegistrationStatus)
 	contestRoutes.Post("/:id/finalize", handler.FinalizeContestRankings)
 }
 
@@ -57,7 +59,7 @@ func (ch *ContestHandlers) CreateContest(ctx *fiber.Ctx) error {
 		return rest.ErrorMessage(ctx, http.StatusBadRequest, err)
 	}
 
-	ch.logger.Info("Creating contest", zap.String("name", req.Name))
+	ch.logger.Info("Creating contest", zap.String("title", req.Title))
 	contest, err := ch.svc.CreateContest(req)
 	if err != nil {
 		ch.logger.Error("Failed to create contest", zap.Error(err))
@@ -112,6 +114,7 @@ func (ch *ContestHandlers) ListContests(ctx *fiber.Ctx) error {
 }
 
 func (ch *ContestHandlers) AddProblemToContest(ctx *fiber.Ctx) error {
+	contestID := ctx.Params("id")
 	var req dto.AddProblemToContestDTO
 
 	if err := ctx.BodyParser(&req); err != nil {
@@ -119,14 +122,11 @@ func (ch *ContestHandlers) AddProblemToContest(ctx *fiber.Ctx) error {
 		return rest.ErrorMessage(ctx, http.StatusBadRequest, err)
 	}
 
-	// Get contest ID from URL params
-	req.ContestID = ctx.Params("id")
-
 	ch.logger.Info("Adding problem to contest",
-		zap.String("contest_id", req.ContestID),
-		zap.String("problem_id", req.ProblemID))
+		zap.String("contest_id", contestID),
+		zap.String("problem_title", req.ProblemTitle))
 
-	err := ch.svc.AddProblemsToContest(req)
+	err := ch.svc.AddProblemsToContest(contestID, req)
 	if err != nil {
 		ch.logger.Error("Failed to add problem to contest", zap.Error(err))
 		return rest.InternalError(ctx, err)
@@ -202,6 +202,30 @@ func (ch *ContestHandlers) UnregisterParticipant(ctx *fiber.Ctx) error {
 	}
 
 	return rest.SuccessMessage(ctx, "Unregistered from contest successfully", nil)
+}
+
+func (ch *ContestHandlers) CheckRegistrationStatus(ctx *fiber.Ctx) error {
+	contestID := ctx.Params("id")
+	
+	// Get user ID from query params
+	userID := ctx.Query("user_id")
+	if userID == "" {
+		return rest.ErrorMessage(ctx, http.StatusBadRequest, fiber.NewError(http.StatusBadRequest, "user_id is required"))
+	}
+
+	ch.logger.Info("Checking registration status",
+		zap.String("contest_id", contestID),
+		zap.String("user_id", userID))
+
+	isRegistered, err := ch.svc.IsUserRegistered(contestID, userID)
+	if err != nil {
+		ch.logger.Error("Failed to check registration status", zap.Error(err))
+		return rest.InternalError(ctx, err)
+	}
+
+	return rest.SuccessMessage(ctx, "Registration status retrieved", map[string]bool{
+		"is_registered": isRegistered,
+	})
 }
 
 func (ch *ContestHandlers) GetContestParticipants(ctx *fiber.Ctx) error {

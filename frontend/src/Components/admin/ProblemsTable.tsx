@@ -140,7 +140,7 @@ export const ProblemsTable = ({ problems, loading, onDelete, onEdit }: ProblemsT
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        if (window.confirm(`Are you sure you want to delete "${problem.main_heading}"?`)) {
+                        if (problem.id && window.confirm(`Are you sure you want to delete "${problem.main_heading}"?`)) {
                           onDelete(problem.id);
                         }
                       }}
