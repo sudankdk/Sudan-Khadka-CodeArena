@@ -51,8 +51,8 @@ export const BoilerplateForm = ({
               <Label htmlFor={`language-${index}`}>Language</Label>
               <select
                 id={`language-${index}`}
-                value={boilerplate.Language}
-                onChange={(e) => onBoilerplateChange(index, "Language", e.target.value)}
+                value={boilerplate.language}
+                onChange={(e) => onBoilerplateChange(index, "language", e.target.value)}
                 className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
               >
@@ -68,7 +68,7 @@ export const BoilerplateForm = ({
               <Label htmlFor={`code-${index}`}>Code</Label>
               <Editor
                 height="300px"
-                language={boilerplate.Language === "go" ? "go" : boilerplate.Language === "python" ? "python" : "javascript"}
+                language={boilerplate.language === "go" ? "go" : boilerplate.language === "python" ? "python" : "javascript"}
                 value={boilerplate.code}
                 theme="vs-dark"
                 onChange={(value) => onBoilerplateChange(index, "code", value || "")}

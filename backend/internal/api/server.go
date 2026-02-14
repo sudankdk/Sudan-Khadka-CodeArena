@@ -53,6 +53,11 @@ func StartServer(cfg configs.AppConfigs) {
 		&domain.Discussion{},
 		&domain.DiscussionComment{},
 		&domain.DiscussionVote{},
+		&domain.Contest{},
+		&domain.ContestProblem{},
+		&domain.ContestParticipant{},
+		&domain.ContestLeaderboardEntry{},
+		&domain.GlobalLeaderboardEntry{},
 	); err != nil {
 		logger.Fatal("Failed to run migrations", zap.Error(err))
 	}
@@ -89,4 +94,5 @@ func SetupRoutes(rh *rest.RestHandlers) {
 	handlers.SetupProblemTestRoutes(rh)
 	handlers.SetupSubmissionRoutes(rh)
 	handlers.SetupDiscussionRoutes(rh)
+	handlers.SetupContestRoutes(rh)
 }

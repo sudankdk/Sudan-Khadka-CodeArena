@@ -27,6 +27,15 @@ type CreateProblemDTO struct {
 	Boilerplates []CreateBoilerplateDTO `json:"boilerplates" binding:"omitempty,dive"`
 }
 
+type UpdateProblemDTO struct {
+	MainHeading  string                 `json:"main_heading" binding:"omitempty"`
+	Description  string                 `json:"description" binding:"omitempty"`
+	Tag          string                 `json:"tag" binding:"omitempty"`
+	Difficulty   string                 `json:"difficulty" binding:"omitempty,oneof=easy medium hard"`
+	TestCases    []CreateTestCaseDTO    `json:"test_cases" binding:"omitempty,dive"`
+	Boilerplates []CreateBoilerplateDTO `json:"boilerplates" binding:"omitempty,dive"`
+}
+
 type TestCaseResponseDTO struct {
 	ID        string    `json:"id"`
 	Input     string    `json:"input"`

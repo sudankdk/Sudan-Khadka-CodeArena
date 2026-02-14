@@ -9,7 +9,7 @@ const initialFormData: IProblemTest = {
   tag: "",
   difficulty: "easy",
   test_cases: [{ input: "", expected: "" }],
-  boilerplate: [{ code: "", Language: "" }]
+  boilerplates: [{ code: "", language: "" }]
 };
 
 
@@ -89,22 +89,22 @@ export const useProblems = () => {
   };
 
   const handleBoilerplateChange = (index: number, field: keyof IBoilerplate, value: string) => {
-    const newBoilerplates = [...formData.boilerplate];
+    const newBoilerplates = [...formData.boilerplates];
     newBoilerplates[index] = { ...newBoilerplates[index], [field]: value };
-    setFormData(prev => ({ ...prev, boilerplate: newBoilerplates }));
+    setFormData(prev => ({ ...prev, boilerplates: newBoilerplates }));
   };
 
   const addBoilerplate = () => {
     setFormData(prev => ({
       ...prev,
-      boilerplate: [...prev.boilerplate, { code: "", Language: "" }]
+      boilerplates: [...prev.boilerplates, { code: "", language: "" }]
     }));
   };
 
   const removeBoilerplate = (index: number) => {
     setFormData(prev => ({
       ...prev,
-      boilerplate: prev.boilerplate.filter((_, i) => i !== index)
+      boilerplates: prev.boilerplates.filter((_, i) => i !== index)
     }));
   };
 

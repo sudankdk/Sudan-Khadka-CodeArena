@@ -53,7 +53,7 @@ func (a Auth) GenerateToken(id uuid.UUID, email, role string) (string, error) {
 	})
 	signedToken, err := token.SignedString([]byte(a.Secret))
 	if err != nil {
-		return "", fmt.Errorf("error in signing token :%d", signedToken)
+		return "", fmt.Errorf("error in signing token: %v", err)
 	}
 	return signedToken, nil
 }

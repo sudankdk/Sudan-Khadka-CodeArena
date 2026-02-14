@@ -14,7 +14,7 @@ export function useCodeEditor(boilerplates?: IBoilerplate[]) {
 
   useEffect(() => {
     const apiLang = langMap[language];
-    const boilerplate = boilerplates?.find(b => b.Language === apiLang);
+    const boilerplate = boilerplates?.find(b => b.language === apiLang);
 
     setCode(boilerplate?.code ??
       defaultCode[language] ??

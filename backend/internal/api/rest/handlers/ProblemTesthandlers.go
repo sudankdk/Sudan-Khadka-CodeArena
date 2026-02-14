@@ -37,6 +37,8 @@ func SetupProblemTestRoutes(rh *rest.RestHandlers) {
 	priRoutes.Get("", handler.List)
 	priRoutes.Get(":id", handler.GetProblemByID)
 	priRoutes.Get("/slug/:slug", handler.GetProblemBySlug)
+	priRoutes.Put(":id", handler.Update)
+	priRoutes.Delete(":id", handler.Delete)
 	testRoutes := app.Group("/testcase")
 	testRoutes.Post("", handler.CreateTestCases)
 	testRoutes.Get(":id", handler.ListTestCasesOfProblems)
@@ -91,7 +93,7 @@ func (u *ProblemTestHandlers) List(ctx *fiber.Ctx) error {
 	q.Limit = pageSize
 	q.Offset = (page - 1) * pageSize
 
-	u.logger.Info("Listing problems", zap.Int("page", page), zap.Int("limit", pageSize), zap.String("search", q.Search))
+	u.logger.Info("Listing problems", zap.Int("page", page), zap.Int("limit", pageSize), zap.String("search", q.Search), zap.Bool("test-cases", q.Testcases))
 	res, err := u.svc.ListProblems(q)
 	if err != nil {
 		u.logger.Error("Failed to list problems", zap.Error(err))
@@ -175,4 +177,56 @@ func (u *ProblemTestHandlers) ListTestCasesOfProblems(ctx *fiber.Ctx) error {
 
 	u.logger.Info("Testcases listed successfully", zap.String("problem_id", id), zap.Int("count", len(testcases)))
 	return rest.SuccessMessage(ctx, "Success", testcases)
+}
+
+func (u *ProblemTestHandlers) Update(ctx *fiber.Ctx) error {
+	id := ctx.Params("id")
+	if id == "" {
+		u.logger.Warn("Problem ID is required for update")
+		return rest.ErrorMessage(ctx, http.StatusBadRequest, errors.New("id is required"))
+	}
+
+	var req dto.UpdateProblemDTO
+	if err := ctx.BodyParser(&req); err != nil {
+		u.logger.Warn("Invalid update problem payload", zap.Error(err))
+		return rest.ErrorMessage(ctx, http.StatusBadRequest, errors.New("invalid payload"))
+	}
+
+	u.logger.Info("Updating problem", zap.String("id", id))
+	err := u.svc.UpdateProblem(id, req)
+	if err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			u.logger.Warn("Problem not found", zap.String("id", id))
+			return rest.ErrorMessage(ctx, http.StatusNotFound, err)
+		}
+		u.logger.Error("Failed to update problem", zap.String("id", id), zap.Error(err))
+		return rest.InternalError(ctx, err)
+	}
+
+	u.logger.Info("Problem updated successfully", zap.String("id", id))
+	return rest.SuccessMessage(ctx, "Problem updated successfully", map[string]string{
+		"id": id,
+	})
+}
+
+func (u *ProblemTestHandlers) Delete(ctx *fiber.Ctx) error {
+	id := ctx.Params("id")
+	if id == "" {
+		u.logger.Warn("Problem ID is required for deletion")
+		return rest.ErrorMessage(ctx, http.StatusBadRequest, errors.New("id is required"))
+	}
+
+	u.logger.Info("Deleting problem", zap.String("id", id))
+	err := u.svc.DeleteProblem(id)
+	if err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			u.logger.Warn("Problem not found", zap.String("id", id))
+			return rest.ErrorMessage(ctx, http.StatusNotFound, err)
+		}
+		u.logger.Error("Failed to delete problem", zap.String("id", id), zap.Error(err))
+		return rest.InternalError(ctx, err)
+	}
+
+	u.logger.Info("Problem deleted successfully", zap.String("id", id))
+	return rest.SuccessMessage(ctx, "Problem deleted successfully", nil)
 }
