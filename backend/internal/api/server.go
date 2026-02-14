@@ -92,4 +92,5 @@ func SetupRoutes(rh *rest.RestHandlers) {
 	handlers.SetupProblemTestRoutes(rh)
 	handlers.SetupSubmissionRoutes(rh)
 	handlers.SetupDiscussionRoutes(rh)
+	handlers.SetupContestRoutes(rh)
 }

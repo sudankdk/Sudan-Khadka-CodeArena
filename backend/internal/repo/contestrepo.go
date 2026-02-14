@@ -2,6 +2,7 @@ package repo
 
 import (
 	"errors"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/sudankdk/codearena/internal/domain"
@@ -24,6 +25,8 @@ type ContestRepo interface {
 	UpdateParticipantScore(contestID, userID uuid.UUID, points int, problemsSolved int, penaltyTime int) error
 	GetLeaderboard(contestID uuid.UUID) ([]*domain.ContestLeaderboardEntry, error)
 	UpdateLeaderboardEntry(contestID, userID uuid.UUID, score int, rating float64, rank int) error
+	UpdateGlobalLeaderboardEntry(userID uuid.UUID, rating float64, solvedCount int) error
+	GetGlobalLeaderboard(limit int) ([]*domain.GlobalLeaderboardEntry, error)
 }
 
 type contestRepoImpl struct {
@@ -198,12 +201,80 @@ func (c *contestRepoImpl) UpdateLeaderboardEntry(contestID uuid.UUID, userID uui
 	} else {
 		// Update existing entry
 		updates := map[string]interface{}{
-			"score": score,
-
+			"score":  score,
 			"rating": rating,
 			"rank":   rank,
 		}
 		if err := c.db.Model(&entry).Where("id = ?", entry.ID).Updates(updates).Error; err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// UpdateGlobalLeaderboardEntry implements [ContestRepo].
+func (c *contestRepoImpl) UpdateGlobalLeaderboardEntry(userID uuid.UUID, rating float64, solvedCount int) error {
+	// Get user for username
+	var user domain.User
+	if err := c.db.First(&user, "id = ?", userID).Error; err != nil {
+		return err
+	}
+
+	// Check if entry exists
+	var entry domain.GlobalLeaderboardEntry
+	if err := c.db.Where("user_id = ?", userID).First(&entry).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			// Create new entry
+			newEntry := &domain.GlobalLeaderboardEntry{
+				UserID:               userID,
+				Username:             user.Username,
+				Rating:               rating,
+				SolvedCount:          solvedCount,
+				ContestsParticipated: 1, // This should be calculated properly
+			}
+			if err := c.db.Create(newEntry).Error; err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+	} else {
+		// Update existing entry
+		updates := map[string]interface{}{
+			"rating":       rating,
+			"solved_count": solvedCount,
+			"updated_at":   time.Now(),
+		}
+		if err := c.db.Model(&entry).Where("id = ?", entry.ID).Updates(updates).Error; err != nil {
+			return err
+		}
+	}
+
+	// Recalculate global ranks
+	return c.recalculateGlobalRanks()
+}
+
+func (c *contestRepoImpl) GetGlobalLeaderboard(limit int) ([]*domain.GlobalLeaderboardEntry, error) {
+	var entries []*domain.GlobalLeaderboardEntry
+	query := c.db.Preload("User").Order("rank ASC")
+	if limit > 0 {
+		query = query.Limit(limit)
+	}
+	if err := query.Find(&entries).Error; err != nil {
+		return nil, err
+	}
+	return entries, nil
+}
+
+func (c *contestRepoImpl) recalculateGlobalRanks() error {
+	var entries []domain.GlobalLeaderboardEntry
+	if err := c.db.Order("rating DESC").Find(&entries).Error; err != nil {
+		return err
+	}
+
+	for i, entry := range entries {
+		rank := i + 1
+		if err := c.db.Model(&entry).Where("id = ?", entry.ID).Update("rank", rank).Error; err != nil {
 			return err
 		}
 	}

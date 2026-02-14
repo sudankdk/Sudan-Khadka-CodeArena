@@ -85,6 +85,16 @@ func (m *MockContestRepo) UpdateLeaderboardEntry(contestID, userID uuid.UUID, sc
 	return args.Error(0)
 }
 
+func (m *MockContestRepo) UpdateGlobalLeaderboardEntry(userID uuid.UUID, rating float64, solvedCount int) error {
+	args := m.Called(userID, rating, solvedCount)
+	return args.Error(0)
+}
+
+func (m *MockContestRepo) GetGlobalLeaderboard(limit int) ([]*domain.GlobalLeaderboardEntry, error) {
+	args := m.Called(limit)
+	return args.Get(0).([]*domain.GlobalLeaderboardEntry), args.Error(1)
+}
+
 func TestContestService(t *testing.T) {
 	mockRepo := new(MockContestRepo)
 	contestService := &ContestService{

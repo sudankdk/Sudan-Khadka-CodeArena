@@ -12,6 +12,8 @@ import (
 type SubmissionRepo interface {
 	CreateSubmission(submission *domain.Submission) error
 	GetSubmissionByID(id uuid.UUID) (*domain.Submission, error)
+	UpdateSubmissionPoints(id uuid.UUID, points int) error
+	CountContestProblemAttempts(contestID, userID, problemID uuid.UUID) (int, error)
 	ListSubmissions(opts dto.SubmissionListQueryDTO) ([]domain.Submission, int64, error)
 	GetUserStats(userID uuid.UUID) (*dto.UserStatsDTO, error)
 	GetProblemStats(problemID uuid.UUID) (*dto.ProblemStatsDTO, error)
@@ -40,6 +42,24 @@ func (sr *submissionRepo) GetSubmissionByID(id uuid.UUID) (*domain.Submission, e
 		return nil, errors.New("submission not found")
 	}
 	return &submission, nil
+}
+
+func (sr *submissionRepo) UpdateSubmissionPoints(id uuid.UUID, points int) error {
+	if err := sr.db.Model(&domain.Submission{}).Where("id = ?", id).Update("points_earned", points).Error; err != nil {
+		return errors.New("error updating submission points")
+	}
+	return nil
+}
+
+func (sr *submissionRepo) CountContestProblemAttempts(contestID, userID, problemID uuid.UUID) (int, error) {
+	var count int64
+	err := sr.db.Model(&domain.Submission{}).
+		Where("contest_id = ? AND user_id = ? AND problem_id = ?", contestID, userID, problemID).
+		Count(&count).Error
+	if err != nil {
+		return 0, err
+	}
+	return int(count), nil
 }
 
 func (sr *submissionRepo) ListSubmissions(opts dto.SubmissionListQueryDTO) ([]domain.Submission, int64, error) {
