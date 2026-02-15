@@ -91,6 +91,14 @@ function App() {
           }
         />
         <Route
+          path="/contests/:contestId/problems/:id"
+          element={
+            <ProtectedRoute>
+              <ProblemSolve />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/profile"
           element={
             <ProtectedRoute>

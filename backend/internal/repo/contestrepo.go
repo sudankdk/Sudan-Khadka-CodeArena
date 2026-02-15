@@ -24,6 +24,7 @@ type ContestRepo interface {
 	IsUserRegistered(contestID, userID uuid.UUID) (bool, error)
 	GetParticipants(contestID uuid.UUID) ([]*domain.ContestParticipant, error)
 	UpdateParticipantScore(contestID, userID uuid.UUID, points int, problemsSolved int, penaltyTime int) error
+	UpdateParticipantActivity(contestID, userID uuid.UUID, startedAt, lastSubmissionAt *time.Time, problemsAttempted int) error
 	GetLeaderboard(contestID uuid.UUID) ([]*domain.ContestLeaderboardEntry, error)
 	UpdateLeaderboardEntry(contestID, userID uuid.UUID, score int, rating float64, rank int) error
 	UpdateGlobalLeaderboardEntry(userID uuid.UUID, rating float64, solvedCount int) error
@@ -87,12 +88,33 @@ func (c *contestRepoImpl) GetByID(id uuid.UUID) (*domain.Contest, error) {
 }
 
 // GetLeaderboard implements [ContestRepo].
+// Returns live leaderboard based on current participant scores
 func (c *contestRepoImpl) GetLeaderboard(contestID uuid.UUID) ([]*domain.ContestLeaderboardEntry, error) {
-
-	var entries []*domain.ContestLeaderboardEntry
-	if err := c.db.Where("contest_id = ?", contestID).Preload("User").Find(&entries).Error; err != nil {
+	// Get all participants with their scores
+	var participants []*domain.ContestParticipant
+	if err := c.db.Where("contest_id = ?", contestID).
+		Preload("User").
+		Order("total_points DESC, problems_solved DESC, penalty_time ASC, last_submission_at ASC").
+		Find(&participants).Error; err != nil {
 		return nil, err
 	}
+
+	// Convert participants to leaderboard entries with calculated ranks
+	entries := make([]*domain.ContestLeaderboardEntry, len(participants))
+	for i, p := range participants {
+		entries[i] = &domain.ContestLeaderboardEntry{
+			ID:        uuid.New(),
+			ContestID: contestID,
+			UserID:    p.UserID,
+			User:      p.User,
+			Username:  p.User.Username,
+			Score:     p.TotalPoints,
+			Rank:      i + 1, // 1-based ranking
+			Solved:    p.ProblemsSolved,
+			Penalty:   p.PenaltyTime,
+		}
+	}
+
 	return entries, nil
 }
 
@@ -311,6 +333,39 @@ func (c *contestRepoImpl) UpdateParticipantScore(contestID uuid.UUID, userID uui
 	if err := c.db.Model(&participant).Where("id = ?", participant.ID).Updates(updates).Error; err != nil {
 		return err
 	}
+	return nil
+}
+
+// UpdateParticipantActivity updates participant timestamps and attempt count
+func (c *contestRepoImpl) UpdateParticipantActivity(contestID uuid.UUID, userID uuid.UUID, startedAt, lastSubmissionAt *time.Time, problemsAttempted int) error {
+	var participant domain.ContestParticipant
+	if err := c.db.Where("contest_id = ? AND user_id = ?", contestID, userID).First(&participant).Error; err != nil {
+		return err
+	}
+
+	updates := map[string]interface{}{}
+
+	// Set started_at only if it's null (first time)
+	if startedAt != nil && participant.StartedAt == nil {
+		updates["started_at"] = startedAt
+	}
+
+	// Always update last submission time
+	if lastSubmissionAt != nil {
+		updates["last_submission_at"] = lastSubmissionAt
+	}
+
+	// Increment problems attempted
+	if problemsAttempted > 0 {
+		updates["problems_attempted"] = participant.ProblemsAttempted + problemsAttempted
+	}
+
+	if len(updates) > 0 {
+		if err := c.db.Model(&participant).Where("id = ?", participant.ID).Updates(updates).Error; err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 

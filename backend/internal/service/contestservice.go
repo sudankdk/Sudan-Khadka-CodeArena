@@ -273,24 +273,37 @@ func (cs *ContestService) ProcessSubmission(
 		return err
 	}
 
-	// 7. If status is ACCEPTED, update participant's total points, etc.
-	if status == domain.STATUS_ACCEPTED {
-		// Calculate penalty time for this solve
-		penaltyTime := cs.ScoringService.CalculatePenaltyTime(timeSinceStart, attempts)
+	// 7. Track participant activity
+	now := time.Now()
+	err = cs.ContestRepo.UpdateParticipantActivity(contestID, userID, &now, &now, 1)
+	if err != nil {
+		return err
+	}
 
-		// Update participant
-		err = cs.ContestRepo.UpdateParticipantScore(contestID, userID, points, 1, penaltyTime)
+	// 8. If status is ACCEPTED, update participant's total points, etc.
+	if status == domain.STATUS_ACCEPTED {
+		// Check if this is the first accepted submission for this problem in this contest
+		// Exclude the current submission to see if there was a PREVIOUS accepted submission
+		alreadySolved, err := cs.SubmissionRepo.HasUserSolvedContestProblem(contestID, userID, problemID, submissionID)
 		if err != nil {
 			return err
 		}
 
-		// Update last submission time
-		// Note: This would require adding a method to update participant last submission time
-	}
+		// Calculate penalty time for this solve
+		penaltyTime := cs.ScoringService.CalculatePenaltyTime(timeSinceStart, attempts)
 
-	// 8. Recalculate contest rankings
-	// This could be done here or as a separate operation
-	// For now, we'll skip it as it might be expensive to do on every submission
+		// Increment problemsSolved only if this is the first time solving this problem
+		problemsSolvedIncrement := 0
+		if !alreadySolved {
+			problemsSolvedIncrement = 1
+		}
+
+		// Update participant
+		err = cs.ContestRepo.UpdateParticipantScore(contestID, userID, points, problemsSolvedIncrement, penaltyTime)
+		if err != nil {
+			return err
+		}
+	}
 
 	return nil
 }

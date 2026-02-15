@@ -17,9 +17,19 @@ type SubmissionService struct {
 }
 
 func (ss *SubmissionService) CreateSubmission(userID uuid.UUID, req dto.CreateSubmissionDTO) (*domain.Submission, error) {
+	// Check if user already solved this problem BEFORE creating the submission
+	wasAlreadySolved := false
+	if req.Status == domain.STATUS_ACCEPTED && req.ContestID == nil {
+		alreadySolved, err := ss.Repo.HasUserSolvedProblem(userID, req.ProblemID)
+		if err == nil {
+			wasAlreadySolved = alreadySolved
+		}
+	}
+
 	submission := &domain.Submission{
 		UserID:          userID,
 		ProblemID:       req.ProblemID,
+		ContestID:       req.ContestID, // Will be NULL for practice, UUID for contest
 		Language:        req.Language,
 		Code:            req.Code,
 		Status:          req.Status,
@@ -32,6 +42,16 @@ func (ss *SubmissionService) CreateSubmission(userID uuid.UUID, req dto.CreateSu
 
 	if err := ss.Repo.CreateSubmission(submission); err != nil {
 		return nil, err
+	}
+
+	// Update user's solved count if this is the first time solving this problem (non-contest)
+	if req.Status == domain.STATUS_ACCEPTED && req.ContestID == nil && !wasAlreadySolved {
+		// Get updated stats to sync user's solved count
+		stats, err := ss.Repo.GetUserStats(userID)
+		if err == nil {
+			// Update user's solved count in the database
+			_ = ss.UserRepo.UpdateUserSolvedCount(userID, stats.TotalSolved)
+		}
 	}
 
 	return submission, nil
@@ -53,6 +73,7 @@ func (ss *SubmissionService) ListSubmissions(opts dto.SubmissionListQueryDTO) ([
 			ID:              sub.ID,
 			UserID:          sub.UserID,
 			ProblemID:       sub.ProblemID,
+			ContestID:       sub.ContestID,
 			ProblemSlug:     sub.Problem.Slug,
 			ProblemTitle:    sub.Problem.MainHeading,
 			Difficulty:      sub.Problem.Difficulty,
@@ -62,6 +83,7 @@ func (ss *SubmissionService) ListSubmissions(opts dto.SubmissionListQueryDTO) ([
 			MemoryUsed:      sub.MemoryUsed,
 			TestCasesPassed: sub.TestCasesPassed,
 			TotalTestCases:  sub.TotalTestCases,
+			PointsEarned:    sub.PointsEarned,
 			CreatedAt:       sub.CreatedAt.Format("2006-01-02 15:04:05"),
 		}
 	}
@@ -87,6 +109,7 @@ func (ss *SubmissionService) GetUserStats(userID uuid.UUID) (*dto.UserStatsDTO, 
 			ID:              sub.ID,
 			UserID:          sub.UserID,
 			ProblemID:       sub.ProblemID,
+			ContestID:       sub.ContestID,
 			ProblemSlug:     sub.Problem.Slug,
 			ProblemTitle:    sub.Problem.MainHeading,
 			Difficulty:      sub.Problem.Difficulty,
@@ -96,6 +119,7 @@ func (ss *SubmissionService) GetUserStats(userID uuid.UUID) (*dto.UserStatsDTO, 
 			MemoryUsed:      sub.MemoryUsed,
 			TestCasesPassed: sub.TestCasesPassed,
 			TotalTestCases:  sub.TotalTestCases,
+			PointsEarned:    sub.PointsEarned,
 			CreatedAt:       sub.CreatedAt.Format("2006-01-02 15:04:05"),
 		}
 	}

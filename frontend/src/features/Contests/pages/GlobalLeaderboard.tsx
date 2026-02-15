@@ -23,7 +23,7 @@ export const GlobalLeaderboard = () => {
       {/* Stats Cards */}
       {!isLoading && leaderboard.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-gradient-to-br from-[#FFD70020] to-[#1a1a1a] rounded-lg p-6 border border-[#FFD700] border-opacity-30">
+          <div className="bg-gradient-to-br from-[#FFD70020] to-[#1a1a1a] rounded-lg p-6 border-2 border-[#FFD700]/50">
             <div className="flex items-center gap-4">
               <span className="text-5xl">🥇</span>
               <div>
@@ -38,7 +38,7 @@ export const GlobalLeaderboard = () => {
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-[#C0C0C020] to-[#1a1a1a] rounded-lg p-6 border border-[#C0C0C0] border-opacity-30">
+          <div className="bg-gradient-to-br from-[#C0C0C020] to-[#1a1a1a] rounded-lg p-6 border-2 border-[#C0C0C0]/50">
             <div className="flex items-center gap-4">
               <span className="text-5xl">🥈</span>
               <div>
@@ -53,7 +53,7 @@ export const GlobalLeaderboard = () => {
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-[#CD7F3220] to-[#1a1a1a] rounded-lg p-6 border border-[#CD7F32] border-opacity-30">
+          <div className="bg-gradient-to-br from-[#CD7F3220] to-[#1a1a1a] rounded-lg p-6 border-2 border-[#CD7F32]/50">
             <div className="flex items-center gap-4">
               <span className="text-5xl">🥉</span>
               <div>

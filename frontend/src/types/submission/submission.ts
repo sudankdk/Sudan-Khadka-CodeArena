@@ -2,6 +2,7 @@ export interface ISubmission {
   id: string;
   user_id: string;
   problem_id: string;
+  contest_id?: string | null; // NULL for practice, UUID for contest submissions
   problem_slug?: string;
   problem_title?: string;
   difficulty?: string;
@@ -11,11 +12,13 @@ export interface ISubmission {
   memory_used?: number;
   test_cases_passed: number;
   total_test_cases: number;
+  points_earned?: number; // Points earned in contest submissions
   created_at: string;
 }
 
 export interface ICreateSubmission {
   problem_id: string;
+  contest_id?: string | null; // Pass contest ID when solving contest problems
   language: string;
   code: string;
   status: string;

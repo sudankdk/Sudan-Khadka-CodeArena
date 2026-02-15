@@ -33,10 +33,20 @@ export const listSubmissions = async (
     language?: string;
   }
 ): Promise<ISubmissionsResponse> => {
+  // Filter out undefined values to prevent "undefined" strings in URL
+  const cleanFilters: Record<string, string> = {};
+  if (filters) {
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        cleanFilters[key] = value;
+      }
+    });
+  }
+  
   const params = new URLSearchParams({
     page: page.toString(),
     page_size: pageSize.toString(),
-    ...filters
+    ...cleanFilters
   });
   
   const resp = await submissionClient.get<ISubmissionsResponse>(`/submissions?${params}`);

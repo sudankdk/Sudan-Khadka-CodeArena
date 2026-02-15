@@ -8,9 +8,10 @@ import { getProblemTestBySlug } from "@/services/auth/api/problemtest";
 import { useExecuteCode } from "@/features/Problems/hooks/useExecute";
 import { useCreateSubmission, useProblemStats, useSubmissions } from "@/hooks/useSubmissions";
 import { SubmissionStatus } from "@/types/submission/submission";
+import { useContestProblems } from "@/features/Contests/hooks/useContests";
 
 const ProblemSolve = () => {
-  const { id } = useParams();
+  const { id, contestId } = useParams(); // Extract both problem slug and contestId
   const { logout } = useAuth();
   const user = useAuthStore((state) => state.user);
   const [activeTab, setActiveTab] = useState("DESCRIPTION");
@@ -21,6 +22,16 @@ const ProblemSolve = () => {
   const [output, setOutput] = useState<string | null>(null);
   const [activeTestCase, setActiveTestCase] = useState(0);
   const [data, setData] = useState<any>(null);
+
+  // Check if this is a contest problem
+  const isContestProblem = !!contestId;
+
+  // Fetch contest problems if this is a contest problem
+  const { data: contestProblems = [] } = useContestProblems(contestId || '');
+  
+  // Find the max points for this problem in the contest
+  const contestProblem = contestProblems.find((cp: any) => cp.problem?.slug === id);
+  const maxPoints = contestProblem?.max_points || 0;
 
   const tabs = ["DESCRIPTION", "SOLUTIONS", "SUBMISSIONS"];
   const languages = [
@@ -148,8 +159,9 @@ const ProblemSolve = () => {
       const status = allPassed ? SubmissionStatus.ACCEPTED : SubmissionStatus.WRONG_ANSWER;
 
       // Create submission record
-      await createSubmissionMutation.mutateAsync({
+      const submissionResult = await createSubmissionMutation.mutateAsync({
         problem_id: data.id,
+        contest_id: isContestProblem ? contestId : null, // Include contest_id for contest submissions
         language: language === 'python' ? 'py' : language === 'javascript' ? 'js' : language,
         code,
         status,
@@ -160,7 +172,14 @@ const ProblemSolve = () => {
 
       // Display result
       if (allPassed) {
-        setOutput(`✓ ACCEPTED\n\nAll ${totalTestCases} test cases passed!\n\nExecution Time: ${Math.round(executionTime)}ms`);
+        let resultMessage = `✓ ACCEPTED\n\nAll ${totalTestCases} test cases passed!\n\nExecution Time: ${Math.round(executionTime)}ms`;
+        
+        // Show points for contest submissions
+        if (isContestProblem && submissionResult?.points_earned !== undefined) {
+          resultMessage += `\n\n🏆 Points Earned: ${submissionResult.points_earned}`;
+        }
+        
+        setOutput(resultMessage);
       } else {
         setOutput(`✗ WRONG ANSWER\n\nPassed: ${passedCount}/${totalTestCases} test cases\n\nFailed at test case ${failedTestCase + 1}`);
       }
@@ -169,6 +188,7 @@ const ProblemSolve = () => {
       if (data?.id) {
         await createSubmissionMutation.mutateAsync({
           problem_id: data.id,
+          contest_id: isContestProblem ? contestId : null, // Include contest_id for contest submissions
           language: language === 'python' ? 'py' : language === 'javascript' ? 'js' : language,
           code,
           status: SubmissionStatus.RUNTIME_ERROR,
@@ -236,7 +256,10 @@ const ProblemSolve = () => {
         {/* Problem Header Bar */}
         <div className="flex items-center justify-between mb-4 pb-4 border-b-2 border-dashed border-[#333] flex-shrink-0">
           <div className="flex items-center gap-4">
-            <NavLink to="/problems" className="text-gray-500 hover:text-white transition-colors">
+            <NavLink 
+              to={isContestProblem ? `/contests/${contestId}` : "/problems"} 
+              className="text-gray-500 hover:text-white transition-colors"
+            >
               ← BACK
             </NavLink>
             <div className="flex items-center gap-3">
@@ -245,6 +268,18 @@ const ProblemSolve = () => {
               <span className={`px-2 py-1 text-[10px] tracking-widest border ${getDifficultyColor(data?.difficulty)}`}>
                 {data?.difficulty || 'UNKNOWN'}
               </span>
+              {isContestProblem && (
+                <>
+                  <span className="px-2 py-1 text-[10px] tracking-widest border-2 border-[#F7D046] bg-[#F7D046]/10 text-[#F7D046]">
+                    CONTEST
+                  </span>
+                  {maxPoints > 0 && (
+                    <span className="px-2 py-1 text-[10px] tracking-widest border-2 border-[#4ECDC4] bg-[#4ECDC4]/10 text-[#4ECDC4]">
+                      MAX: {maxPoints} PTS
+                    </span>
+                  )}
+                </>
+              )}
             </div>
           </div>
           <div className="flex items-center gap-4">

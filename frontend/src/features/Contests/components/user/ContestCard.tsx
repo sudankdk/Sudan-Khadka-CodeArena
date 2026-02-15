@@ -71,7 +71,7 @@ export const ContestCard = ({ contest }: ContestCardProps) => {
           </Button>
         </Link>
         {contest.is_rated && (
-          <div className="px-3 py-2 bg-[#4ECDC4] bg-opacity-20 rounded border border-[#4ECDC4] border-opacity-50">
+          <div className="px-3 py-2 bg-[#4ECDC4]/10 rounded border-2 border-[#4ECDC4]">
             <span className="text-[#4ECDC4] font-mono text-xs font-bold">
               RATED
             </span>

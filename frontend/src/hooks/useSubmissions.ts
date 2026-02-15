@@ -49,6 +49,8 @@ export const useSubmissions = (
   return useQuery({
     queryKey: ['submissions', page, pageSize, filters],
     queryFn: () => listSubmissions(page, pageSize, filters),
+    // Only enable query when we have either a user_id or problem_id to filter by
+    enabled: !!(filters?.user_id || filters?.problem_id),
   });
 };
 
