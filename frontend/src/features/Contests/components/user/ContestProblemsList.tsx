@@ -66,7 +66,7 @@ export const ContestProblemsList = ({
                 </td>
                 <td className="px-6 py-4">
                   <Link 
-                    to={`/contests/${contestId}/problems/${problem.problem_id}`}
+                    to={`/contests/${contestId}/problems/${problem.problem?.slug || problem.problem_id}`}
                     className="text-white font-mono font-semibold hover:text-[#F7D046] transition-colors"
                   >
                     {problem.problem?.main_heading || 'Unknown Problem'}
@@ -89,7 +89,7 @@ export const ContestProblemsList = ({
                   </span>
                 </td>
                 <td className="px-6 py-4 text-right">
-                  <Link to={`/contests/${contestId}/problems/${problem.problem_id}`}>
+                  <Link to={`/contests/${contestId}/problems/${problem.problem?.slug || problem.problem_id}`}>
                     <Button
                       variant="outline"
                       size="sm"

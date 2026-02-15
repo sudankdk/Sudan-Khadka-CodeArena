@@ -46,7 +46,7 @@ export const ContestHeader = ({
               {statusText}
             </span>
             {contest.is_rated && (
-              <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-[#4ECDC4] bg-opacity-20 text-[#4ECDC4]">
+              <span className="px-3 py-1 rounded border-2 border-[#4ECDC4] bg-[#4ECDC4]/10 text-xs font-mono font-bold text-[#4ECDC4]">
                 RATED
               </span>
             )}

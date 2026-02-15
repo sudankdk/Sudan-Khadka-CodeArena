@@ -273,7 +273,14 @@ func (cs *ContestService) ProcessSubmission(
 		return err
 	}
 
-	// 7. If status is ACCEPTED, update participant's total points, etc.
+	// 7. Track participant activity
+	now := time.Now()
+	err = cs.ContestRepo.UpdateParticipantActivity(contestID, userID, &now, &now, 1)
+	if err != nil {
+		return err
+	}
+
+	// 8. If status is ACCEPTED, update participant's total points, etc.
 	if status == domain.STATUS_ACCEPTED {
 		// Calculate penalty time for this solve
 		penaltyTime := cs.ScoringService.CalculatePenaltyTime(timeSinceStart, attempts)
@@ -283,14 +290,7 @@ func (cs *ContestService) ProcessSubmission(
 		if err != nil {
 			return err
 		}
-
-		// Update last submission time
-		// Note: This would require adding a method to update participant last submission time
 	}
-
-	// 8. Recalculate contest rankings
-	// This could be done here or as a separate operation
-	// For now, we'll skip it as it might be expensive to do on every submission
 
 	return nil
 }

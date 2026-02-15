@@ -20,6 +20,7 @@ func (ss *SubmissionService) CreateSubmission(userID uuid.UUID, req dto.CreateSu
 	submission := &domain.Submission{
 		UserID:          userID,
 		ProblemID:       req.ProblemID,
+		ContestID:       req.ContestID, // Will be NULL for practice, UUID for contest
 		Language:        req.Language,
 		Code:            req.Code,
 		Status:          req.Status,
@@ -53,6 +54,7 @@ func (ss *SubmissionService) ListSubmissions(opts dto.SubmissionListQueryDTO) ([
 			ID:              sub.ID,
 			UserID:          sub.UserID,
 			ProblemID:       sub.ProblemID,
+			ContestID:       sub.ContestID,
 			ProblemSlug:     sub.Problem.Slug,
 			ProblemTitle:    sub.Problem.MainHeading,
 			Difficulty:      sub.Problem.Difficulty,
@@ -62,6 +64,7 @@ func (ss *SubmissionService) ListSubmissions(opts dto.SubmissionListQueryDTO) ([
 			MemoryUsed:      sub.MemoryUsed,
 			TestCasesPassed: sub.TestCasesPassed,
 			TotalTestCases:  sub.TotalTestCases,
+			PointsEarned:    sub.PointsEarned,
 			CreatedAt:       sub.CreatedAt.Format("2006-01-02 15:04:05"),
 		}
 	}
@@ -87,6 +90,7 @@ func (ss *SubmissionService) GetUserStats(userID uuid.UUID) (*dto.UserStatsDTO, 
 			ID:              sub.ID,
 			UserID:          sub.UserID,
 			ProblemID:       sub.ProblemID,
+			ContestID:       sub.ContestID,
 			ProblemSlug:     sub.Problem.Slug,
 			ProblemTitle:    sub.Problem.MainHeading,
 			Difficulty:      sub.Problem.Difficulty,
@@ -96,6 +100,7 @@ func (ss *SubmissionService) GetUserStats(userID uuid.UUID) (*dto.UserStatsDTO, 
 			MemoryUsed:      sub.MemoryUsed,
 			TestCasesPassed: sub.TestCasesPassed,
 			TotalTestCases:  sub.TotalTestCases,
+			PointsEarned:    sub.PointsEarned,
 			CreatedAt:       sub.CreatedAt.Format("2006-01-02 15:04:05"),
 		}
 	}
