@@ -14,6 +14,7 @@ type SubmissionRepo interface {
 	GetSubmissionByID(id uuid.UUID) (*domain.Submission, error)
 	UpdateSubmissionPoints(id uuid.UUID, points int) error
 	CountContestProblemAttempts(contestID, userID, problemID uuid.UUID) (int, error)
+	HasUserSolvedContestProblem(contestID, userID, problemID, excludeSubmissionID uuid.UUID) (bool, error)
 	ListSubmissions(opts dto.SubmissionListQueryDTO) ([]domain.Submission, int64, error)
 	GetUserStats(userID uuid.UUID) (*dto.UserStatsDTO, error)
 	GetProblemStats(problemID uuid.UUID) (*dto.ProblemStatsDTO, error)
@@ -134,12 +135,16 @@ func (sr *submissionRepo) GetUserStats(userID uuid.UUID) (*dto.UserStatsDTO, err
 	}
 
 	var difficultyCounts []DifficultyCount
-	sr.db.Model(&domain.Submission{}).
+	err := sr.db.Model(&domain.Submission{}).
 		Select("problems.difficulty, COUNT(DISTINCT submissions.problem_id) as count").
 		Joins("JOIN problems ON problems.id = submissions.problem_id").
 		Where("submissions.user_id = ? AND submissions.status = ?", userID, domain.STATUS_ACCEPTED).
 		Group("problems.difficulty").
-		Scan(&difficultyCounts)
+		Scan(&difficultyCounts).Error
+
+	if err != nil {
+		return nil, err
+	}
 
 	for _, dc := range difficultyCounts {
 		switch dc.Difficulty {
@@ -217,6 +222,24 @@ func (sr *submissionRepo) HasUserSolvedProblem(userID, problemID uuid.UUID) (boo
 			userID, problemID, domain.STATUS_ACCEPTED).
 		Count(&count).Error
 
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
+
+func (sr *submissionRepo) HasUserSolvedContestProblem(contestID, userID, problemID, excludeSubmissionID uuid.UUID) (bool, error) {
+	var count int64
+	query := sr.db.Model(&domain.Submission{}).
+		Where("contest_id = ? AND user_id = ? AND problem_id = ? AND status = ?",
+			contestID, userID, problemID, domain.STATUS_ACCEPTED)
+
+	// Exclude the current submission to check if there was a PREVIOUS accepted submission
+	if excludeSubmissionID != uuid.Nil {
+		query = query.Where("id != ?", excludeSubmissionID)
+	}
+
+	err := query.Count(&count).Error
 	if err != nil {
 		return false, err
 	}

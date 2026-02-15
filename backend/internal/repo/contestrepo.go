@@ -88,12 +88,33 @@ func (c *contestRepoImpl) GetByID(id uuid.UUID) (*domain.Contest, error) {
 }
 
 // GetLeaderboard implements [ContestRepo].
+// Returns live leaderboard based on current participant scores
 func (c *contestRepoImpl) GetLeaderboard(contestID uuid.UUID) ([]*domain.ContestLeaderboardEntry, error) {
-
-	var entries []*domain.ContestLeaderboardEntry
-	if err := c.db.Where("contest_id = ?", contestID).Preload("User").Find(&entries).Error; err != nil {
+	// Get all participants with their scores
+	var participants []*domain.ContestParticipant
+	if err := c.db.Where("contest_id = ?", contestID).
+		Preload("User").
+		Order("total_points DESC, problems_solved DESC, penalty_time ASC, last_submission_at ASC").
+		Find(&participants).Error; err != nil {
 		return nil, err
 	}
+
+	// Convert participants to leaderboard entries with calculated ranks
+	entries := make([]*domain.ContestLeaderboardEntry, len(participants))
+	for i, p := range participants {
+		entries[i] = &domain.ContestLeaderboardEntry{
+			ID:        uuid.New(),
+			ContestID: contestID,
+			UserID:    p.UserID,
+			User:      p.User,
+			Username:  p.User.Username,
+			Score:     p.TotalPoints,
+			Rank:      i + 1, // 1-based ranking
+			Solved:    p.ProblemsSolved,
+			Penalty:   p.PenaltyTime,
+		}
+	}
+
 	return entries, nil
 }
 

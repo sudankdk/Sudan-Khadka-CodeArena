@@ -282,11 +282,24 @@ func (cs *ContestService) ProcessSubmission(
 
 	// 8. If status is ACCEPTED, update participant's total points, etc.
 	if status == domain.STATUS_ACCEPTED {
+		// Check if this is the first accepted submission for this problem in this contest
+		// Exclude the current submission to see if there was a PREVIOUS accepted submission
+		alreadySolved, err := cs.SubmissionRepo.HasUserSolvedContestProblem(contestID, userID, problemID, submissionID)
+		if err != nil {
+			return err
+		}
+
 		// Calculate penalty time for this solve
 		penaltyTime := cs.ScoringService.CalculatePenaltyTime(timeSinceStart, attempts)
 
+		// Increment problemsSolved only if this is the first time solving this problem
+		problemsSolvedIncrement := 0
+		if !alreadySolved {
+			problemsSolvedIncrement = 1
+		}
+
 		// Update participant
-		err = cs.ContestRepo.UpdateParticipantScore(contestID, userID, points, 1, penaltyTime)
+		err = cs.ContestRepo.UpdateParticipantScore(contestID, userID, points, problemsSolvedIncrement, penaltyTime)
 		if err != nil {
 			return err
 		}

@@ -15,6 +15,7 @@ type UserRepo interface {
 	FindUserById(id uuid.UUID) (domain.User, error)
 	UpdateUser(id uuid.UUID, user domain.User) (domain.User, error)
 	UpdateUserRating(id uuid.UUID, rating float64) error
+	UpdateUserSolvedCount(id uuid.UUID, solvedCount int) error
 	ListUser() ([]domain.User, error)
 }
 
@@ -58,6 +59,13 @@ func (u *userRepo) UpdateUser(id uuid.UUID, user domain.User) (domain.User, erro
 func (u *userRepo) UpdateUserRating(id uuid.UUID, rating float64) error {
 	if err := u.db.Model(&domain.User{}).Where("id = ?", id).Update("rating", rating).Error; err != nil {
 		return errors.New("failed to update user rating")
+	}
+	return nil
+}
+
+func (u *userRepo) UpdateUserSolvedCount(id uuid.UUID, solvedCount int) error {
+	if err := u.db.Model(&domain.User{}).Where("id = ?", id).Update("solvedcount", solvedCount).Error; err != nil {
+		return errors.New("failed to update user solved count")
 	}
 	return nil
 }

@@ -17,6 +17,15 @@ type SubmissionService struct {
 }
 
 func (ss *SubmissionService) CreateSubmission(userID uuid.UUID, req dto.CreateSubmissionDTO) (*domain.Submission, error) {
+	// Check if user already solved this problem BEFORE creating the submission
+	wasAlreadySolved := false
+	if req.Status == domain.STATUS_ACCEPTED && req.ContestID == nil {
+		alreadySolved, err := ss.Repo.HasUserSolvedProblem(userID, req.ProblemID)
+		if err == nil {
+			wasAlreadySolved = alreadySolved
+		}
+	}
+
 	submission := &domain.Submission{
 		UserID:          userID,
 		ProblemID:       req.ProblemID,
@@ -33,6 +42,16 @@ func (ss *SubmissionService) CreateSubmission(userID uuid.UUID, req dto.CreateSu
 
 	if err := ss.Repo.CreateSubmission(submission); err != nil {
 		return nil, err
+	}
+
+	// Update user's solved count if this is the first time solving this problem (non-contest)
+	if req.Status == domain.STATUS_ACCEPTED && req.ContestID == nil && !wasAlreadySolved {
+		// Get updated stats to sync user's solved count
+		stats, err := ss.Repo.GetUserStats(userID)
+		if err == nil {
+			// Update user's solved count in the database
+			_ = ss.UserRepo.UpdateUserSolvedCount(userID, stats.TotalSolved)
+		}
 	}
 
 	return submission, nil
