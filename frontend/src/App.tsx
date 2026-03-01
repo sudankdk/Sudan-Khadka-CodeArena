@@ -8,6 +8,8 @@ import Profile from "./pages/user/Profile";
 import Discussion from "./pages/user/Discussion";
 import DiscussionDetail from "./pages/user/DiscussionDetail";
 import Duel from "./pages/user/Duel";
+import BattleArena from "./pages/user/BattleArena";
+import BattleResult from "./pages/user/BattleResult";
 import Roadmap from "./pages/user/Roadmap";
 import ProblemSolve from "./pages/user/ProblemSolve";
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -135,6 +137,22 @@ function App() {
           element={
             <ProtectedRoute>
               <Duel />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/duel/battle/:matchId"
+          element={
+            <ProtectedRoute>
+              <BattleArena />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/duel/result/:matchId"
+          element={
+            <ProtectedRoute>
+              <BattleResult />
             </ProtectedRoute>
           }
         />

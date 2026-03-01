@@ -111,10 +111,10 @@ func (a Auth) VerifyToken(token string) (domain.User, error) {
 
 func (a Auth) Authorize(ctx *fiber.Ctx) error {
 	token := ctx.Cookies("token")
-	 if token == "" {
-        return ctx.Status(401).JSON(fiber.Map{"message": "Unauthorized"})
-    }
-	user, err := a.VerifyToken("Bearer "+token)
+	if token == "" {
+		return ctx.Status(401).JSON(fiber.Map{"message": "Unauthorized"})
+	}
+	user, err := a.VerifyToken("Bearer " + token)
 	if err != nil {
 		return ctx.Status(401).JSON(&fiber.Map{
 			"message": "Authorization Failed",
@@ -130,17 +130,16 @@ func (a Auth) CurrentUserInfo(ctx *fiber.Ctx) (domain.User, error) {
 	return user.(domain.User), nil
 }
 
-
 func (a Auth) CreateCookie(ctx *fiber.Ctx, name, value string) {
-    cookie := &fiber.Cookie{
-        Name:     name,
-        Value:    value,
-        HTTPOnly: true,
-        Secure:   false,
-        SameSite: "Lax",  
-        Path:     "/",
-        MaxAge:   3600, //3600 -> 1hr
-    }
+	cookie := &fiber.Cookie{
+		Name:     name,
+		Value:    value,
+		HTTPOnly: true,
+		Secure:   false,
+		SameSite: "Lax",
+		Path:     "/",
+		MaxAge:   86400 * 30, // 30 days — matches JWT expiry
+	}
 
-    ctx.Cookie(cookie)
+	ctx.Cookie(cookie)
 }

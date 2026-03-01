@@ -16,6 +16,7 @@ type UserRepo interface {
 	UpdateUser(id uuid.UUID, user domain.User) (domain.User, error)
 	UpdateUserRating(id uuid.UUID, rating float64) error
 	UpdateUserSolvedCount(id uuid.UUID, solvedCount int) error
+	IncrementMatchStats(id uuid.UUID, won bool) error
 	ListUser() ([]domain.User, error)
 }
 
@@ -68,6 +69,19 @@ func (u *userRepo) UpdateUserSolvedCount(id uuid.UUID, solvedCount int) error {
 		return errors.New("failed to update user solved count")
 	}
 	return nil
+}
+
+// IncrementMatchStats atomically increments matches_played (and matches_won if won) using raw SQL.
+func (u *userRepo) IncrementMatchStats(id uuid.UUID, won bool) error {
+	if won {
+		return u.db.Model(&domain.User{}).Where("id = ?", id).
+			UpdateColumns(map[string]interface{}{
+				"matches_played": gorm.Expr("matches_played + 1"),
+				"matches_won":    gorm.Expr("matches_won + 1"),
+			}).Error
+	}
+	return u.db.Model(&domain.User{}).Where("id = ?", id).
+		UpdateColumn("matches_played", gorm.Expr("matches_played + 1")).Error
 }
 
 func (u *userRepo) ListUser() ([]domain.User, error) {

@@ -2,7 +2,71 @@ import UserDashboardLayout from '@/components/UserDashboardLayout';
 import useAuthStore from "@/services/auth/store/auth.store";
 import { useState } from "react";
 import { useUserStats, useSubmissions } from "@/hooks/useSubmissions";
+import { useBattleStats } from "@/hooks/useBattle";
+import EloTierBadge from "@/components/battle/EloTierBadge";
 import { NavLink } from 'react-router-dom';
+
+const BattleStatsCard = () => {
+  const { data: battleStats, isLoading } = useBattleStats();
+
+  if (isLoading) {
+    return (
+      <div className="border-2 border-dashed border-[#333] p-4">
+        <p className="text-[10px] text-gray-600 tracking-widest mb-4">1VS1 BATTLE ⚔</p>
+        <p className="text-gray-500 text-xs animate-pulse">Loading...</p>
+      </div>
+    );
+  }
+
+  if (!battleStats || battleStats.total_matches === 0) {
+    return (
+      <div className="border-2 border-dashed border-[#333] p-4">
+        <p className="text-[10px] text-gray-600 tracking-widest mb-4">1VS1 BATTLE ⚔</p>
+        <p className="text-gray-600 text-[10px]">NO BATTLES YET</p>
+        <NavLink
+          to="/duel"
+          className="inline-block mt-2 text-[10px] text-[#F7D046] tracking-widest hover:underline"
+        >
+          START YOUR FIRST BATTLE →
+        </NavLink>
+      </div>
+    );
+  }
+
+  return (
+    <div className="border-2 border-[#E54B4B] p-4 relative">
+      <span className="absolute -top-2 -right-2 text-[#E54B4B] text-xs">⚔</span>
+      <p className="text-[10px] text-gray-600 tracking-widest mb-3">1VS1 BATTLE</p>
+      <div className="mb-3">
+        <EloTierBadge rating={battleStats.rating} tier={battleStats.tier} size="md" />
+      </div>
+      <div className="grid grid-cols-3 gap-2 text-center">
+        <div>
+          <p className="text-lg font-bold text-[#4ECDC4] font-mono">{battleStats.wins}</p>
+          <p className="text-[8px] text-gray-600 tracking-widest">W</p>
+        </div>
+        <div>
+          <p className="text-lg font-bold text-[#E54B4B] font-mono">{battleStats.losses}</p>
+          <p className="text-[8px] text-gray-600 tracking-widest">L</p>
+        </div>
+        <div>
+          <p className="text-lg font-bold text-[#F7D046] font-mono">{battleStats.draws}</p>
+          <p className="text-[8px] text-gray-600 tracking-widest">D</p>
+        </div>
+      </div>
+      <div className="mt-3 pt-3 border-t border-[#333] flex justify-between text-[10px]">
+        <span className="text-gray-500">STREAK</span>
+        <span className="text-white font-mono">{battleStats.current_streak}🔥</span>
+      </div>
+      <NavLink
+        to="/duel"
+        className="block mt-3 text-center py-2 border border-[#E54B4B] text-[#E54B4B] text-[10px] tracking-widest hover:bg-[#E54B4B] hover:text-white transition-colors"
+      >
+        GO TO ARENA →
+      </NavLink>
+    </div>
+  );
+};
 
 const Profile = () => {
   const user = useAuthStore((state) => state.user);
@@ -278,6 +342,9 @@ const Profile = () => {
                   ))}
                 </div>
               </div>
+
+              {/* Battle Stats */}
+              <BattleStatsCard />
 
               {/* Basquiat quote */}
               <div className="text-[#222] text-[8px] font-mono">
