@@ -150,6 +150,17 @@ func StartServer(cfg configs.AppConfigs) {
 	// Setup battle REST routes
 	handlers.SetupBattleRoutes(rh, battleSvc, challengeRepo, judgeSvc)
 
+	// Setup Gemini hint service
+	if cfg.GOOGLEAPIKEY != "" {
+		hintSvc, err := service.NewHintService(cfg.GOOGLEAPIKEY)
+		if err != nil {
+			logger.Warn("Failed to initialize hint service, hints will be unavailable", zap.Error(err))
+		} else {
+			handlers.SetupHintRoutes(rh, hintSvc)
+			logger.Info("Hint service initialized")
+		}
+	}
+
 	// Periodically clean up expired WS tickets
 	go func() {
 		for range time.Tick(30 * time.Second) {

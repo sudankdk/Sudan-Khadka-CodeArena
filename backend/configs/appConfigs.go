@@ -20,6 +20,8 @@ type AppConfigs struct {
 	// GITHUBCLIENTID     string
 	// GITHUBCALLBACKURL  string
 	GOOGLECALLBACKURL string
+	GOOGLEAPIKEY      string
+	GOOGLEAPIURL      string
 }
 
 func SetUpEnv() (AppConfigs, error) {
@@ -40,9 +42,9 @@ func SetUpEnv() (AppConfigs, error) {
 		// GITHUBCLIENTID:     os.Getenv("GITHUBCLIENTID"),
 		// GITHUBCALLBACKURL:  os.Getenv("GITHUB_CALLBACK_URL"),
 		GOOGLECALLBACKURL: os.Getenv("GOOGLE_CALLBACK_URL"),
+		GOOGLEAPIKEY:      os.Getenv("GOOGLE_API_KEY"),
+		GOOGLEAPIURL:      os.Getenv("GOOGLE_API_URL"),
 	}
-
-	
 
 	switch {
 	case cfg.PORT == "":
@@ -55,6 +57,10 @@ func SetUpEnv() (AppConfigs, error) {
 		return AppConfigs{}, errors.New("Google CLIENTID or CLIENTSECRET missing in environment")
 	case cfg.GOOGLECALLBACKURL == "":
 		return AppConfigs{}, errors.New("GOOGLECALLBACKURL missing in environment")
+	case cfg.GOOGLEAPIKEY == "":
+		return AppConfigs{}, errors.New("GOOGLEAPIKEY missing in environment")
+	case cfg.GOOGLEAPIURL == "":
+		return AppConfigs{}, errors.New("GOOGLEAPIURL missing in environment")
 	}
 	// case cfg.GITHUBCLIENTID == "" || cfg.GITHUBCLIENTSECRET == "":
 	// 	return AppConfigs{}, errors.New("GitHub CLIENTID or CLIENTSECRET missing in environment")
