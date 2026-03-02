@@ -7,7 +7,9 @@ toolchain go1.24.10
 require github.com/stretchr/testify v1.11.1
 
 require (
-	cloud.google.com/go/compute/metadata v0.3.0 // indirect
+	cloud.google.com/go v0.116.0 // indirect
+	cloud.google.com/go/auth v0.9.3 // indirect
+	cloud.google.com/go/compute/metadata v0.5.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/chromedp/cdproto v0.0.0-20250724212937-08a3db8b4327 // indirect
 	github.com/chromedp/chromedp v0.14.2 // indirect
@@ -21,6 +23,10 @@ require (
 	github.com/gobwas/ws v1.4.0 // indirect
 	github.com/gofiber/contrib/websocket v1.3.4 // indirect
 	github.com/golang-jwt/jwt/v5 v5.3.0 // indirect
+	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
+	github.com/google/go-cmp v0.6.0 // indirect
+	github.com/google/s2a-go v0.1.8 // indirect
+	github.com/googleapis/enterprise-certificate-proxy v0.3.4 // indirect
 	github.com/gorilla/context v1.1.1 // indirect
 	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/gorilla/securecookie v1.1.1 // indirect
@@ -35,6 +41,7 @@ require (
 	github.com/redis/go-redis/v9 v9.18.0 // indirect
 	github.com/savsgio/gotils v0.0.0-20240303185622-093b76447511 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
+	go.opencensus.io v0.24.0 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.1 // indirect
@@ -43,6 +50,10 @@ require (
 	golang.org/x/oauth2 v0.33.0 // indirect
 	golang.org/x/sync v0.17.0 // indirect
 	golang.org/x/text v0.30.0 // indirect
+	google.golang.org/genai v1.48.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240903143218-8af14fe29dc1 // indirect
+	google.golang.org/grpc v1.66.2 // indirect
+	google.golang.org/protobuf v1.34.2 // indirect
 )
 
 require (

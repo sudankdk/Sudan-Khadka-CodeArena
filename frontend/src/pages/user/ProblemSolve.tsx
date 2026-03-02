@@ -9,6 +9,7 @@ import { useExecuteCode } from "@/features/Problems/hooks/useExecute";
 import { useCreateSubmission, useProblemStats, useSubmissions } from "@/hooks/useSubmissions";
 import { SubmissionStatus } from "@/types/submission/submission";
 import { useContestProblems } from "@/features/Contests/hooks/useContests";
+import { useHint } from "@/hooks/useHint";
 
 const ProblemSolve = () => {
   const { id, contestId } = useParams(); // Extract both problem slug and contestId
@@ -22,6 +23,10 @@ const ProblemSolve = () => {
   const [output, setOutput] = useState<string | null>(null);
   const [activeTestCase, setActiveTestCase] = useState(0);
   const [data, setData] = useState<any>(null);
+  const [hintLevel, setHintLevel] = useState(0);
+  const [hints, setHints] = useState<string[]>([]);
+  const [showHints, setShowHints] = useState(false);
+  const [hintError, setHintError] = useState<string | null>(null);
 
   // Check if this is a contest problem
   const isContestProblem = !!contestId;
@@ -85,6 +90,30 @@ const ProblemSolve = () => {
 
   const executeMutation = useExecuteCode();
   const createSubmissionMutation = useCreateSubmission();
+  const hintMutation = useHint();
+
+  const isHintBusy = hintMutation.isPending;
+
+  const handleGetHint = async () => {
+    if (isHintBusy) return; // guard against double-fire
+    const nextLevel = Math.min(hintLevel + 1, 3);
+    setHintError(null);
+    try {
+      const result = await hintMutation.mutateAsync({
+        problem_title: data?.main_heading || "",
+        problem_desc: data?.description || "",
+        difficulty: data?.difficulty || "",
+        user_code: code,
+        hint_level: nextLevel,
+      });
+      setHintLevel(nextLevel);
+      setHints((prev) => [...prev, result.hint]);
+      setShowHints(true);
+    } catch (e: any) {
+      const msg = e?.response?.data?.error || e?.response?.data || "Something went wrong. Try again shortly.";
+      setHintError(typeof msg === "string" ? msg : "Failed to get hint. Please try again.");
+    }
+  };
   const { data: problemStats } = useProblemStats(data?.id || "");
   const { data: submissionsData } = useSubmissions(1, 20, { 
     problem_id: data?.id,
@@ -367,6 +396,43 @@ const ProblemSolve = () => {
                       ))}
                     </ul>
                   </div> } */}
+
+                  {/* AI Hint */}
+                  <div className="border border-dashed border-[#333] p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-[10px] text-gray-600 tracking-widest">AI HINTS ({hintLevel}/3)</p>
+                      <button
+                        onClick={handleGetHint}
+                        disabled={hintLevel >= 3 || isHintBusy}
+                        className="px-3 py-1 border border-[#F7D046] text-[#F7D046] text-[10px] tracking-widest hover:bg-[#F7D046] hover:text-black transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                      >
+                        {isHintBusy ? "THINKING..." : hintLevel >= 3 ? "MAX HINTS" : `💡 GET HINT ${hintLevel + 1}`}
+                      </button>
+                    </div>
+                    {hintError && (
+                      <p className="text-[#E54B4B] text-xs mb-2">{hintError}</p>
+                    )}
+                    {hints.length > 0 && (
+                      <div>
+                        <button
+                          onClick={() => setShowHints(!showHints)}
+                          className="text-[10px] text-gray-500 tracking-widest mb-2 hover:text-white transition-colors"
+                        >
+                          {showHints ? "▼ HIDE HINTS" : "▶ SHOW HINTS"}
+                        </button>
+                        {showHints && (
+                          <div className="space-y-2 mt-2">
+                            {hints.map((hint, idx) => (
+                              <div key={idx} className="border-l-2 border-[#F7D046] pl-3 py-1">
+                                <p className="text-[10px] text-[#F7D046] tracking-widest mb-1">HINT {idx + 1}</p>
+                                <p className="text-gray-300 text-sm leading-relaxed">{hint}</p>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
 
                   {/* Tags */}
                   <div>
