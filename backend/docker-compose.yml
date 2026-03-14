@@ -1,3 +1,5 @@
+version: "3.8"
+
 services:
   postgres:
     image: postgres:18
@@ -19,6 +21,50 @@ services:
     volumes:
       - redis_data:/data
     command: redis-server --appendonly yes
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: codearena/backend:local
+    container_name: codearena_backend
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      PORT: "${PORT:-8080}"
+      # DSN example: postgres://user:pass@host:5432/db?sslmode=disable
+      DSN: "postgres://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}?sslmode=disable"
+      SECRETKEY: ${SECRETKEY}
+      CLIENTID: ${CLIENTID}
+      CLIENTSECRET: ${CLIENTSECRET}
+      GOOGLE_CALLBACK_URL: ${GOOGLE_CALLBACK_URL}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY}
+      GOOGLE_API_URL: ${GOOGLE_API_URL}
+      REDIS_ADDR: "redis:6379"
+      SCREENSHOTS_DIR: /app/screenshots
+    ports:
+      - "${PORT:-8080}:${PORT:-8080}"
+    volumes:
+      - ./screenshots:/app/screenshots
+    restart: unless-stopped
+
+  codeexecutionengine:
+    build:
+      context: ../CodeExecutionEngine
+      dockerfile: Dockerfile
+    image: codearena/cee:local
+    container_name: codearena_cee
+    depends_on:
+      - redis
+    environment:
+      PORT: "8081"
+      REDIS_ADDR: "redis:6379"
+    ports:
+      - "8081:8081"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
 
 volumes:
   db:

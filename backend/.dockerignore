@@ -1,3 +1,9 @@
+vendor
+.git
+node_modules
+tmp
+*.log
+.env
 # Binaries
 *.exe
 *.dll
