@@ -17,9 +17,10 @@ import (
 )
 
 type SubmissionHandlers struct {
-	svc        service.SubmissionService
-	contestSvc service.ContestService
-	logger     *zap.Logger
+	svc           service.SubmissionService
+	contestSvc    service.ContestService
+	logger        *zap.Logger
+	adminStatsSvc *service.AdminStatsService
 }
 
 func SetupSubmissionRoutes(rh *rest.RestHandlers) {
@@ -38,9 +39,10 @@ func SetupSubmissionRoutes(rh *rest.RestHandlers) {
 		ScoringService: &service.ContestScoringService{},
 	}
 	handler := SubmissionHandlers{
-		svc:        svc,
-		contestSvc: contestSvc,
-		logger:     rh.Logger,
+		svc:           svc,
+		contestSvc:    contestSvc,
+		logger:        rh.Logger,
+		adminStatsSvc: rh.AdminStatsSvc,
 	}
 
 	submissionRoutes := app.Group("/submissions", rh.Auth.Authorize)
@@ -131,6 +133,7 @@ func (sh *SubmissionHandlers) CreateSubmission(ctx *fiber.Ctx) error {
 	sh.logger.Info("Submission created successfully",
 		zap.String("id", submission.ID.String()),
 		zap.Int("points", submission.PointsEarned))
+
 	return rest.SuccessMessage(ctx, "Submission created successfully", submission)
 }
 

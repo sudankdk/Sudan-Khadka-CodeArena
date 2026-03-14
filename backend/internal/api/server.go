@@ -107,6 +107,10 @@ func StartServer(cfg configs.AppConfigs) {
 	challengeRepo := repo.NewFrontendChallengeRepo(db)
 	userRepo := repo.NewUserRepo(db)
 
+	// Initialize admin stats service
+	adminStatsRepo := repo.NewAdminStatsRepo(db)
+	adminStatsSvc := service.NewAdminStatsService(adminStatsRepo, logger.Log)
+
 	screenshotsDir := os.Getenv("SCREENSHOTS_DIR")
 	if screenshotsDir == "" {
 		screenshotsDir = "screenshots"
@@ -137,11 +141,12 @@ func StartServer(cfg configs.AppConfigs) {
 
 	auth := helper.SetupAuth(cfg.SECRETKEY)
 	rh := &rest.RestHandlers{
-		App:     app,
-		DB:      db,
-		Configs: cfg,
-		Auth:    *auth,
-		Logger:  logger.Log,
+		App:           app,
+		DB:            db,
+		Configs:       cfg,
+		Auth:          *auth,
+		Logger:        logger.Log,
+		AdminStatsSvc: adminStatsSvc,
 	}
 
 	// Setup REST routes
@@ -149,6 +154,9 @@ func StartServer(cfg configs.AppConfigs) {
 
 	// Setup battle REST routes
 	handlers.SetupBattleRoutes(rh, battleSvc, challengeRepo, judgeSvc)
+
+	// Setup admin stats routes
+	handlers.SetupAdminStatsRoutes(rh, adminStatsSvc)
 
 	// Setup Gemini hint service
 	if cfg.GOOGLEAPIKEY != "" {

@@ -15,8 +15,9 @@ import (
 )
 
 type UserHandlers struct {
-	svc    service.UserService
-	logger *zap.Logger
+	svc           service.UserService
+	logger        *zap.Logger
+	adminStatsSvc *service.AdminStatsService
 }
 
 func SetupRoutes(rh *rest.RestHandlers) {
@@ -27,8 +28,9 @@ func SetupRoutes(rh *rest.RestHandlers) {
 		Config: rh.Configs,
 	}
 	handler := UserHandlers{
-		svc:    svc,
-		logger: rh.Logger,
+		svc:           svc,
+		logger:        rh.Logger,
+		adminStatsSvc: rh.AdminStatsSvc,
 	}
 	app.Get("/health", handler.HealthCheck)
 	app.Get("/auth/:provider", handler.OAuthRedirect)
@@ -65,6 +67,7 @@ func (u *UserHandlers) Register(ctx *fiber.Ctx) error {
 	}
 
 	u.logger.Info("User registered successfully", zap.String("email", user.Email))
+
 	return rest.SuccessMessage(ctx, "user created", user)
 }
 
@@ -148,16 +151,8 @@ func (u *UserHandlers) OAuthCallback(ctx *fiber.Ctx) error {
 		return rest.InternalError(ctx, err)
 	}
 
-	cookie := &fiber.Cookie{
-		Name:     "token",
-		Value:    token,
-		HTTPOnly: true,
-		Secure:   true,
-		SameSite: "None",
-		Path:     "/",
-		MaxAge:   3600,
-	}
-	ctx.Cookie(cookie)
+	// Use the Auth.CreateCookie method which handles environment-aware cookie settings
+	u.svc.Auth.CreateCookie(ctx, "token", token)
 
 	ctx.Locals("user", dbUser)
 	u.logger.Info("OAuth login successful", zap.String("email", dbUser.Email))
