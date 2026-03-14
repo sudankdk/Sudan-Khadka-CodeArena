@@ -14,8 +14,9 @@ import (
 )
 
 type ContestHandlers struct {
-	svc    service.ContestService
-	logger *zap.Logger
+	svc           service.ContestService
+	logger        *zap.Logger
+	adminStatsSvc *service.AdminStatsService
 }
 
 func SetupContestRoutes(rh *rest.RestHandlers) {
@@ -28,8 +29,9 @@ func SetupContestRoutes(rh *rest.RestHandlers) {
 		ScoringService: &service.ContestScoringService{},
 	}
 	handler := ContestHandlers{
-		svc:    svc,
-		logger: rh.Logger,
+		svc:           svc,
+		logger:        rh.Logger,
+		adminStatsSvc: rh.AdminStatsSvc,
 	}
 
 	// Public routes
@@ -67,6 +69,7 @@ func (ch *ContestHandlers) CreateContest(ctx *fiber.Ctx) error {
 	}
 
 	ch.logger.Info("Contest created successfully", zap.String("id", contest.ID.String()))
+
 	return rest.SuccessMessage(ctx, "Contest created successfully", contest)
 }
 
@@ -206,7 +209,7 @@ func (ch *ContestHandlers) UnregisterParticipant(ctx *fiber.Ctx) error {
 
 func (ch *ContestHandlers) CheckRegistrationStatus(ctx *fiber.Ctx) error {
 	contestID := ctx.Params("id")
-	
+
 	// Get user ID from query params
 	userID := ctx.Query("user_id")
 	if userID == "" {

@@ -15,8 +15,9 @@ import (
 )
 
 type ProblemTestHandlers struct {
-	svc    service.ProblemTestService
-	logger *zap.Logger
+	svc           service.ProblemTestService
+	logger        *zap.Logger
+	adminStatsSvc *service.AdminStatsService
 }
 
 func SetupProblemTestRoutes(rh *rest.RestHandlers) {
@@ -28,8 +29,9 @@ func SetupProblemTestRoutes(rh *rest.RestHandlers) {
 		Config:   rh.Configs,
 	}
 	handler := ProblemTestHandlers{
-		svc:    svc,
-		logger: rh.Logger,
+		svc:           svc,
+		logger:        rh.Logger,
+		adminStatsSvc: rh.AdminStatsSvc,
 	}
 	// priRoutes := app.Group("/problems", rh.Auth.Authorize)
 	priRoutes := app.Group("/problems")
@@ -67,6 +69,7 @@ func (u *ProblemTestHandlers) Create(ctx *fiber.Ctx) error {
 	}
 
 	u.logger.Info("Problem created successfully", zap.String("slug", req.Slug))
+
 	// Success response
 	return rest.SuccessMessage(ctx, "Problem created successfully", map[string]string{
 		"slug": req.Slug,

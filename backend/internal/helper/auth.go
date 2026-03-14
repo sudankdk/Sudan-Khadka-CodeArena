@@ -3,6 +3,7 @@ package helper
 import (
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -130,15 +131,39 @@ func (a Auth) CurrentUserInfo(ctx *fiber.Ctx) (domain.User, error) {
 	return user.(domain.User), nil
 }
 
+func (a Auth) RequireAdmin(ctx *fiber.Ctx) error {
+	user, err := a.CurrentUserInfo(ctx)
+	if err != nil {
+		return ctx.Status(401).JSON(fiber.Map{"message": "Unauthorized"})
+	}
+	if user.Role != domain.ADMIN {
+		return ctx.Status(403).JSON(fiber.Map{"message": "Admin access required"})
+	}
+	return ctx.Next()
+}
+
 func (a Auth) CreateCookie(ctx *fiber.Ctx, name, value string) {
+	// Get environment to determine cookie settings
+	env := os.Getenv("APP_ENV")
+	isDev := env == "development" || env == "dev" || env == ""
+
 	cookie := &fiber.Cookie{
 		Name:     name,
 		Value:    value,
 		HTTPOnly: true,
-		Secure:   false,
-		SameSite: "Lax",
 		Path:     "/",
 		MaxAge:   86400 * 30, // 30 days — matches JWT expiry
+	}
+
+	// In development (localhost different ports), don't set SameSite
+	// This allows cookies to work across localhost:5173 and localhost:8080
+	if isDev {
+		cookie.Secure = false
+		// Omit SameSite for localhost development
+	} else {
+		// In production, use secure settings
+		cookie.Secure = true
+		cookie.SameSite = "Lax"
 	}
 
 	ctx.Cookie(cookie)
