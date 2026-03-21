@@ -43,6 +43,7 @@ services:
       GOOGLE_API_URL: ${GOOGLE_API_URL}
       REDIS_ADDR: "redis:6379"
       SCREENSHOTS_DIR: /app/screenshots
+      CHROME_BIN: /usr/bin/chromium-browser
     ports:
       - "${PORT:-8080}:${PORT:-8080}"
     volumes:

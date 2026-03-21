@@ -1,5 +1,5 @@
 import { Icons } from '../../constants/Icons';
-import { AdminStats } from '@/hooks/useAdminStats';
+import type { AdminStats } from '@/hooks/useAdminStats';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 

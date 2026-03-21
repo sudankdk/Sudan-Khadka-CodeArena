@@ -39,7 +39,6 @@ const BattleResult = () => {
 
   const isWinner = match.winner_id === user?.id;
   const isDraw = !match.winner_id && match.status === "finished";
-  const isLoss = match.winner_id && match.winner_id !== user?.id;
 
   const resultText = isWinner ? "VICTORY" : isDraw ? "DRAW" : "DEFEAT";
   const resultColor = isWinner

@@ -11,7 +11,7 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags="-s -w" -o /app/backend ./main.go
 
 FROM alpine:3.18
-RUN apk add --no-cache ca-certificates
+RUN apk add --no-cache ca-certificates chromium chromium-chromedriver
 WORKDIR /app
 COPY --from=builder /app/backend ./
 
