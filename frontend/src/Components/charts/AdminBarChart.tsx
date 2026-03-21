@@ -21,7 +21,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AdminStats } from "@/hooks/useAdminStats";
+import type { AdminStats } from "@/hooks/useAdminStats";
 
 interface ChartBarMultipleProps {
   stats: AdminStats | null;
