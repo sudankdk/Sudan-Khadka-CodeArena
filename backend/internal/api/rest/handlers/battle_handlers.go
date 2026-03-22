@@ -2,7 +2,10 @@ package handlers
 
 import (
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -203,9 +206,43 @@ func (bh *BattleHandlers) GetReferenceScreenshot(ctx *fiber.Ctx) error {
 		return ctx.Status(http.StatusNotFound).JSON(fiber.Map{"message": "Challenge not found"})
 	}
 
+	// Normalize separators in case the path was saved on a different OS.
+	refPath := strings.ReplaceAll(challenge.ReferenceScreenshotPath, "\\", string(os.PathSeparator))
+	refPath = strings.ReplaceAll(refPath, "/", string(os.PathSeparator))
+	refPath = filepath.Clean(refPath)
+	if refPath == "" {
+		return ctx.Status(http.StatusNotFound).JSON(fiber.Map{"message": "Reference screenshot not found"})
+	}
+
+	if !filepath.IsAbs(refPath) {
+		screenshotsDir := os.Getenv("SCREENSHOTS_DIR")
+		if screenshotsDir == "" {
+			screenshotsDir = "screenshots"
+		}
+
+		// Normalize screenshotsDir and make absolute for consistent joining.
+		screenshotsDir = filepath.Clean(strings.ReplaceAll(screenshotsDir, "\\", string(os.PathSeparator)))
+		if !filepath.IsAbs(screenshotsDir) {
+			cwd, _ := os.Getwd()
+			screenshotsDir = filepath.Join(cwd, screenshotsDir)
+		}
+
+		// If the stored path already starts with the screenshots folder name, strip it to avoid duplication.
+		base := filepath.Base(screenshotsDir)
+		if strings.HasPrefix(refPath, base+string(os.PathSeparator)) {
+			refPath = strings.TrimPrefix(refPath, base+string(os.PathSeparator))
+		}
+
+		refPath = filepath.Join(screenshotsDir, refPath)
+	}
+
+	if _, err := os.Stat(refPath); err != nil {
+		return ctx.Status(http.StatusNotFound).JSON(fiber.Map{"message": "Reference screenshot not found"})
+	}
+
 	ctx.Set("Content-Type", "image/png")
 	ctx.Set("Cache-Control", "public, max-age=3600")
-	return ctx.SendFile(challenge.ReferenceScreenshotPath)
+	return ctx.SendFile(refPath)
 }
 
 // GetBattleHistory returns the current user's battle match history.

@@ -1299,10 +1299,30 @@ func SeedChallenges(challengeRepo repo.FrontendChallengeRepo, judgeSvc *JudgeSer
 		return
 	}
 	if total > 0 && len(existing) > 0 {
-		// Challenges exist — check if any have placeholder screenshots that need upgrading
+		// Challenges exist — upgrade placeholder or missing screenshots
 		upgraded := 0
 		for _, ch := range existing {
-			if !strings.Contains(ch.ReferenceScreenshotPath, "placeholder") {
+			refPath := ch.ReferenceScreenshotPath
+			if refPath == "" {
+				continue
+			}
+
+			// Normalize stored path across OSes and resolve relative paths against output dir.
+			normalized := strings.ReplaceAll(refPath, "\\", string(os.PathSeparator))
+			normalized = strings.ReplaceAll(normalized, "/", string(os.PathSeparator))
+			normalized = filepath.Clean(normalized)
+			if !filepath.IsAbs(normalized) {
+				normalized = filepath.Join(judgeSvc.outputDir, normalized)
+			}
+
+			// Determine if we need to regenerate the reference screenshot.
+			needsUpgrade := strings.Contains(refPath, "placeholder")
+			if !needsUpgrade {
+				if _, err := os.Stat(normalized); err != nil {
+					needsUpgrade = true
+				}
+			}
+			if !needsUpgrade {
 				continue
 			}
 
@@ -1342,8 +1362,15 @@ func SeedChallenges(challengeRepo repo.FrontendChallengeRepo, judgeSvc *JudgeSer
 				continue
 			}
 
-			// Remove old placeholder file
-			os.Remove(oldPath)
+			// Remove old file if present
+			if oldPath != "" {
+				oldPath = filepath.Clean(strings.ReplaceAll(oldPath, "\\", string(os.PathSeparator)))
+				oldPath = strings.ReplaceAll(oldPath, "/", string(os.PathSeparator))
+				if !filepath.IsAbs(oldPath) {
+					oldPath = filepath.Join(judgeSvc.outputDir, oldPath)
+				}
+				os.Remove(oldPath)
+			}
 
 			upgraded++
 			logger.Info("Upgraded placeholder screenshot",
