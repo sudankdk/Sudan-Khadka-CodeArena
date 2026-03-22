@@ -12,8 +12,10 @@ import type {
   ErrorPayload,
 } from "@/types/battle/battle";
 
-const WS_BASE_URL = "ws://localhost:8080/ws/battle";
-const TICKET_URL = "http://localhost:8080/api/ws-ticket";
+const apiBase = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, "") || "http://localhost:8080";
+const wsBase = (import.meta.env.VITE_WS_BASE_URL as string | undefined)?.replace(/\/$/, "") || apiBase.replace(/^http/, "ws");
+const WS_BASE_URL = `${wsBase}/ws/battle`;
+const TICKET_URL = `${apiBase}/api/ws-ticket`;
 
 type MessageHandler = (payload: any) => void;
 

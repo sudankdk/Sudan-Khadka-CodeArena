@@ -140,31 +140,3 @@ func (a Auth) RequireAdmin(ctx *fiber.Ctx) error {
 	}
 	return ctx.Next()
 }
-
-// depricated - cookies hatako token ma rakhne
-// func (a Auth) CreateCookie(ctx *fiber.Ctx, name, value string) {
-// 	// Get environment to determine cookie settings
-// 	env := os.Getenv("APP_ENV")
-// 	isDev := env == "development" || env == "dev" || env == ""
-
-// 	cookie := &fiber.Cookie{
-// 		Name:     name,
-// 		Value:    value,
-// 		HTTPOnly: true,
-// 		Path:     "/",
-// 		MaxAge:   86400 * 30, // 30 days — matches JWT expiry
-// 	}
-
-// 	// In development (localhost different ports), don't set SameSite
-// 	// This allows cookies to work across localhost:5173 and localhost:8080
-// 	if isDev {
-// 		cookie.Secure = false
-// 		// Omit SameSite for localhost development
-// 	} else {
-// 		// In production, use secure settings
-// 		cookie.Secure = true
-// 		cookie.SameSite = "Lax"
-// 	}
-
-// 	ctx.Cookie(cookie)
-// }

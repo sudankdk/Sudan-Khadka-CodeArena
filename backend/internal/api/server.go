@@ -198,7 +198,7 @@ func StartServer(cfg configs.AppConfigs) {
 		ticketID := uuid.New().String()
 		wsTickets.Store(ticketID, &wsTicket{
 			UserID:    user.ID,
-			ExpiresAt: time.Now().Add(30 * time.Second),
+			ExpiresAt: time.Now().Add(120 * time.Second),
 		})
 
 		logger.Info("WS ticket issued", zap.String("user_id", user.ID.String()))
@@ -217,7 +217,9 @@ func StartServer(cfg configs.AppConfigs) {
 						c.Locals("user_id", t.UserID)
 						return c.Next()
 					}
+					logger.Warn("WS ticket expired", zap.String("ticket", ticket), zap.Time("expired_at", t.ExpiresAt))
 				}
+				logger.Warn("WS ticket invalid or missing", zap.String("ticket", ticket))
 				return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid or expired ticket"})
 			}
 
