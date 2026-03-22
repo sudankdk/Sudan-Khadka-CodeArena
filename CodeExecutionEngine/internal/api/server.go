@@ -1,6 +1,8 @@
 package api
 
 import (
+	"os"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	executer "github.com/sudankdk/ceev2/internal/Executer"
@@ -15,6 +17,11 @@ func NewServer(exec *executer.Executor) *Server {
 }
 
 func (s *Server) StartServer() error {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "3000"
+	}
+
 	app := fiber.New()
 	app.Use(cors.New(cors.Config{
 		AllowCredentials: true,
@@ -25,5 +32,5 @@ func (s *Server) StartServer() error {
 
 	s.setupRoutes(app)
 
-	return app.Listen(":3000")
+	return app.Listen(":" + port)
 }

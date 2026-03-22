@@ -1,5 +1,7 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import UserDashboardLayout from '@/components/UserDashboardLayout';
+import { createCustomRoadmap, listCustomRoadmaps } from "@/services/auth/api/roadmap";
+import type { ICustomRoadmap } from "@/types/roadmap/roadmap";
 
 interface Topic {
   id: string;
@@ -15,8 +17,18 @@ interface Topic {
 const Roadmap = () => {
   const [activeTab, setActiveTab] = useState("NEETCODE");
   const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null);
+  const [customRoadmaps, setCustomRoadmaps] = useState<ICustomRoadmap[]>([]);
+  const [customLoading, setCustomLoading] = useState(false);
+  const [customError, setCustomError] = useState<string | null>(null);
+  const [createError, setCreateError] = useState<string | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
+  const [roadmapName, setRoadmapName] = useState("");
+  const [roadmapDescription, setRoadmapDescription] = useState("");
+  const [roadmapVisibility, setRoadmapVisibility] = useState<"private" | "public">("private");
+  const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
 
   const tabs = ["NEETCODE", "BLIND 75", "CUSTOM", "CREATE"];
+  const customTopicOptions = ["ARRAY", "STRING", "DP", "GRAPH", "TREE", "BINARY SEARCH", "HEAP", "STACK"];
 
   const neetcodeTopics: Topic[] = [
     { id: "arrays", name: "ARRAYS & HASHING", problems: 9, completed: 7, status: "in-progress", dependencies: [], x: 50, y: 5 },
@@ -106,6 +118,61 @@ const Roadmap = () => {
       });
     });
     return lines;
+  };
+
+  const loadCustomRoadmaps = async () => {
+    setCustomLoading(true);
+    setCustomError(null);
+    try {
+      const data = await listCustomRoadmaps();
+      setCustomRoadmaps(data);
+    } catch (err) {
+      setCustomError("Failed to load custom roadmaps.");
+    } finally {
+      setCustomLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === "CUSTOM") {
+      loadCustomRoadmaps();
+    }
+  }, [activeTab]);
+
+  const toggleTopic = (topic: string) => {
+    setSelectedTopics((prev) =>
+      prev.includes(topic) ? prev.filter((item) => item !== topic) : [...prev, topic]
+    );
+  };
+
+  const handleCreateRoadmap = async () => {
+    if (!roadmapName.trim()) {
+      setCreateError("Roadmap name is required.");
+      return;
+    }
+
+    setIsCreating(true);
+    setCreateError(null);
+    try {
+      const payload = {
+        name: roadmapName.trim(),
+        description: roadmapDescription.trim(),
+        visibility: roadmapVisibility,
+        topics: selectedTopics,
+        total_problems: selectedTopics.length,
+      };
+      const created = await createCustomRoadmap(payload);
+      setCustomRoadmaps((prev) => [created, ...prev]);
+      setRoadmapName("");
+      setRoadmapDescription("");
+      setRoadmapVisibility("private");
+      setSelectedTopics([]);
+      setActiveTab("CUSTOM");
+    } catch (err) {
+      setCreateError("Failed to create roadmap. Try again.");
+    } finally {
+      setIsCreating(false);
+    }
   };
 
   return (
@@ -292,24 +359,46 @@ const Roadmap = () => {
 
         {/* Custom Roadmaps */}
         {activeTab === "CUSTOM" && (
-          <div className="grid grid-cols-3 gap-4">
-            {[
-              { name: "MY DSA JOURNEY", problems: 45, progress: 67, author: "YOU" },
-              { name: "GOOGLE PREP", problems: 80, progress: 23, author: "ALGO_KING" },
-              { name: "SYSTEM DESIGN", problems: 30, progress: 10, author: "CODE_WARRIOR" },
-            ].map((roadmap, idx) => (
-              <div key={idx} className="border-2 border-dashed border-[#333] p-4 hover:border-[#F7D046] transition-colors cursor-pointer">
-                <p className="text-white font-bold tracking-wider mb-2">{roadmap.name}</p>
-                <p className="text-gray-500 text-xs mb-3">by {roadmap.author}</p>
-                <div className="h-2 bg-[#1a1a1a] mb-2">
-                  <div className="h-full bg-[#4ECDC4]" style={{ width: `${roadmap.progress}%` }} />
-                </div>
-                <div className="flex justify-between text-[10px] text-gray-500">
-                  <span>{roadmap.problems} PROBLEMS</span>
-                  <span>{roadmap.progress}% DONE</span>
-                </div>
+          <div>
+            {customLoading && (
+              <div className="border-2 border-dashed border-[#333] p-6 text-center text-gray-500 text-xs tracking-widest">
+                LOADING ROADMAPS...
               </div>
-            ))}
+            )}
+            {customError && (
+              <div className="border-2 border-[#E54B4B] p-6 text-center text-[#E54B4B] text-xs tracking-widest">
+                {customError}
+              </div>
+            )}
+            {!customLoading && !customError && (
+              <div className="grid grid-cols-3 gap-4">
+                {customRoadmaps.length === 0 && (
+                  <div className="border-2 border-dashed border-[#333] p-6 text-center text-gray-500 text-xs tracking-widest col-span-3">
+                    NO CUSTOM ROADMAPS YET
+                  </div>
+                )}
+                {customRoadmaps.map((roadmap) => {
+                  const problemCount = roadmap.total_problems || roadmap.topics.length;
+                  const progress = Math.min(Math.max(roadmap.progress, 0), 100);
+                  return (
+                    <div
+                      key={roadmap.id}
+                      className="border-2 border-dashed border-[#333] p-4 hover:border-[#F7D046] transition-colors cursor-pointer"
+                    >
+                      <p className="text-white font-bold tracking-wider mb-2">{roadmap.name}</p>
+                      <p className="text-gray-500 text-xs mb-3">by {roadmap.author_name || "YOU"}</p>
+                      <div className="h-2 bg-[#1a1a1a] mb-2">
+                        <div className="h-full bg-[#4ECDC4]" style={{ width: `${progress}%` }} />
+                      </div>
+                      <div className="flex justify-between text-[10px] text-gray-500">
+                        <span>{problemCount} PROBLEMS</span>
+                        <span>{progress}% DONE</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 
@@ -325,6 +414,8 @@ const Roadmap = () => {
                   <input
                     type="text"
                     placeholder="MY CUSTOM PATH"
+                    value={roadmapName}
+                    onChange={(event) => setRoadmapName(event.target.value)}
                     className="w-full bg-transparent border-2 border-[#333] px-4 py-3 text-white text-sm font-mono tracking-wider placeholder:text-gray-700 focus:border-[#F7D046] focus:outline-none"
                   />
                 </div>
@@ -334,6 +425,8 @@ const Roadmap = () => {
                   <textarea
                     rows={3}
                     placeholder="WHAT'S THIS ROADMAP FOR?"
+                    value={roadmapDescription}
+                    onChange={(event) => setRoadmapDescription(event.target.value)}
                     className="w-full bg-transparent border-2 border-[#333] px-4 py-3 text-white text-sm font-mono tracking-wider placeholder:text-gray-700 focus:border-[#F7D046] focus:outline-none resize-none"
                   />
                 </div>
@@ -341,10 +434,15 @@ const Roadmap = () => {
                 <div>
                   <label className="text-[10px] text-gray-500 tracking-widest block mb-2">ADD TOPICS</label>
                   <div className="flex flex-wrap gap-2 mb-3">
-                    {["ARRAY", "STRING", "DP", "GRAPH", "TREE", "BINARY SEARCH", "HEAP", "STACK"].map((topic) => (
+                    {customTopicOptions.map((topic) => (
                       <button
                         key={topic}
-                        className="px-3 py-2 border border-[#333] text-gray-500 text-[10px] tracking-widest hover:border-[#F7D046] hover:text-[#F7D046] transition-colors"
+                        type="button"
+                        onClick={() => toggleTopic(topic)}
+                        className={`px-3 py-2 border text-[10px] tracking-widest transition-colors ${selectedTopics.includes(topic)
+                          ? "border-[#F7D046] text-[#F7D046]"
+                          : "border-[#333] text-gray-500 hover:border-[#F7D046] hover:text-[#F7D046]"
+                          }`}
                       >
                         + {topic}
                       </button>
@@ -355,17 +453,42 @@ const Roadmap = () => {
                 <div>
                   <label className="text-[10px] text-gray-500 tracking-widest block mb-2">VISIBILITY</label>
                   <div className="flex gap-2">
-                    <button className="flex-1 py-3 border-2 border-[#F7D046] text-[#F7D046] text-xs tracking-widest bg-[#F7D046]/5">
+                    <button
+                      type="button"
+                      onClick={() => setRoadmapVisibility("private")}
+                      className={`flex-1 py-3 border-2 text-xs tracking-widest ${roadmapVisibility === "private"
+                        ? "border-[#F7D046] text-[#F7D046] bg-[#F7D046]/5"
+                        : "border-[#333] text-gray-500 hover:border-[#F7D046]"
+                        }`}
+                    >
                       PRIVATE
                     </button>
-                    <button className="flex-1 py-3 border-2 border-[#333] text-gray-500 text-xs tracking-widest hover:border-[#4ECDC4]">
+                    <button
+                      type="button"
+                      onClick={() => setRoadmapVisibility("public")}
+                      className={`flex-1 py-3 border-2 text-xs tracking-widest ${roadmapVisibility === "public"
+                        ? "border-[#4ECDC4] text-[#4ECDC4] bg-[#4ECDC4]/5"
+                        : "border-[#333] text-gray-500 hover:border-[#4ECDC4]"
+                        }`}
+                    >
                       PUBLIC
                     </button>
                   </div>
                 </div>
 
-                <button className="w-full py-4 bg-[#F7D046] text-black text-sm font-bold tracking-widest hover:bg-[#f5c518] transition-colors">
-                  CREATE ROADMAP ♛
+                {createError && (
+                  <div className="border-2 border-[#E54B4B] px-4 py-2 text-[#E54B4B] text-[10px] tracking-widest">
+                    {createError}
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  onClick={handleCreateRoadmap}
+                  disabled={isCreating}
+                  className="w-full py-4 bg-[#F7D046] text-black text-sm font-bold tracking-widest hover:bg-[#f5c518] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {isCreating ? "CREATING..." : "CREATE ROADMAP ♛"}
                 </button>
               </div>
             </div>

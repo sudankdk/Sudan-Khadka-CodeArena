@@ -3,7 +3,6 @@ package helper
 import (
 	"errors"
 	"fmt"
-	"os"
 	"strings"
 	"time"
 
@@ -60,15 +59,15 @@ func (a Auth) GenerateToken(id uuid.UUID, email, role string) (string, error) {
 }
 
 func (a Auth) VerifyToken(token string) (domain.User, error) {
-	splitToken := strings.Split(token, " ")
-	if len(splitToken) != 2 {
+	parts := strings.Split(strings.TrimSpace(token), " ")
+	if len(parts) == 1 {
+		// Accept bare token and normalize to Bearer form.
+		parts = []string{"Bearer", parts[0]}
+	}
+	if len(parts) != 2 || parts[0] != "Bearer" {
 		return domain.User{}, errors.New("bearer missing or invalid token")
 	}
-	keyWord := splitToken[0]
-	if keyWord != "Bearer" {
-		return domain.User{}, errors.New("Bearer Missing")
-	}
-	parsedToken, err := jwt.Parse(splitToken[1], func(t *jwt.Token) (any, error) {
+	parsedToken, err := jwt.Parse(parts[1], func(t *jwt.Token) (any, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			return domain.User{}, fmt.Errorf("Invalid signing method")
 		}
@@ -111,11 +110,11 @@ func (a Auth) VerifyToken(token string) (domain.User, error) {
 }
 
 func (a Auth) Authorize(ctx *fiber.Ctx) error {
-	token := ctx.Cookies("token")
+	token := strings.TrimSpace(ctx.Get("Authorization"))
 	if token == "" {
 		return ctx.Status(401).JSON(fiber.Map{"message": "Unauthorized"})
 	}
-	user, err := a.VerifyToken("Bearer " + token)
+	user, err := a.VerifyToken(token)
 	if err != nil {
 		return ctx.Status(401).JSON(&fiber.Map{
 			"message": "Authorization Failed",
@@ -140,31 +139,4 @@ func (a Auth) RequireAdmin(ctx *fiber.Ctx) error {
 		return ctx.Status(403).JSON(fiber.Map{"message": "Admin access required"})
 	}
 	return ctx.Next()
-}
-
-func (a Auth) CreateCookie(ctx *fiber.Ctx, name, value string) {
-	// Get environment to determine cookie settings
-	env := os.Getenv("APP_ENV")
-	isDev := env == "development" || env == "dev" || env == ""
-
-	cookie := &fiber.Cookie{
-		Name:     name,
-		Value:    value,
-		HTTPOnly: true,
-		Path:     "/",
-		MaxAge:   86400 * 30, // 30 days — matches JWT expiry
-	}
-
-	// In development (localhost different ports), don't set SameSite
-	// This allows cookies to work across localhost:5173 and localhost:8080
-	if isDev {
-		cookie.Secure = false
-		// Omit SameSite for localhost development
-	} else {
-		// In production, use secure settings
-		cookie.Secure = true
-		cookie.SameSite = "Lax"
-	}
-
-	ctx.Cookie(cookie)
 }

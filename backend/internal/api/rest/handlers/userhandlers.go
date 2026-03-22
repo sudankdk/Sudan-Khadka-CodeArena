@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/google/uuid"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/shareed2k/goth_fiber"
 	"github.com/sudankdk/codearena/internal/api/rest"
@@ -50,6 +52,13 @@ func SetupRoutes(rh *rest.RestHandlers) {
 		})
 	})
 
+	adminRoutes := app.Group("/admin/users", rh.Auth.Authorize, rh.Auth.RequireAdmin)
+	adminRoutes.Get("/", handler.AdminList)
+	adminRoutes.Get("/stats", handler.AdminStats)
+	adminRoutes.Get("/:id", handler.AdminGet)
+	adminRoutes.Post("/", handler.AdminCreate)
+	adminRoutes.Put("/:id", handler.AdminUpdate)
+
 }
 
 func (u *UserHandlers) Register(ctx *fiber.Ctx) error {
@@ -84,30 +93,17 @@ func (u *UserHandlers) Login(ctx *fiber.Ctx) error {
 		u.logger.Warn("Login failed", zap.String("email", req.Email), zap.Error(err))
 		return rest.InternalError(ctx, err)
 	}
-
-	u.svc.Auth.CreateCookie(ctx, "token", token)
+	ctx.Locals("user", user)
 	u.logger.Info("Login successful", zap.String("email", user.Email))
+
 	return rest.SuccessMessage(ctx, "Auth complete", fiber.Map{
 		"token": token,
 		"user":  user,
 	})
-
 }
-
 func (u *UserHandlers) Logout(ctx *fiber.Ctx) error {
-	ctx.Cookie(&fiber.Cookie{
-		Name:     "token",
-		Value:    "",
-		MaxAge:   -1,
-		HTTPOnly: true,
-		Secure:   false,
-		SameSite: "None",
-		Path:     "/",
-	})
 
-	return ctx.JSON(fiber.Map{
-		"message": "logout successful",
-	})
+	return ctx.JSON(fiber.Map{"message": "logout successful"})
 }
 
 func (u *UserHandlers) OAuthRedirect(ctx *fiber.Ctx) error {
@@ -151,12 +147,12 @@ func (u *UserHandlers) OAuthCallback(ctx *fiber.Ctx) error {
 		return rest.InternalError(ctx, err)
 	}
 
-	// Use the Auth.CreateCookie method which handles environment-aware cookie settings
-	u.svc.Auth.CreateCookie(ctx, "token", token)
-
 	ctx.Locals("user", dbUser)
 	u.logger.Info("OAuth login successful", zap.String("email", dbUser.Email))
-	return ctx.Redirect("http://localhost:5173/oauth/success")
+
+	// Redirect back to frontend with the token in the URL fragment so it can be stored client-side.
+	redirectURL := "http://localhost:5173/oauth/success#token=" + token
+	return ctx.Redirect(redirectURL)
 }
 
 func (u *UserHandlers) HealthCheck(ctx *fiber.Ctx) error {
@@ -173,4 +169,72 @@ func (u *UserHandlers) List(ctx *fiber.Ctx) error {
 
 	u.logger.Info("Users listed successfully", zap.Int("count", len(users)))
 	return rest.SuccessMessage(ctx, "users list found", users)
+}
+
+func (u *UserHandlers) AdminList(ctx *fiber.Ctx) error {
+	users, err := u.svc.ListUsers()
+	if err != nil {
+		return rest.ErrorMessage(ctx, http.StatusBadRequest, fmt.Errorf("listing of users failed: %v", err))
+	}
+	return rest.SuccessMessage(ctx, "users list found", users)
+}
+
+func (u *UserHandlers) AdminGet(ctx *fiber.Ctx) error {
+	userID, err := uuid.Parse(ctx.Params("id"))
+	if err != nil {
+		return rest.ErrorMessage(ctx, http.StatusBadRequest, fmt.Errorf("invalid user id"))
+	}
+
+	user, err := u.svc.Repo.FindUserById(userID)
+	if err != nil {
+		return rest.ErrorMessage(ctx, http.StatusNotFound, fmt.Errorf("user not found"))
+	}
+
+	return rest.SuccessMessage(ctx, "user found", user)
+}
+
+func (u *UserHandlers) AdminCreate(ctx *fiber.Ctx) error {
+	var req dto.AdminCreateUser
+	if err := ctx.BodyParser(&req); err != nil {
+		u.logger.Warn("Invalid admin create payload", zap.Error(err))
+		return rest.ErrorMessage(ctx, http.StatusBadRequest, fmt.Errorf("Invalid Payload"))
+	}
+
+	created, err := u.svc.AdminCreateUser(req)
+	if err != nil {
+		u.logger.Error("Failed to create user", zap.Error(err))
+		return rest.InternalError(ctx, err)
+	}
+
+	return rest.SuccessMessage(ctx, "user created", created)
+}
+
+func (u *UserHandlers) AdminUpdate(ctx *fiber.Ctx) error {
+	userID, err := uuid.Parse(ctx.Params("id"))
+	if err != nil {
+		return rest.ErrorMessage(ctx, http.StatusBadRequest, fmt.Errorf("invalid user id"))
+	}
+
+	var req dto.UserUpdate
+	if err := ctx.BodyParser(&req); err != nil {
+		u.logger.Warn("Invalid admin update payload", zap.Error(err))
+		return rest.ErrorMessage(ctx, http.StatusBadRequest, fmt.Errorf("Invalid Payload"))
+	}
+
+	updated, err := u.svc.UpdateUser(userID, req)
+	if err != nil {
+		u.logger.Error("Failed to update user", zap.Error(err))
+		return rest.InternalError(ctx, err)
+	}
+
+	return rest.SuccessMessage(ctx, "user updated", updated)
+}
+
+func (u *UserHandlers) AdminStats(ctx *fiber.Ctx) error {
+	stats, err := u.svc.UserStats()
+	if err != nil {
+		u.logger.Error("Failed to get user stats", zap.Error(err))
+		return rest.InternalError(ctx, err)
+	}
+	return rest.SuccessMessage(ctx, "user stats", stats)
 }

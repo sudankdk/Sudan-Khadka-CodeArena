@@ -1,19 +1,33 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { authClient } from "../../services/auth/api/auth";
 import useAuthStore from "../../services/auth/store/auth.store";
-import { useNavigate } from "react-router-dom";
 
 const OAuth = () => {
-  const { setUser } = useAuthStore();
+  const { setUser, setToken } = useAuthStore();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const token = useMemo(() => {
+    const hash = new URLSearchParams(location.hash.replace(/^#/, ""));
+    const search = new URLSearchParams(location.search);
+    return hash.get("token") || search.get("token");
+  }, [location.hash, location.search]);
+
   useEffect(() => {
     const authSuccess = async () => {
+      if (!token) {
+        navigate("/login", { replace: true });
+        return;
+      }
+
+      setToken(token);
       const res = await authClient.get<{ user: any }>("/users/me");
-      console.log(res);
-      if (res.user && res.user.role == "regular") {
+
+      if (res.user?.role === "regular") {
         setUser(res.user);
         navigate("/dashboard", { replace: true });
-      } else if (res.user && res.user.role == "admin") {
+      } else if (res.user?.role === "admin") {
         setUser(res.user);
         navigate("/admin/dashboard", { replace: true });
       } else {
@@ -22,7 +36,8 @@ const OAuth = () => {
     };
 
     authSuccess();
-  }, []);
+  }, [navigate, setToken, setUser, token]);
+
   return <p>Authenticating...</p>;
 };
 

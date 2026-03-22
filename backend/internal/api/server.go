@@ -2,6 +2,7 @@ package api
 
 import (
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -43,7 +44,7 @@ func StartServer(cfg configs.AppConfigs) {
 
 	app.Use(cors.New(cors.Config{
 		AllowCredentials: true,
-		AllowOrigins:     "http://localhost:5173",
+		AllowOrigins:     "http://localhost:5173,https://sudan-khadka-code-arena.vercel.app,http://localhost:3000",
 		AllowMethods:     "GET,POST,PUT,DELETE,OPTIONS",
 		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
 	}))
@@ -62,6 +63,7 @@ func StartServer(cfg configs.AppConfigs) {
 		&domain.TestCases{},
 		&domain.BoilerPlate{},
 		&domain.Submission{},
+		&domain.Roadmap{},
 		&domain.Discussion{},
 		&domain.DiscussionComment{},
 		&domain.DiscussionVote{},
@@ -181,15 +183,14 @@ func StartServer(cfg configs.AppConfigs) {
 		}
 	}()
 
-	// WS ticket endpoint — exchanges HTTP-only cookie auth for a one-time WS ticket.
-	// The browser WebSocket API cannot send HTTP-only cookies cross-origin,
-	// so the frontend calls this first (with credentials), then passes the ticket as a query param.
+	// WS ticket endpoint — exchanges a JWT (from Authorization header) for a one-time WS ticket.
+	// The frontend calls this first, then passes the ticket as a query param when opening the WebSocket.
 	app.Post("/api/ws-ticket", func(c *fiber.Ctx) error {
-		tokenStr := c.Cookies("token")
+		tokenStr := strings.TrimSpace(c.Get("Authorization"))
 		if tokenStr == "" {
-			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Authentication required"})
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Authorization header required"})
 		}
-		user, err := auth.VerifyToken("Bearer " + tokenStr)
+		user, err := auth.VerifyToken(tokenStr)
 		if err != nil {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid token"})
 		}
@@ -197,7 +198,7 @@ func StartServer(cfg configs.AppConfigs) {
 		ticketID := uuid.New().String()
 		wsTickets.Store(ticketID, &wsTicket{
 			UserID:    user.ID,
-			ExpiresAt: time.Now().Add(30 * time.Second),
+			ExpiresAt: time.Now().Add(120 * time.Second),
 		})
 
 		logger.Info("WS ticket issued", zap.String("user_id", user.ID.String()))
@@ -216,21 +217,14 @@ func StartServer(cfg configs.AppConfigs) {
 						c.Locals("user_id", t.UserID)
 						return c.Next()
 					}
+					logger.Warn("WS ticket expired", zap.String("ticket", ticket), zap.Time("expired_at", t.ExpiresAt))
 				}
+				logger.Warn("WS ticket invalid or missing", zap.String("ticket", ticket))
 				return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid or expired ticket"})
 			}
 
-			// Method 2: cookie fallback (same-origin deployments)
-			tokenStr := c.Cookies("token")
-			if tokenStr == "" {
-				return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Authentication required"})
-			}
-			user, err := auth.VerifyToken("Bearer " + tokenStr)
-			if err != nil {
-				return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid token"})
-			}
-			c.Locals("user_id", user.ID)
-			return c.Next()
+			// No cookie fallback — WebSockets should use the ticket flow.
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid or expired ticket"})
 		}
 		return fiber.ErrUpgradeRequired
 	})
@@ -269,4 +263,5 @@ func SetupRoutes(rh *rest.RestHandlers) {
 	handlers.SetupSubmissionRoutes(rh)
 	handlers.SetupDiscussionRoutes(rh)
 	handlers.SetupContestRoutes(rh)
+	handlers.SetupRoadmapRoutes(rh)
 }

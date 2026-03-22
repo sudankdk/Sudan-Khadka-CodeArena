@@ -1,5 +1,4 @@
 import type { IProblemTest } from '@/types/problemstest/problemtest';
-import { useNavigate } from "react-router-dom";
 
 
 interface ProblemsTableProps {
@@ -22,7 +21,6 @@ const getDifficultyColor = (difficulty: string) => {
 
 
 export const ProblemsTable = ({ problems, loading, onDelete, onEdit }: ProblemsTableProps) => {
-  const nav = useNavigate();
 
   if (loading) {
     return (
@@ -74,8 +72,7 @@ export const ProblemsTable = ({ problems, loading, onDelete, onEdit }: ProblemsT
           {problems.map((problem, index) => (
             <tr
               key={index}
-              className="hover:bg-blue-50 transition-colors duration-150 cursor-pointer group"
-              onClick={() => nav(`/admin/problems/${problem.slug}`)}
+              className="hover:bg-blue-50 transition-colors duration-150  group"
             >
               <td className="px-6 py-4 whitespace-nowrap">
                 <div className="flex items-center">
@@ -109,7 +106,7 @@ export const ProblemsTable = ({ problems, loading, onDelete, onEdit }: ProblemsT
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                 <div className="flex items-center gap-2">
-                  <button
+                  {/* <button
                     onClick={(e) => {
                       e.stopPropagation();
                       nav(`/admin/problems/${problem.slug}`);
@@ -121,7 +118,7 @@ export const ProblemsTable = ({ problems, loading, onDelete, onEdit }: ProblemsT
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                     </svg>
-                  </button>
+                  </button> */}
                   {onEdit && (
                     <button
                       onClick={(e) => {

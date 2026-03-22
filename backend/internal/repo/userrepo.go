@@ -13,7 +13,7 @@ type UserRepo interface {
 	CreateUser(user domain.User) (domain.User, error)
 	FindUser(email string) (domain.User, error)
 	FindUserById(id uuid.UUID) (domain.User, error)
-	UpdateUser(id uuid.UUID, user domain.User) (domain.User, error)
+	UpdateUser(id uuid.UUID, updates map[string]interface{}) (domain.User, error)
 	UpdateUserRating(id uuid.UUID, rating float64) error
 	UpdateUserSolvedCount(id uuid.UUID, solvedCount int) error
 	IncrementMatchStats(id uuid.UUID, won bool) error
@@ -49,9 +49,9 @@ func (u *userRepo) FindUserById(id uuid.UUID) (domain.User, error) {
 	return user, nil
 }
 
-func (u *userRepo) UpdateUser(id uuid.UUID, user domain.User) (domain.User, error) {
+func (u *userRepo) UpdateUser(id uuid.UUID, updates map[string]interface{}) (domain.User, error) {
 	var existingUser domain.User
-	if err := u.db.Model(&existingUser).Where("id=?", id).Clauses(clause.Returning{}).Updates(user).Error; err != nil {
+	if err := u.db.Model(&existingUser).Where("id=?", id).Clauses(clause.Returning{}).Updates(updates).Error; err != nil {
 		return domain.User{}, errors.New("failed to update user")
 	}
 	return existingUser, nil

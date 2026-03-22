@@ -5,7 +5,17 @@ export class ApiClient {
   private client: AxiosInstance;
 
   constructor(baseURL: string) {
-    this.client = axios.create({ baseURL, withCredentials: true });
+    this.client = axios.create({ baseURL, withCredentials: false });
+
+    // Inject Authorization header from the auth store token for every request.
+    this.client.interceptors.request.use((config) => {
+      const token = useAuthStore.getState().token;
+      if (token) {
+        config.headers = config.headers || {};
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      return config;
+    });
 
     this.client.interceptors.response.use(
       (response) => response,
