@@ -62,6 +62,7 @@ func StartServer(cfg configs.AppConfigs) {
 		&domain.TestCases{},
 		&domain.BoilerPlate{},
 		&domain.Submission{},
+		&domain.Roadmap{},
 		&domain.Discussion{},
 		&domain.DiscussionComment{},
 		&domain.DiscussionVote{},
@@ -269,4 +270,5 @@ func SetupRoutes(rh *rest.RestHandlers) {
 	handlers.SetupSubmissionRoutes(rh)
 	handlers.SetupDiscussionRoutes(rh)
 	handlers.SetupContestRoutes(rh)
+	handlers.SetupRoadmapRoutes(rh)
 }
