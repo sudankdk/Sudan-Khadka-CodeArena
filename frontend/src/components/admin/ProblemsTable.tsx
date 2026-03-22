@@ -1,5 +1,4 @@
 import type { IProblemTest } from '@/types/problemstest/problemtest';
-import { useNavigate } from "react-router-dom";
 
 
 interface ProblemsTableProps {
