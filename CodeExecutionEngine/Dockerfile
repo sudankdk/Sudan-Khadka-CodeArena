@@ -17,5 +17,5 @@ COPY --from=builder /app/cee ./
 # include language metadata required at runtime
 COPY --from=builder /src/internal/languages /app/internal/languages
 
-EXPOSE 8081
+EXPOSE 3000
 ENTRYPOINT ["/app/cee"]
