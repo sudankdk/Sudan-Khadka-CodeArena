@@ -28,6 +28,7 @@ import {
   UserContestDetail,
   GlobalLeaderboard
 } from "./features/Contests";
+import { ToastContainer } from "react-toastify";
 
 
 function App() {
@@ -47,6 +48,8 @@ function App() {
   }
   return (
     <>
+      <ToastContainer position="top-right" autoClose={3000} theme="dark" pauseOnFocusLoss={false} newestOnTop closeOnClick />
+
       <Routes>
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />

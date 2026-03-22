@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
+import { toast } from 'react-toastify';
 import { server } from '@/constants/server';
 import { ApiClient } from '@/services/auth/client';
 
@@ -31,8 +32,9 @@ export const useAdminStats = (days: number = 30) => {
       setStats(data);
       setError(null);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to fetch stats';
+      const message = (err as any)?.response?.data || (err instanceof Error ? err.message : 'Failed to fetch stats');
       setError(message);
+      toast.error(typeof message === 'string' ? message : 'Failed to fetch admin stats');
       console.error('Failed to fetch admin stats:', err);
     } finally {
       setLoading(false);
