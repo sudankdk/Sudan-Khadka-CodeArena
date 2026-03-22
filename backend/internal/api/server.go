@@ -2,6 +2,7 @@ package api
 
 import (
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -182,15 +183,14 @@ func StartServer(cfg configs.AppConfigs) {
 		}
 	}()
 
-	// WS ticket endpoint — exchanges HTTP-only cookie auth for a one-time WS ticket.
-	// The browser WebSocket API cannot send HTTP-only cookies cross-origin,
-	// so the frontend calls this first (with credentials), then passes the ticket as a query param.
+	// WS ticket endpoint — exchanges a JWT (from Authorization header) for a one-time WS ticket.
+	// The frontend calls this first, then passes the ticket as a query param when opening the WebSocket.
 	app.Post("/api/ws-ticket", func(c *fiber.Ctx) error {
-		tokenStr := c.Cookies("token")
+		tokenStr := strings.TrimSpace(c.Get("Authorization"))
 		if tokenStr == "" {
-			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Authentication required"})
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Authorization header required"})
 		}
-		user, err := auth.VerifyToken("Bearer " + tokenStr)
+		user, err := auth.VerifyToken(tokenStr)
 		if err != nil {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid token"})
 		}
@@ -221,17 +221,8 @@ func StartServer(cfg configs.AppConfigs) {
 				return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid or expired ticket"})
 			}
 
-			// Method 2: cookie fallback (same-origin deployments)
-			tokenStr := c.Cookies("token")
-			if tokenStr == "" {
-				return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Authentication required"})
-			}
-			user, err := auth.VerifyToken("Bearer " + tokenStr)
-			if err != nil {
-				return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid token"})
-			}
-			c.Locals("user_id", user.ID)
-			return c.Next()
+			// No cookie fallback — WebSockets should use the ticket flow.
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid or expired ticket"})
 		}
 		return fiber.ErrUpgradeRequired
 	})

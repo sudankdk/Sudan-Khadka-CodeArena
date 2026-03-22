@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import useAuthStore from "@/services/auth/store/auth.store";
 import type {
   WSMessage,
   WSMessageType,
@@ -117,7 +118,13 @@ export function useBattleWebSocket(): UseBattleWebSocketReturn {
     // Step 1: Fetch a one-time WS ticket via HTTP (cookies sent automatically)
     // Step 2: Connect WebSocket with ticket as query param
     // This is needed because the browser WebSocket API cannot send HTTP-only cookies cross-origin
-    fetch(TICKET_URL, { method: "POST", credentials: "include", signal: ac.signal })
+    const token = useAuthStore.getState?.()?.token || undefined;
+
+    fetch(TICKET_URL, {
+      method: "POST",
+      signal: ac.signal,
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    })
       .then((resp) => {
         if (!resp.ok) {
           throw new Error("Failed to authenticate for WebSocket");

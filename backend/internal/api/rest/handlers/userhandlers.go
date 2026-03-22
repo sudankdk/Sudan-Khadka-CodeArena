@@ -84,30 +84,16 @@ func (u *UserHandlers) Login(ctx *fiber.Ctx) error {
 		u.logger.Warn("Login failed", zap.String("email", req.Email), zap.Error(err))
 		return rest.InternalError(ctx, err)
 	}
+	ctx.Locals("user", user)
+	u.logger.Info("OAuth login successful", zap.String("email", user.Email))
 
-	u.svc.Auth.CreateCookie(ctx, "token", token)
-	u.logger.Info("Login successful", zap.String("email", user.Email))
-	return rest.SuccessMessage(ctx, "Auth complete", fiber.Map{
-		"token": token,
-		"user":  user,
-	})
-
+	// Redirect back to frontend with the token in the fragment so it can be stored client-side.
+	redirectURL := "http://localhost:5173/oauth/success#token=" + token
+	return ctx.Redirect(redirectURL)
 }
-
 func (u *UserHandlers) Logout(ctx *fiber.Ctx) error {
-	ctx.Cookie(&fiber.Cookie{
-		Name:     "token",
-		Value:    "",
-		MaxAge:   -1,
-		HTTPOnly: true,
-		Secure:   false,
-		SameSite: "None",
-		Path:     "/",
-	})
 
-	return ctx.JSON(fiber.Map{
-		"message": "logout successful",
-	})
+	return ctx.JSON(fiber.Map{"message": "logout successful"})
 }
 
 func (u *UserHandlers) OAuthRedirect(ctx *fiber.Ctx) error {
@@ -151,12 +137,13 @@ func (u *UserHandlers) OAuthCallback(ctx *fiber.Ctx) error {
 		return rest.InternalError(ctx, err)
 	}
 
-	// Use the Auth.CreateCookie method which handles environment-aware cookie settings
-	u.svc.Auth.CreateCookie(ctx, "token", token)
-
 	ctx.Locals("user", dbUser)
 	u.logger.Info("OAuth login successful", zap.String("email", dbUser.Email))
-	return ctx.Redirect("http://localhost:5173/oauth/success")
+
+	return rest.SuccessMessage(ctx, "Auth complete", fiber.Map{
+		"token": token,
+		"user":  dbUser,
+	})
 }
 
 func (u *UserHandlers) HealthCheck(ctx *fiber.Ctx) error {

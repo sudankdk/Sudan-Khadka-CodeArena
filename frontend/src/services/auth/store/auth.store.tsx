@@ -18,6 +18,12 @@ const useAuthStore = create<IAuth>((set) => ({
   initialize: async () => {
     set({ loading: true, error: null });
     try {
+      const token = useAuthStore.getState().token;
+      if (!token) {
+        set({ user: null, loading: false, error: null });
+        return;
+      }
+
       const response = await authClient.get<{ user: User }>("/users/me");
       set({ user: response.user, loading: false, error: null });
     } catch (error: any) {
