@@ -22,7 +22,6 @@ const getDifficultyColor = (difficulty: string) => {
 
 
 export const ProblemsTable = ({ problems, loading, onDelete, onEdit }: ProblemsTableProps) => {
-  const nav = useNavigate();
 
   if (loading) {
     return (

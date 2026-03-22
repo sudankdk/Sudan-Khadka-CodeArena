@@ -28,7 +28,7 @@ export const useAdminStats = (days: number = 30) => {
 
   const fetchStats = useCallback(async () => {
     try {
-      const data = await adminClient.get(`/api/admin/stats?days=${days}`);
+      const data = await adminClient.get<AdminStats>(`/api/admin/stats?days=${days}`);
       setStats(data);
       setError(null);
     } catch (err) {
