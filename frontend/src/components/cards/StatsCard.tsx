@@ -27,6 +27,9 @@ const StatsCard = ({ stats, loading }: StatsCardProps) => {
     );
   }
 
+  const totalSubmissions = (stats?.submission_stats || []).reduce((sum, item) => sum + (item?.count || 0), 0);
+  const totalParticipants = (stats?.contest_participation || []).reduce((sum, item) => sum + (item?.count || 0), 0);
+
   const data = [
     {
       type: "Total Users",
@@ -43,12 +46,22 @@ const StatsCard = ({ stats, loading }: StatsCardProps) => {
       value: stats?.active_contests?.toLocaleString() || "0",
       logo: <Icons.Trophy />,
     },
+    {
+      type: "Submissions (30d)",
+      value: totalSubmissions.toLocaleString(),
+      logo: <Icons.Code />,
+    },
+    {
+      type: "Participants (30d)",
+      value: totalParticipants.toLocaleString(),
+      logo: <Icons.Users />,
+    },
   ];
 
   return (
     <Card className="p-6">
       <CardContent className="p-0">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
           {data.map((item) => (
             <div
               key={item.type}

@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { server } from '@/constants/server';
+import { ApiClient } from '@/services/auth/client';
 
 export interface TimeSeriesData {
   period: string;
@@ -17,6 +18,7 @@ export interface AdminStats {
 }
 
 const BASE_URL = server.replace(/\/$/, '');
+const adminClient = new ApiClient(BASE_URL);
 
 export const useAdminStats = (days: number = 30) => {
   const [stats, setStats] = useState<AdminStats | null>(null);
@@ -25,21 +27,7 @@ export const useAdminStats = (days: number = 30) => {
 
   const fetchStats = useCallback(async () => {
     try {
-      const response = await fetch(`${BASE_URL}/api/admin/stats?days=${days}`, {
-        credentials: 'include',
-        headers: {
-          'Accept': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          throw new Error('Unauthorized. Please log in again.');
-        }
-        throw new Error(`Failed to fetch stats: ${response.status}`);
-      }
-
-      const data = await response.json();
+      const data = await adminClient.get(`/api/admin/stats?days=${days}`);
       setStats(data);
       setError(null);
     } catch (err) {
@@ -53,11 +41,6 @@ export const useAdminStats = (days: number = 30) => {
 
   useEffect(() => {
     fetchStats();
-    
-    // Poll every 30 seconds for updates
-    const interval = setInterval(fetchStats, 30000);
-    
-    return () => clearInterval(interval);
   }, [fetchStats]);
 
   const refetch = useCallback(() => {
