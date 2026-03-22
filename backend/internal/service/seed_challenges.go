@@ -6,7 +6,6 @@ import (
 	"image/png"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/google/uuid"
 	"github.com/sudankdk/codearena/internal/domain"
@@ -1299,91 +1298,7 @@ func SeedChallenges(challengeRepo repo.FrontendChallengeRepo, judgeSvc *JudgeSer
 		return
 	}
 	if total > 0 && len(existing) > 0 {
-		// Challenges exist — upgrade placeholder or missing screenshots
-		upgraded := 0
-		for _, ch := range existing {
-			refPath := ch.ReferenceScreenshotPath
-			if refPath == "" {
-				continue
-			}
-
-			// Normalize stored path across OSes and resolve relative paths against output dir.
-			normalized := strings.ReplaceAll(refPath, "\\", string(os.PathSeparator))
-			normalized = strings.ReplaceAll(normalized, "/", string(os.PathSeparator))
-			normalized = filepath.Clean(normalized)
-			if !filepath.IsAbs(normalized) {
-				normalized = filepath.Join(judgeSvc.outputDir, normalized)
-			}
-
-			// Determine if we need to regenerate the reference screenshot.
-			needsUpgrade := strings.Contains(refPath, "placeholder")
-			if !needsUpgrade {
-				if _, err := os.Stat(normalized); err != nil {
-					needsUpgrade = true
-				}
-			}
-			if !needsUpgrade {
-				continue
-			}
-
-			// Find the matching seed to get the correct code
-			var seed *challengeSeed
-			for i := range seedChallenges {
-				if seedChallenges[i].Title == ch.Title {
-					seed = &seedChallenges[i]
-					break
-				}
-			}
-			if seed == nil {
-				continue
-			}
-
-			refPath, err := judgeSvc.GenerateReferenceScreenshot(
-				seed.CorrectHTML, seed.CorrectCSS, seed.CorrectJS,
-				seed.ViewportWidth, seed.ViewportHeight,
-			)
-			if err != nil {
-				logger.Warn("Failed to upgrade placeholder screenshot",
-					zap.String("challenge", ch.Title),
-					zap.Error(err),
-				)
-				continue
-			}
-
-			// Update the challenge with the real screenshot path
-			oldPath := ch.ReferenceScreenshotPath
-			if err := challengeRepo.Update(ch.ID, map[string]interface{}{
-				"reference_screenshot_path": refPath,
-			}); err != nil {
-				logger.Error("Failed to update challenge screenshot path",
-					zap.String("challenge", ch.Title),
-					zap.Error(err),
-				)
-				continue
-			}
-
-			// Remove old file if present
-			if oldPath != "" {
-				oldPath = filepath.Clean(strings.ReplaceAll(oldPath, "\\", string(os.PathSeparator)))
-				oldPath = strings.ReplaceAll(oldPath, "/", string(os.PathSeparator))
-				if !filepath.IsAbs(oldPath) {
-					oldPath = filepath.Join(judgeSvc.outputDir, oldPath)
-				}
-				os.Remove(oldPath)
-			}
-
-			upgraded++
-			logger.Info("Upgraded placeholder screenshot",
-				zap.String("title", ch.Title),
-				zap.String("new_path", refPath),
-			)
-		}
-
-		if upgraded > 0 {
-			logger.Info("Screenshot upgrade complete", zap.Int("upgraded", upgraded))
-		} else {
-			logger.Info("Challenges already seeded with proper screenshots", zap.Int64("count", total))
-		}
+		logger.Info("Challenges already present — skipping seeding and regeneration", zap.Int64("count", total))
 		return
 	}
 
