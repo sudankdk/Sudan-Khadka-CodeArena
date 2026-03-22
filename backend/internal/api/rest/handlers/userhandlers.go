@@ -85,11 +85,12 @@ func (u *UserHandlers) Login(ctx *fiber.Ctx) error {
 		return rest.InternalError(ctx, err)
 	}
 	ctx.Locals("user", user)
-	u.logger.Info("OAuth login successful", zap.String("email", user.Email))
+	u.logger.Info("Login successful", zap.String("email", user.Email))
 
-	// Redirect back to frontend with the token in the fragment so it can be stored client-side.
-	redirectURL := "http://localhost:5173/oauth/success#token=" + token
-	return ctx.Redirect(redirectURL)
+	return rest.SuccessMessage(ctx, "Auth complete", fiber.Map{
+		"token": token,
+		"user":  user,
+	})
 }
 func (u *UserHandlers) Logout(ctx *fiber.Ctx) error {
 
@@ -140,10 +141,9 @@ func (u *UserHandlers) OAuthCallback(ctx *fiber.Ctx) error {
 	ctx.Locals("user", dbUser)
 	u.logger.Info("OAuth login successful", zap.String("email", dbUser.Email))
 
-	return rest.SuccessMessage(ctx, "Auth complete", fiber.Map{
-		"token": token,
-		"user":  dbUser,
-	})
+	// Redirect back to frontend with the token in the URL fragment so it can be stored client-side.
+	redirectURL := "http://localhost:5173/oauth/success#token=" + token
+	return ctx.Redirect(redirectURL)
 }
 
 func (u *UserHandlers) HealthCheck(ctx *fiber.Ctx) error {

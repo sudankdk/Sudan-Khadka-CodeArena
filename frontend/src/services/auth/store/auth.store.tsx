@@ -11,14 +11,29 @@ const useAuthStore = create<IAuth>((set) => ({
 
   setUser: (user: User | null) => set({ user }),
 
-  setToken: (token: string | null) => set({ token }),
+  setToken: (token: string | null) => {
+    if (token) {
+      localStorage.setItem("auth_token", token);
+    } else {
+      localStorage.removeItem("auth_token");
+    }
+    set({ token });
+  },
 
-  clear: () => set({ user: null, token: null }),
+  clear: () => {
+    localStorage.removeItem("auth_token");
+    set({ user: null, token: null });
+  },
 
   initialize: async () => {
     set({ loading: true, error: null });
     try {
-      const token = useAuthStore.getState().token;
+      const stored = localStorage.getItem("auth_token");
+      if (stored) {
+        set({ token: stored });
+      }
+
+      const token = stored || useAuthStore.getState().token;
       if (!token) {
         set({ user: null, loading: false, error: null });
         return;
