@@ -22,6 +22,7 @@ type AppConfigs struct {
 	GOOGLECALLBACKURL string
 	GOOGLEAPIKEY      string
 	GOOGLEAPIURL      string
+	REDISURL          string
 }
 
 func SetUpEnv() (AppConfigs, error) {
@@ -44,6 +45,7 @@ func SetUpEnv() (AppConfigs, error) {
 		GOOGLECALLBACKURL: os.Getenv("GOOGLE_CALLBACK_URL"),
 		GOOGLEAPIKEY:      os.Getenv("GOOGLE_API_KEY"),
 		GOOGLEAPIURL:      os.Getenv("GOOGLE_API_URL"),
+		REDISURL:          os.Getenv("redis_url"),
 	}
 
 	switch {
