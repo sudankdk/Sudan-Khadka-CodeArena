@@ -1,0 +1,45 @@
+
+version: "3.8"
+
+services:
+  codeexecutionengine:
+    build:
+      context: ../CodeExecutionEngine
+      dockerfile: Dockerfile
+    image: codearena/cee:local
+    container_name: codearena_cee
+    depends_on:
+      - redis
+    environment:
+      PORT: "3000"
+      REDIS_ADDR: ${REDIS_ADDR:-redis:6379}
+    ports:
+      - "3000:3000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
+
+  redis:
+    image: ${REDIS_IMAGE:-redis:7-alpine}
+    container_name: redis_codearena
+    environment:
+      - name=value
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    restart: unless-stopped
+
+  python-runner:
+    build:
+      context: ./docker/python
+      dockerfile: Dockerfile
+    image: codearena/python-runner:local
+    container_name: codearena_python_runner
+    entrypoint: ["/bin/sh", "-c", "sleep infinity"]
+    restart: unless-stopped
+
+volumes:
+  redis_data:
+    driver: local

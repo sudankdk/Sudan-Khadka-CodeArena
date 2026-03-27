@@ -99,9 +99,11 @@ func StartServer(cfg configs.AppConfigs) {
 	if redisAddr == "" {
 		redisAddr = "localhost:6379"
 	}
-	redisClient := redis.NewClient(&redis.Options{
-		Addr: redisAddr,
-	})
+	redisOptions, err := redis.ParseURL(redisAddr)
+	if err != nil {
+		logger.Fatal("Failed to parse Redis URL", zap.Error(err))
+	}
+	redisClient := redis.NewClient(redisOptions)
 	logger.Info("Redis client initialized", zap.String("addr", redisAddr))
 
 	// Initialize services for battle system
