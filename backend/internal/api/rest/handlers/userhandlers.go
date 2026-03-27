@@ -154,10 +154,12 @@ func (u *UserHandlers) OAuthCallback(ctx *fiber.Ctx) error {
 
 	// Redirect back to frontend with the token in the URL fragment so it can be stored client-side.
 	frontendURL := strings.TrimSuffix(os.Getenv("FRONTEND_URL"), "/")
-	if frontendURL == "" && os.Getenv("APP_ENV") == "dev" {
-		frontendURL = "http://localhost:5173"
-	} else {
-		frontendURL = "sudan-khadka-code-arena.vercel.app"
+	if frontendURL == "" {
+		if os.Getenv("APP_ENV") == "dev" {
+			frontendURL = "http://localhost:5173"
+		} else {
+			frontendURL = "https://sudan-khadka-code-arena.vercel.app"
+		}
 	}
 	redirectURL := fmt.Sprintf("%s/oauth/success#token=%s", frontendURL, token)
 	return ctx.Redirect(redirectURL)
