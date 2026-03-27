@@ -14,8 +14,10 @@ services:
       - db:/var/lib/postgresql
 
   redis:
-    image: redis:7-alpine
+    image: ${REDIS_IMAGE:-redis:7-alpine}
     container_name: redis_codearena
+    environment:
+      - name=value
     ports:
       - "6379:6379"
     volumes:
