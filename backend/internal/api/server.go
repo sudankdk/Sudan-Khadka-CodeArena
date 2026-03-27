@@ -95,7 +95,7 @@ func StartServer(cfg configs.AppConfigs) {
 	db.Model(&domain.User{}).Where("rating = 0").Update("rating", 1000)
 
 	// Initialize Redis
-	redisAddr := os.Getenv("REDIS_ADDR")
+	redisAddr := cfg.REDISURL
 	if redisAddr == "" {
 		redisAddr = "localhost:6379"
 	}
