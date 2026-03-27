@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
+	"strings"
 
 	"github.com/google/uuid"
 
@@ -151,7 +153,11 @@ func (u *UserHandlers) OAuthCallback(ctx *fiber.Ctx) error {
 	u.logger.Info("OAuth login successful", zap.String("email", dbUser.Email))
 
 	// Redirect back to frontend with the token in the URL fragment so it can be stored client-side.
-	redirectURL := "http://localhost:5173/oauth/success#token=" + token
+	frontendURL := strings.TrimSuffix(os.Getenv("FRONTEND_URL"), "/")
+	if frontendURL == "" {
+		frontendURL = "http://localhost:5173"
+	}
+	redirectURL := fmt.Sprintf("%s/oauth/success#token=%s", frontendURL, token)
 	return ctx.Redirect(redirectURL)
 }
 
