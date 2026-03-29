@@ -130,6 +130,12 @@ func (sh *SubmissionHandlers) CreateSubmission(ctx *fiber.Ctx) error {
 		submission, _ = sh.svc.Repo.GetSubmissionByID(submission.ID)
 	}
 
+	if req.Status == domain.STATUS_ACCEPTED {
+		if err := sh.contestSvc.UpdateGlobalLeaderboard(user.ID); err != nil {
+			sh.logger.Error("Failed to update global leaderboard", zap.Error(err))
+		}
+	}
+
 	sh.logger.Info("Submission created successfully",
 		zap.String("id", submission.ID.String()),
 		zap.Int("points", submission.PointsEarned))

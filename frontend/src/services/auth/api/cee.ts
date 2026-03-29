@@ -1,5 +1,3 @@
-import { ApiClient } from "../client";
-
 // Allow configuring Judge0 URL via env, fallback to common open instance or localhost
 export const JUDGE0_URL = import.meta.env.VITE_JUDGE0_URL || "https://judge0-ce.p.rapidapi.com";
 export const JUDGE0_HOST = import.meta.env.VITE_JUDGE0_HOST || "judge0-ce.p.rapidapi.com";

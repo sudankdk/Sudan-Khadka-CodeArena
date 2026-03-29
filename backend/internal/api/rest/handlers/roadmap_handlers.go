@@ -22,8 +22,9 @@ type RoadmapHandlers struct {
 func SetupRoadmapRoutes(rh *rest.RestHandlers) {
 	app := rh.App
 	svc := service.RoadmapService{
-		Repo:     repo.NewRoadmapRepo(rh.DB),
-		UserRepo: repo.NewUserRepo(rh.DB),
+		Repo:         repo.NewRoadmapRepo(rh.DB),
+		UserRepo:     repo.NewUserRepo(rh.DB),
+		ProblemsRepo: repo.NewProblemsRepo(rh.DB),
 	}
 	handler := RoadmapHandlers{
 		svc:    svc,

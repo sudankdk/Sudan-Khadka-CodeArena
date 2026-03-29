@@ -1,3 +1,10 @@
+export interface IRoadmapProblem {
+  id: string;
+  slug: string;
+  title: string;
+  difficulty: string;
+}
+
 export interface ICustomRoadmap {
   id: string;
   user_id: string;
@@ -6,6 +13,8 @@ export interface ICustomRoadmap {
   description: string;
   visibility: "private" | "public";
   topics: string[];
+  problem_ids: string[];
+  problems: IRoadmapProblem[];
   total_problems: number;
   progress: number;
   created_at: string;
@@ -17,7 +26,17 @@ export interface ICreateCustomRoadmap {
   description: string;
   visibility: "private" | "public";
   topics: string[];
+  problem_ids: string[];
   total_problems: number;
+}
+
+export interface IUpdateCustomRoadmap {
+  name?: string;
+  description?: string;
+  visibility?: "private" | "public";
+  topics?: string[];
+  problem_ids?: string[];
+  total_problems?: number;
 }
 
 export interface IUpdateRoadmapProgress {
