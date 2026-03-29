@@ -25,7 +25,7 @@ func (s *Server) StartServer() error {
 	app := fiber.New()
 	app.Use(cors.New(cors.Config{
 		AllowCredentials: true,
-		AllowOrigins:     "http://localhost:5173",
+		AllowOrigins:     "http://localhost:5173,https://sudan-khadka-code-arena.vercel.app,",
 		AllowMethods:     "GET,POST,PUT,DELETE,OPTIONS",
 		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
 	}))
