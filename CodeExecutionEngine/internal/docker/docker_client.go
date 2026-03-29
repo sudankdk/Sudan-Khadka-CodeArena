@@ -4,6 +4,7 @@ import (
 	"archive/tar"
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -226,9 +227,12 @@ func (c *Client) ExecInExistingContainer(
 	containerID string,
 	sb sandbox.Config,
 ) (Result, error) {
+	log.Printf("[DOCKER] ExecInExistingContainer called with timeout=%v, containerID=%s", sb.Timeout, containerID[:12])
+	log.Printf("[DOCKER] Command to execute: %v", sb.ExecCmd)
 
 	execCtx, cancel := context.WithTimeout(ctx, sb.Timeout)
 	defer cancel()
+	log.Printf("[DOCKER] Context created with timeout=%v", sb.Timeout)
 
 	execResp, err := c.d.ContainerExecCreate(execCtx, containerID, container.ExecOptions{
 		Cmd:          append([]string{"sh", "-c"}, quoteCmd(sb.ExecCmd)...),
@@ -239,18 +243,23 @@ func (c *Client) ExecInExistingContainer(
 		WorkingDir:   "/app",
 	})
 	if err != nil {
+		log.Printf("[DOCKER] ContainerExecCreate failed: %v", err)
 		return Result{}, err
 	}
+	log.Printf("[DOCKER] Exec created: %s", execResp.ID)
 
 	attach, err := c.d.ContainerExecAttach(execCtx, execResp.ID, container.ExecStartOptions{})
 	if err != nil {
+		log.Printf("[DOCKER] ContainerExecAttach failed: %v", err)
 		return Result{}, err
 	}
+	log.Printf("[DOCKER] Exec attached, starting execution")
 	defer attach.Close()
 
 	// write stdin
 	go func() {
 		if sb.Stdin != "" {
+			log.Printf("[DOCKER] Writing stdin to exec")
 			attach.Conn.Write([]byte(sb.Stdin))
 		}
 		if closer, ok := attach.Conn.(interface{ CloseWrite() error }); ok {
@@ -258,16 +267,34 @@ func (c *Client) ExecInExistingContainer(
 		}
 	}()
 
+	// Ensure we unblock StdCopy if the timeout fires
+	go func() {
+		<-execCtx.Done()
+		attach.Close()
+	}()
+
+	log.Printf("[DOCKER] Waiting for output from exec")
 	var stdout, stderr bytes.Buffer
 	_, err = stdcopy.StdCopy(&stdout, &stderr, attach.Reader)
 	if err != nil {
+		log.Printf("[DOCKER] StdCopy error: %v", err)
+		if errors.Is(err, context.DeadlineExceeded) || errors.Is(execCtx.Err(), context.DeadlineExceeded) {
+			return Result{}, fmt.Errorf("execution timed out after %s", sb.Timeout)
+		}
+		return Result{}, err
+	}
+	log.Printf("[DOCKER] Output received, inspecting exec result")
+
+	inspectCtx, cancelInspect := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancelInspect()
+
+	inspect, err := c.d.ContainerExecInspect(inspectCtx, execResp.ID)
+	if err != nil {
+		log.Printf("[DOCKER] ContainerExecInspect failed: %v", err)
 		return Result{}, err
 	}
 
-	inspect, err := c.d.ContainerExecInspect(execCtx, execResp.ID)
-	if err != nil {
-		return Result{}, err
-	}
+	log.Printf("[DOCKER] Exec completed with exit code=%d, stdout_len=%d, stderr_len=%d", inspect.ExitCode, len(stdout.String()), len(stderr.String()))
 
 	return Result{
 		Stdout:   stdout.String(),

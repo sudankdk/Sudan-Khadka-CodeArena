@@ -3,6 +3,7 @@ package docker
 import (
 	"context"
 	"fmt"
+	"log"
 	"sync"
 	"time"
 
@@ -96,24 +97,55 @@ func (pm *PoolManager) PreWarm(ctx context.Context, langs languages.LanguageMap)
 	return nil
 }
 
-func (pm *PoolManager) Acquire(image string) *PoolContainer {
+func (pm *PoolManager) Acquire(ctx context.Context, image string) (*PoolContainer, error) {
+	log.Printf("[POOL] Acquiring container for image: %s", image)
 	pm.mu.Lock()
-	defer pm.mu.Unlock()
 
 	for _, cont := range pm.pool {
 		if cont.Status == "idle" && cont.Image == image {
+			log.Printf("[POOL] Found idle container: %s", cont.ID[:12])
 			cont.Status = "busy"
-			return cont
+			pm.mu.Unlock()
+			return cont, nil
 		}
 	}
-	return nil  // this is causing the panic
+	log.Printf("[POOL] No idle container found, creating new one")
+	pm.mu.Unlock()
+
+	// No idle container found, create a new one
+	id, err := pm.createPoolContainer(ctx, image)
+	if err != nil {
+		log.Printf("[POOL] Failed to create container: %v", err)
+		return nil, err
+	}
+	log.Printf("[POOL] New container created: %s", id[:12])
+
+	newCont := &PoolContainer{
+		ID:       id,
+		Status:   "busy",
+		LastUsed: time.Now(),
+		Image:    image,
+	}
+
+	pm.mu.Lock()
+	pm.pool[id] = newCont
+	pm.mu.Unlock()
+
+	log.Printf("[POOL] Container added to pool and marked busy: %s", id[:12])
+	return newCont, nil
 }
 
 func (pm *PoolManager) Release(cont *PoolContainer) {
+	if cont == nil {
+		log.Printf("[POOL] Release called with nil container")
+		return
+	}
+	log.Printf("[POOL] Releasing container: %s", cont.ID[:12])
 	pm.mu.Lock()
 	cont.Status = "idle"
 	cont.LastUsed = time.Now()
 	pm.mu.Unlock()
+	log.Printf("[POOL] Container marked as idle: %s", cont.ID[:12])
 }
 
 func (pm *PoolManager) ListContainers(ctx context.Context, lang languages.Language) ([]*PoolContainer, error) {

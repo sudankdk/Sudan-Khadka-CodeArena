@@ -6,7 +6,8 @@ WORKDIR /app
 
 RUN apk add --no-cache \
     bash \
-    dos2unix
+    dos2unix \
+    coreutils
 
 # Create the /run/code directory
 RUN mkdir -p /run/code && chown -R runner:runner /run/code

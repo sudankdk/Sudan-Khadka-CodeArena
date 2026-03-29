@@ -2,6 +2,9 @@ package api
 
 import (
 	"context"
+	"errors"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -53,6 +56,9 @@ func (s *Server) executeHandler(c *fiber.Ctx) error {
 	}
 	result, err := s.exec.Run(ctx, er)
 	if err != nil {
+		if errors.Is(err, context.DeadlineExceeded) || strings.Contains(err.Error(), "execution timed out") {
+			return c.Status(fiber.StatusRequestTimeout).JSON(fiber.Map{"error": fmt.Sprintf("execution timed out after %ds", timeout)})
+		}
 		return fiber.NewError(500, err.Error())
 	}
 
