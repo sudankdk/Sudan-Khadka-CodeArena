@@ -16,7 +16,6 @@ const ProblemSolve = () => {
   const [activeTestCase, setActiveTestCase] = useState(0);
   const [problem, setProblem] = useState<any>(null);
   const [hintLevel, setHintLevel] = useState(0);
-  const [showHint, setShowHint] = useState(false);
 
   const languages = [
     { id: "python", name: "python" },
@@ -105,7 +104,6 @@ const ProblemSolve = () => {
       });
       
       setHintLevel(nextLevel);
-      setShowHint(true);
       setOutput(`💡 HINT (Level ${nextLevel})\n\n${result.hint}`);
     } catch (error: any) {
       if (error.message.includes("rate limit") || error.message.includes("cooldown")) {
@@ -113,32 +111,6 @@ const ProblemSolve = () => {
       } else {
         setOutput("ERROR: Failed to generate hint. Please try again.");
       }
-    } finally {
-      setIsRunning(false);
-    }
-  };
-
-  const handleRun = async () => {
-    if (!currentTestCase) {
-      setOutput("No test cases available for this problem.");
-      return;
-    }
-    setIsRunning(true);
-    try {
-      const result = await executeMutation.mutateAsync({
-        language,
-        code,
-        stdin: currentTestCase.input ?? currentTestCase.stdin ?? ""
-      });
-      
-      if (result.stderr && result.stderr.trim()) {
-        setOutput(`Test Case ${activeTestCase + 1} - Error:\n\n${result.stderr}\n\nOutput:\n${result.stdout || 'No output'}`);
-      } else {
-        const expected = getExpectedValue(currentTestCase);
-        setOutput(`Test Case ${activeTestCase + 1} Output:\n\n${result.stdout}\n\n${expected ? `Expected:\n${expected}` : ""}`.trim());
-      }
-    } catch (error: any) {
-      setOutput("ERROR: " + error.message);
     } finally {
       setIsRunning(false);
     }
