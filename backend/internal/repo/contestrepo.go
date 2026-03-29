@@ -256,6 +256,14 @@ func (c *contestRepoImpl) UpdateGlobalLeaderboardEntry(userID uuid.UUID, rating 
 		return err
 	}
 
+	// Derive contests participated from registrations to keep counts accurate
+	var contestsParticipated int64
+	if err := c.db.Model(&domain.ContestParticipant{}).
+		Where("user_id = ?", userID).
+		Count(&contestsParticipated).Error; err != nil {
+		return err
+	}
+
 	// Check if entry exists
 	var entry domain.GlobalLeaderboardEntry
 	if err := c.db.Where("user_id = ?", userID).First(&entry).Error; err != nil {
@@ -266,7 +274,7 @@ func (c *contestRepoImpl) UpdateGlobalLeaderboardEntry(userID uuid.UUID, rating 
 				Username:             user.Username,
 				Rating:               rating,
 				SolvedCount:          solvedCount,
-				ContestsParticipated: 1, // This should be calculated properly
+				ContestsParticipated: int(contestsParticipated),
 			}
 			if err := c.db.Create(newEntry).Error; err != nil {
 				return err
@@ -277,9 +285,10 @@ func (c *contestRepoImpl) UpdateGlobalLeaderboardEntry(userID uuid.UUID, rating 
 	} else {
 		// Update existing entry
 		updates := map[string]interface{}{
-			"rating":       rating,
-			"solved_count": solvedCount,
-			"updated_at":   time.Now(),
+			"rating":                rating,
+			"solved_count":          solvedCount,
+			"contests_participated": int(contestsParticipated),
+			"updated_at":            time.Now(),
 		}
 		if err := c.db.Model(&entry).Where("id = ?", entry.ID).Updates(updates).Error; err != nil {
 			return err
