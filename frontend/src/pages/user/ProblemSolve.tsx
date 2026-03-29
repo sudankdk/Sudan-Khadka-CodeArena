@@ -133,17 +133,19 @@ const ProblemSolve = () => {
       let passedCount = 0;
       let failedTestCase = -1;
       let executionTime = 0;
+      let memoryUsed = 0;
 
       // Run all test cases
       for (let i = 0; i < testCases.length; i++) {
-        const startTime = performance.now();
         const result = await executeMutation.mutateAsync({
           language,
           code,
           stdin: testCases[i].input ?? testCases[i].stdin ?? ""
         });
-        const endTime = performance.now();
-        executionTime += (endTime - startTime);
+        
+        // Use Judge0 metrics if available, fallback to manual if none
+        executionTime += result.time || 0;
+        memoryUsed = Math.max(memoryUsed, result.memory || 0);
 
         if (result.stderr && result.stderr.trim()) {
           throw new Error(`Runtime error in test case ${i + 1}: ${result.stderr}`);
@@ -170,6 +172,7 @@ const ProblemSolve = () => {
         code,
         status,
         execution_time: Math.round(executionTime),
+        memory_used: Math.round(memoryUsed),
         test_cases_passed: passedCount,
         total_test_cases: totalTestCases,
       });
@@ -180,6 +183,7 @@ const ProblemSolve = () => {
           "✓ ACCEPTED",
           `All ${totalTestCases} test cases passed!`,
           `Execution Time: ${Math.round(executionTime)}ms`,
+          memoryUsed > 0 ? `Memory: ${Math.round(memoryUsed)} KB` : "",
           points !== undefined ? `Points Earned: ${points}` : "",
         ]
           .filter(Boolean)

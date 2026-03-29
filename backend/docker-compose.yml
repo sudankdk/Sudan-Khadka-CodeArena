@@ -52,23 +52,6 @@ services:
       - ./screenshots:/app/screenshots
     restart: unless-stopped
 
-  codeexecutionengine:
-    build:
-      context: ../CodeExecutionEngine
-      dockerfile: Dockerfile
-    image: codearena/cee:local
-    container_name: codearena_cee
-    depends_on:
-      - redis
-    environment:
-      PORT: "3000"
-      REDIS_ADDR: "redis:6379"
-    ports:
-      - "3000:3000"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    restart: unless-stopped
-
 volumes:
   db:
     driver: local
