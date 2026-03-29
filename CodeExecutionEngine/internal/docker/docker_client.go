@@ -267,6 +267,12 @@ func (c *Client) ExecInExistingContainer(
 		}
 	}()
 
+	// Ensure we unblock StdCopy if the timeout fires
+	go func() {
+		<-execCtx.Done()
+		attach.Close()
+	}()
+
 	log.Printf("[DOCKER] Waiting for output from exec")
 	var stdout, stderr bytes.Buffer
 	_, err = stdcopy.StdCopy(&stdout, &stderr, attach.Reader)
@@ -279,7 +285,7 @@ func (c *Client) ExecInExistingContainer(
 	}
 	log.Printf("[DOCKER] Output received, inspecting exec result")
 
-	inspectCtx, cancelInspect := context.WithTimeout(ctx, 5*time.Second)
+	inspectCtx, cancelInspect := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancelInspect()
 
 	inspect, err := c.d.ContainerExecInspect(inspectCtx, execResp.ID)
