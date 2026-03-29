@@ -1,6 +1,10 @@
 package sandbox
 
-import "time"
+import (
+	"fmt"
+	"log"
+	"time"
+)
 
 type Config struct {
 	ExecCmd        []string
@@ -12,10 +16,14 @@ type Config struct {
 	Timeout        time.Duration
 }
 
-func NewConfig(codeDir, codeFilename, stdinFilename, lang string) Config {
+func NewConfig(codeDir, codeFilename, stdinFilename, lang string, timeoutSeconds int) Config {
 	var cmd []string
 	readonly := true
-	timeout := 20 * time.Second
+	if timeoutSeconds <= 0 {
+		timeoutSeconds = 20
+	}
+
+	log.Printf("[SANDBOX] Creating config for language=%s, timeoutSeconds=%d", lang, timeoutSeconds)
 
 	switch lang {
 	case "python":
@@ -23,10 +31,16 @@ func NewConfig(codeDir, codeFilename, stdinFilename, lang string) Config {
 	case "go":
 		cmd = []string{"go", "run", codeFilename}
 		readonly = false
-		timeout = 40 * time.Second
 	case "node":
 		cmd = []string{"node", codeFilename}
 	}
+
+	duration := time.Duration(timeoutSeconds) * time.Second
+	log.Printf("[SANDBOX] Final timeout duration: %v", duration)
+
+	// Enforce execution timeout within the container to avoid runaway processes
+	timeoutCmd := []string{"timeout", "-s", "KILL", fmt.Sprintf("%d", timeoutSeconds)}
+	cmd = append(timeoutCmd, cmd...)
 
 	return Config{
 		ExecCmd:        cmd,
@@ -34,6 +48,6 @@ func NewConfig(codeDir, codeFilename, stdinFilename, lang string) Config {
 		CPU:            1_000_000_000,
 		Binds:          []string{codeDir + ":/run/code"},
 		ReadonlyRootfs: readonly,
-		Timeout:        timeout,
+		Timeout:        duration,
 	}
 }

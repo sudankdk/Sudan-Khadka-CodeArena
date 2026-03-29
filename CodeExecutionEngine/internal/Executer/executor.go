@@ -36,43 +36,50 @@ func NewExecutor(d *docker.Client, lang languages.LanguageMap, p *docker.PoolMan
 }
 
 func (e *Executor) Run(ctx context.Context, req Request) (*Response, error) {
+	log.Printf("[EXECUTOR] Starting Run with timeout=%d seconds, language=%s", req.Timeout, req.Language)
+
 	langCfg, ok := e.langs[req.Language]
 	if !ok {
 		return nil, errors.New("unsupported language")
 	}
-	log.Println(langCfg)
-	pc := e.pooling.Acquire(langCfg.Image)
+	log.Printf("[EXECUTOR] Language config: %+v", langCfg)
+
+	pc, err := e.pooling.Acquire(ctx, langCfg.Image)
+	if err != nil {
+		log.Printf("[EXECUTOR] Failed to acquire container: %v", err)
+		return nil, err
+	}
+	log.Printf("[EXECUTOR] Container acquired: %s", pc.ID[:12])
 	defer e.pooling.Release(pc)
 
 	files, err := utils.Save(req.Code, req.Stdin, langCfg.Ext)
 	if err != nil {
+		log.Printf("[EXECUTOR] Failed to save files: %v", err)
 		return nil, err
 	}
+	log.Printf("[EXECUTOR] Files saved to: %s", files.Dir)
 	defer utils.CleanupFiles(files.Dir)
 
-	//enuser image presents
 	codeFileName := "/run/code/" + filepath.Base(files.CodePath)
 	stdInFileName := "/run/code/" + filepath.Base(files.StdinPath)
-	// codeFileName := "/run/code/main.py"
-	// stdInFileName := "/run/code/stdin.txt"
 
-	sb := sandbox.NewConfig(files.Dir, codeFileName, stdInFileName, req.Language)
+	sb := sandbox.NewConfig(files.Dir, codeFileName, stdInFileName, req.Language, req.Timeout)
+	log.Printf("[EXECUTOR] Sandbox config created with timeout: %v", sb.Timeout)
 
-	// Copy files to the container
 	if err := e.docker.CopyFilesToContainer(ctx, pc.ID, files.Dir); err != nil {
+		log.Printf("[EXECUTOR] Failed to copy files: %v", err)
 		return nil, err
 	}
+	log.Printf("[EXECUTOR] Files copied to container")
 
-	// Run container using your Docker client
-	// res, err := e.docker.Run(ctx, langCfg.Image, sb)
-	// if err != nil {
-	// 	return nil, err
-	// }
-
+	log.Printf("[EXECUTOR] Executing code in container")
 	res, err := e.docker.ExecInExistingContainer(ctx, pc.ID, sb)
 	if err != nil {
+		log.Printf("[EXECUTOR] Execution failed: %v", err)
 		return nil, err
 	}
+	log.Printf("[EXECUTOR] Execution completed successfully")
+
 	return &Response{
 		Stdout:   res.Stdout,
 		Stderr:   res.Stderr,

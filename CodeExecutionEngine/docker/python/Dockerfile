@@ -4,7 +4,7 @@ RUN addgroup -S runner && adduser -S runner -G runner
 
 WORKDIR /app
 
-RUN apk add --no-cache bash dos2unix
+RUN apk add --no-cache bash dos2unix coreutils
 
 # Create the /run/code directory
 RUN mkdir -p /run/code && chown -R runner:runner /run/code

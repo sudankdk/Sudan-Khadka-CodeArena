@@ -4,6 +4,7 @@ import Editor from "@monaco-editor/react";
 import { getProblemTestBySlug } from "@/services/auth/api/problemtest";
 import { useExecuteCode } from "@/features/Problems/hooks/useExecute";
 import { useCreateSubmission } from "@/hooks/useSubmissions";
+import { useHint } from "@/hooks/useHint";
 import { SubmissionStatus } from "@/types/submission/submission";
 
 const ProblemSolve = () => {
@@ -14,6 +15,8 @@ const ProblemSolve = () => {
   const [output, setOutput] = useState<string | null>(null);
   const [activeTestCase, setActiveTestCase] = useState(0);
   const [problem, setProblem] = useState<any>(null);
+  const [hintLevel, setHintLevel] = useState(0);
+  const [showHint, setShowHint] = useState(false);
 
   const languages = [
     { id: "python", name: "python" },
@@ -23,6 +26,7 @@ const ProblemSolve = () => {
 
   const executeMutation = useExecuteCode();
   const createSubmissionMutation = useCreateSubmission();
+  const hintMutation = useHint();
 
   const testCases =
     problem?.test_cases?.length
@@ -77,6 +81,42 @@ const ProblemSolve = () => {
     const boilerplate = problem?.boilerplates?.find((b: any) => b.language === apiLang);
     setCode(boilerplate?.code || defaultCode[language as keyof typeof defaultCode] || "");
   }, [problem, language]);
+
+  const handleGetHint = async () => {
+    if (!problem?.id) {
+      setOutput("ERROR: Problem data not loaded");
+      return;
+    }
+    
+    const nextLevel = hintLevel + 1;
+    if (nextLevel > 3) {
+      setOutput("⚠️ No more hints available for this problem");
+      return;
+    }
+
+    try {
+      setIsRunning(true);
+      const result = await hintMutation.mutateAsync({
+        problem_title: problem.main_heading || "",
+        problem_desc: problem.description || "",
+        difficulty: problem.difficulty || "medium",
+        user_code: code,
+        hint_level: nextLevel,
+      });
+      
+      setHintLevel(nextLevel);
+      setShowHint(true);
+      setOutput(`💡 HINT (Level ${nextLevel})\n\n${result.hint}`);
+    } catch (error: any) {
+      if (error.message.includes("rate limit") || error.message.includes("cooldown")) {
+        setOutput(`⏱️ ${error.message}`);
+      } else {
+        setOutput("ERROR: Failed to generate hint. Please try again.");
+      }
+    } finally {
+      setIsRunning(false);
+    }
+  };
 
   const handleRun = async () => {
     if (!currentTestCase) {
@@ -269,11 +309,12 @@ const ProblemSolve = () => {
             <span className="text-[10px] tracking-widest text-gray-400">EDITOR</span>
             <div className="flex gap-2">
               <button
-                onClick={handleRun}
-                disabled={isRunning}
-                className="px-4 py-1 border border-[#4ECDC4] text-[#4ECDC4] text-[10px] tracking-widest hover:bg-[#4ECDC4] hover:text-black transition-colors disabled:opacity-50"
+                onClick={handleGetHint}
+                disabled={isRunning || hintLevel >= 3}
+                title={hintLevel >= 3 ? "No more hints available" : "Get an AI hint"}
+                className="px-4 py-1 border border-[#E54B4B] text-[#E54B4B] text-[10px] tracking-widest hover:bg-[#E54B4B] hover:text-black transition-colors disabled:opacity-50"
               >
-                {isRunning ? "RUNNING..." : "▶ RUN"}
+                {isRunning ? "WAITING..." : `💡 HINT (${hintLevel}/3)`}
               </button>
               <button
                 onClick={handleSubmit}
