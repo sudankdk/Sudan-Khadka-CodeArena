@@ -13,16 +13,19 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        module: ['backend', 'CodeExecutionEngine']
     steps:
     - uses: actions/checkout@v4
 
     - name: Set up Go
       uses: actions/setup-go@v4
       with:
-        go-version: '1.24'
+        go-version: '1.22'
 
-    - name: Build
-      run: go build -v ./...
+    - name: Build ${{ matrix.module }}
+      run: cd ${{ matrix.module }} && go build -v ./...
 
-    - name: Test
-      run: go test -v ./...
+    - name: Test ${{ matrix.module }}
+      run: cd ${{ matrix.module }} && go test -v ./...
