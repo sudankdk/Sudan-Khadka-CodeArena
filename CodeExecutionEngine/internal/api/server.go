@@ -2,6 +2,7 @@ package api
 
 import (
 	"os"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -22,10 +23,22 @@ func (s *Server) StartServer() error {
 		port = "3000"
 	}
 
+	frontendOrigin := strings.TrimRight(os.Getenv("FRONTEND_URL"), "/")
+	if frontendOrigin == "" {
+		frontendOrigin = "https://sudan-khadka-code-arena.vercel.app"
+	}
+	allowedOrigins := []string{
+		"http://localhost:5173",
+		frontendOrigin,
+	}
+	if extra := strings.TrimSpace(os.Getenv("CORS_ORIGINS")); extra != "" {
+		allowedOrigins = append(allowedOrigins, strings.Split(extra, ",")...)
+	}
+
 	app := fiber.New()
 	app.Use(cors.New(cors.Config{
 		AllowCredentials: true,
-		AllowOrigins:     "http://localhost:5173,https://sudan-khadka-code-arena.vercel.app,",
+		AllowOrigins:     strings.Join(allowedOrigins, ","),
 		AllowMethods:     "GET,POST,PUT,DELETE,OPTIONS",
 		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
 	}))

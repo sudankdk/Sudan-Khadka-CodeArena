@@ -33,9 +33,27 @@ func SetUpEnv() (AppConfigs, error) {
 		log.Println("Loaded .env file")
 	}
 
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
+	dsn := os.Getenv("DSN")
+	if dsn == "" {
+		dsn = os.Getenv("DATABASE_URL")
+	}
+
+	redisURL := os.Getenv("redis_url")
+	if redisURL == "" {
+		redisURL = os.Getenv("REDIS_URL")
+	}
+	if redisURL == "" {
+		redisURL = os.Getenv("REDIS_ADDR")
+	}
+
 	cfg := AppConfigs{
-		PORT:         os.Getenv("PORT"),
-		DSN:          os.Getenv("DSN"),
+		PORT:         port,
+		DSN:          dsn,
 		SECRETKEY:    os.Getenv("SECRETKEY"),
 		CLIENTSECRET: os.Getenv("CLIENTSECRET"),
 		CLIENTID:     os.Getenv("CLIENTID"),
@@ -45,14 +63,12 @@ func SetUpEnv() (AppConfigs, error) {
 		GOOGLECALLBACKURL: os.Getenv("GOOGLE_CALLBACK_URL"),
 		GOOGLEAPIKEY:      os.Getenv("GOOGLE_API_KEY"),
 		GOOGLEAPIURL:      os.Getenv("GOOGLE_API_URL"),
-		REDISURL:          os.Getenv("redis_url"),
+		REDISURL:          redisURL,
 	}
 
 	switch {
-	case cfg.PORT == "":
-		return AppConfigs{}, errors.New("PORT missing in environment")
 	case cfg.DSN == "":
-		return AppConfigs{}, errors.New("DSN missing in environment")
+		return AppConfigs{}, errors.New("DSN missing in environment (set DSN or DATABASE_URL)")
 	case cfg.SECRETKEY == "":
 		return AppConfigs{}, errors.New("SECRETKEY missing in environment")
 	case cfg.CLIENTID == "" || cfg.CLIENTSECRET == "":
