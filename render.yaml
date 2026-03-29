@@ -1,0 +1,75 @@
+services:
+  - type: web
+    name: codearena-backend
+    env: docker
+    plan: starter
+    autoDeploy: true
+    dockerContext: backend
+    dockerfilePath: backend/Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: PORT
+        value: 8080
+      - key: DSN
+        fromDatabase:
+          name: codearena-db
+          property: connectionString
+      - key: SECRETKEY
+        generateValue: true
+      - key: CLIENTID
+        sync: false
+      - key: CLIENTSECRET
+        sync: false
+      - key: GOOGLE_CALLBACK_URL
+        sync: false
+      - key: GOOGLE_API_KEY
+        sync: false
+      - key: GOOGLE_API_URL
+        value: https://generativelanguage.googleapis.com/v1beta
+      - key: FRONTEND_URL
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+      - key: REDIS_URL
+        fromService:
+          name: codearena-redis
+          property: connectionString
+      - key: SCREENSHOTS_DIR
+        value: /app/screenshots
+    disk:
+      name: screenshots
+      mountPath: /app/screenshots
+      sizeGB: 1
+
+  - type: web
+    name: codearena-cee
+    env: docker
+    plan: starter
+    autoDeploy: true
+    dockerContext: CodeExecutionEngine
+    dockerfilePath: CodeExecutionEngine/Dockerfile
+    healthCheckPath: /
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: REDIS_URL
+        fromService:
+          name: codearena-redis
+          property: connectionString
+      - key: FRONTEND_URL
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+
+  - type: redis
+    name: codearena-redis
+    plan: starter
+
+databases:
+  - name: codearena-db
+    databaseName: codearena
+    plan: starter

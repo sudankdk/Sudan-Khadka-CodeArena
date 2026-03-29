@@ -39,12 +39,26 @@ func StartServer(cfg configs.AppConfigs) {
 
 	app := fiber.New()
 
+	// Build CORS allowlist from env so Render/Vercel domains can be injected without code changes.
+	frontendOrigin := strings.TrimRight(os.Getenv("FRONTEND_URL"), "/")
+	if frontendOrigin == "" {
+		frontendOrigin = "https://sudan-khadka-code-arena.vercel.app"
+	}
+	allowedOrigins := []string{
+		"http://localhost:5173",
+		"http://localhost:3000",
+		frontendOrigin,
+	}
+	if extra := strings.TrimSpace(os.Getenv("CORS_ORIGINS")); extra != "" {
+		allowedOrigins = append(allowedOrigins, strings.Split(extra, ",")...)
+	}
+
 	// Add logging middleware
 	app.Use(middleware.LoggingMiddleware(logger.Log))
 
 	app.Use(cors.New(cors.Config{
 		AllowCredentials: true,
-		AllowOrigins:     "http://localhost:5173,https://sudan-khadka-code-arena.vercel.app,http://localhost:3000",
+		AllowOrigins:     strings.Join(allowedOrigins, ","),
 		AllowMethods:     "GET,POST,PUT,DELETE,OPTIONS",
 		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
 	}))
