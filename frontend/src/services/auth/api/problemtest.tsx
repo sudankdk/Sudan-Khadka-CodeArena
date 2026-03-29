@@ -56,6 +56,12 @@ export const getProblemTestBySlug = async (slug: string): Promise<IProblemTest> 
   return resp?.data || resp;
 }
 
+export const getProblemTestById = async (id: string): Promise<IProblemTest> => {
+  const resp = await problemtestClient.get<any>(`/problems/${id}?include_tc=true`);
+  console.log("Fetched Problem Test by ID:", resp);
+  return resp?.data || resp;
+}
+
 export const filteredProblemsByDifficulty = async (difficulty: string): Promise<IProblemTest[]> => {
   const resp = await problemtestClient.get<any>(`/problems?difficulty=${difficulty}`);
   console.log("Fetched Filtered Problems:", resp);

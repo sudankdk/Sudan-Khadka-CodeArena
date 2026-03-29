@@ -14,17 +14,26 @@ import type {
 
 export const contestClient = new ApiClient(server);
 
+const normalizeContest = (contest: any): IContest => {
+  if (!contest) return contest as IContest;
+  const title = contest.title || contest.name || "";
+  return {
+    ...contest,
+    title,
+  } as IContest;
+};
+
 // Contest CRUD APIs
 export const createContest = async (contest: ICreateContest): Promise<IContest> => {
   const resp = await contestClient.post<{data: IContest}>("/contests", contest);
   console.log("Created Contest:", resp);
-  return resp?.data || resp;
+  return normalizeContest(resp?.data || resp);
 }
 
 export const getContestById = async (id: string): Promise<IContest> => {
   const resp = await contestClient.get<{data: IContest}>(`/contests/${id}`);
   console.log("Fetched Contest:", resp);
-  return resp?.data || resp;
+  return normalizeContest(resp?.data || resp);
 }
 
 export const listContests = async (
@@ -45,8 +54,10 @@ export const listContests = async (
   console.log("Fetched Contests:", resp);
   
   const contestsData = resp?.data || resp;
+  const contests = (contestsData?.contests || contestsData || []).map(normalizeContest);
+
   return {
-    contests: contestsData?.contests || contestsData || [],
+    contests,
     total: contestsData?.total || 0,
     page: page,
     page_size: pageSize

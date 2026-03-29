@@ -49,6 +49,7 @@ func SetupContestRoutes(rh *rest.RestHandlers) {
 	contestRoutes.Delete("/:id/problems/:problemId", handler.RemoveProblemFromContest)
 	contestRoutes.Post("/:id/register", handler.RegisterParticipant)
 	contestRoutes.Delete("/:id/register", handler.UnregisterParticipant)
+	contestRoutes.Post(":id/unregister", handler.UnregisterParticipant)
 	contestRoutes.Get("/:id/registration-status", handler.CheckRegistrationStatus)
 	contestRoutes.Post("/:id/finalize", handler.FinalizeContestRankings)
 }

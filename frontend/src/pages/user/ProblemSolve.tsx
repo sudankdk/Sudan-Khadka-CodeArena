@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import Editor from "@monaco-editor/react";
-import { getProblemTestBySlug } from "@/services/auth/api/problemtest";
+import { getProblemTestById, getProblemTestBySlug } from "@/services/auth/api/problemtest";
 import { useExecuteCode } from "@/features/Problems/hooks/useExecute";
 import { useCreateSubmission } from "@/hooks/useSubmissions";
 import { useHint } from "@/hooks/useHint";
@@ -55,7 +55,8 @@ const ProblemSolve = () => {
   const loadProblem = async () => {
     if (!id) return;
     try {
-      const result = await getProblemTestBySlug(id);
+      const isUuid = /^[0-9a-fA-F-]{36}$/.test(id);
+      const result = isUuid ? await getProblemTestById(id) : await getProblemTestBySlug(id);
       setProblem(result);
       const apiLang = getApiLanguage(language);
       console.log(apiLang)
