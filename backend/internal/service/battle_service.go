@@ -315,7 +315,7 @@ func (bs *BattleService) ForfeitMatch(matchID, forfeitedByID uuid.UUID) error {
 	}
 
 	if match.Status == "finished" {
-		return errors.New("match is already finished")
+		return nil // No-op if already finished
 	}
 
 	winnerID := match.PlayerBID

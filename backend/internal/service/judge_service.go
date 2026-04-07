@@ -9,6 +9,7 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/chromedp/chromedp"
@@ -140,7 +141,11 @@ func (js *JudgeService) JudgeSubmission(htmlCode, cssCode, jsCode string, challe
 	}
 
 	// Load reference screenshot
-	refImg, err := loadPNG(challenge.ReferenceScreenshotPath)
+	refPath, err := js.resolveReferencePath(challenge.ReferenceScreenshotPath)
+	if err != nil {
+		return nil, err
+	}
+	refImg, err := loadPNG(refPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load reference screenshot: %w", err)
 	}
@@ -220,6 +225,30 @@ func loadPNG(path string) (image.Image, error) {
 	}
 	defer f.Close()
 	return png.Decode(f)
+}
+
+func (js *JudgeService) resolveReferencePath(refPath string) (string, error) {
+	if refPath == "" {
+		return "", fmt.Errorf("reference screenshot path is empty")
+	}
+
+	refPath = filepath.Clean(strings.ReplaceAll(refPath, "\\", string(os.PathSeparator)))
+	if filepath.IsAbs(refPath) {
+		return refPath, nil
+	}
+
+	outputDir := filepath.Clean(strings.ReplaceAll(js.outputDir, "\\", string(os.PathSeparator)))
+	if !filepath.IsAbs(outputDir) {
+		cwd, _ := os.Getwd()
+		outputDir = filepath.Join(cwd, outputDir)
+	}
+
+	base := filepath.Base(outputDir)
+	if strings.HasPrefix(refPath, base+string(os.PathSeparator)) {
+		refPath = strings.TrimPrefix(refPath, base+string(os.PathSeparator))
+	}
+
+	return filepath.Join(outputDir, refPath), nil
 }
 
 // compareScreenshots performs pixel-by-pixel comparison of two images.
