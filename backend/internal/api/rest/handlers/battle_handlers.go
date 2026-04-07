@@ -120,7 +120,15 @@ func (bh *BattleHandlers) CreateChallenge(ctx *fiber.Ctx) error {
 				"message": "Either reference code (reference_html + reference_css) or reference_screenshot file is required",
 			})
 		}
-		refScreenshotPath = "screenshots/ref_" + uuid.New().String() + ".png"
+		screenshotsDir := os.Getenv("SCREENSHOTS_DIR")
+		if screenshotsDir == "" {
+			screenshotsDir = "screenshots"
+		}
+		if err := os.MkdirAll(screenshotsDir, 0755); err != nil {
+			bh.logger.Error("Failed to create screenshots directory", zap.Error(err))
+			return rest.InternalError(ctx, err)
+		}
+		refScreenshotPath = filepath.Join(screenshotsDir, "ref_"+uuid.New().String()+".png")
 		if err := ctx.SaveFile(file, refScreenshotPath); err != nil {
 			bh.logger.Error("Failed to save reference screenshot", zap.Error(err))
 			return rest.InternalError(ctx, err)

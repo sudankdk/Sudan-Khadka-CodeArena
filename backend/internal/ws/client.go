@@ -46,7 +46,9 @@ func (c *Client) ReadPump(handler *WSHandler) {
 	for {
 		_, message, err := c.Conn.ReadMessage()
 		if err != nil {
-			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseNormalClosure) {
+			if websocket.IsCloseError(err, websocket.CloseNormalClosure, websocket.CloseGoingAway, websocket.CloseNoStatusReceived) {
+				logger.Info("WebSocket closed", zap.Error(err), zap.String("user_id", c.UserID.String()))
+			} else if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseNormalClosure) {
 				logger.Error("WebSocket read error", zap.Error(err), zap.String("user_id", c.UserID.String()))
 			}
 			break
