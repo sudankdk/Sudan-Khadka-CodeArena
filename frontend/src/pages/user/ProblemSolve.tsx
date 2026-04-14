@@ -52,6 +52,107 @@ const ProblemSolve = () => {
   const getExpectedValue = (testCase: any) =>
     testCase?.expected ?? testCase?.output ?? testCase?.expected_output ?? testCase?.output_expected ?? "";
 
+  const normalizeOutput = (value: string) => {
+    const trimmed = value.trim();
+    if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
+      return trimmed.replace(/\s+/g, "");
+    }
+    return trimmed;
+  };
+
+  const tryParseArray = (value: string) => {
+    const trimmed = value.trim();
+    if (!trimmed.startsWith("[") || !trimmed.endsWith("]")) return null;
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (Array.isArray(parsed)) return parsed;
+    } catch {
+      return null;
+    }
+    return null;
+  };
+
+  const compareOutputs = (stdout: string, expected: string) => {
+    const outArr = tryParseArray(stdout);
+    const expArr = tryParseArray(expected);
+
+    if (outArr && expArr) {
+      const isPrimitiveArray = (arr: any[]) =>
+        arr.every((item) => item === null || ["string", "number", "boolean"].includes(typeof item));
+
+      if (isPrimitiveArray(outArr) && isPrimitiveArray(expArr)) {
+        const sortedOut = [...outArr].map(String).sort();
+        const sortedExp = [...expArr].map(String).sort();
+        return JSON.stringify(sortedOut) === JSON.stringify(sortedExp);
+      }
+    }
+
+    return normalizeOutput(stdout) === normalizeOutput(expected);
+  };
+
+  const buildExecutableCode = (lang: string, source: string) => {
+    if (lang !== "python") return source;
+    if (source.includes("__codearena_runner__")) return source;
+
+    const runner = [
+      "",
+      "# __codearena_runner__",
+      "import sys",
+      "import ast",
+      "import json",
+      "",
+      "def __ca_parse(raw):",
+      "    raw = raw.strip()",
+      "    if not raw:",
+      "        return None",
+      "    try:",
+      "        return ast.literal_eval(raw)",
+      "    except Exception:",
+      "        pass",
+      "    if '\\n' in raw:",
+      "        lines = [line for line in raw.splitlines() if line.strip()]",
+      "        try:",
+      "            return tuple(ast.literal_eval(line) for line in lines)",
+      "        except Exception:",
+      "            return raw",
+      "    return raw",
+      "",
+      "def __ca_args(data):",
+      "    if isinstance(data, tuple):",
+      "        return data",
+      "    return (data,)",
+      "",
+      "__ca_data = __ca_parse(sys.stdin.read())",
+      "__ca_func = None",
+      "",
+      "if 'Solution' in globals():",
+      "    try:",
+      "        __ca_obj = Solution()",
+      "        for __name in ('twoSum', 'two_sum', 'solve', 'main'):",
+      "            if hasattr(__ca_obj, __name):",
+      "                __ca_func = getattr(__ca_obj, __name)",
+      "                break",
+      "    except Exception:",
+      "        __ca_func = None",
+      "",
+      "if __ca_func is None:",
+      "    for __name in ('twoSum', 'two_sum', 'solve', 'main'):",
+      "        if __name in globals():",
+      "            __ca_func = globals()[__name]",
+      "            break",
+      "",
+      "if __ca_func is not None:",
+      "    __ca_res = __ca_func(*__ca_args(__ca_data))",
+      "    if __ca_res is not None:",
+      "        try:",
+      "            print(json.dumps(__ca_res, separators=(',', ':')))",
+      "        except Exception:",
+      "            print(__ca_res)",
+    ].join("\n");
+
+    return `${source}\n${runner}`;
+    };
+
   const loadProblem = async () => {
     if (!id) return;
     try {
@@ -136,11 +237,13 @@ const ProblemSolve = () => {
       let executionTime = 0;
       let memoryUsed = 0;
 
+      const executableCode = buildExecutableCode(language, code);
+
       // Run all test cases
       for (let i = 0; i < testCases.length; i++) {
         const result = await executeMutation.mutateAsync({
           language,
-          code,
+          code: executableCode,
           stdin: testCases[i].input ?? testCases[i].stdin ?? ""
         });
         
@@ -152,10 +255,9 @@ const ProblemSolve = () => {
           throw new Error(`Runtime error in test case ${i + 1}: ${result.stderr}`);
         }
 
-        const trimmedStdout = result.stdout.trim();
-        const trimmedExpected = getExpectedValue(testCases[i]).trim();
-        
-        if (trimmedStdout === trimmedExpected) {
+        const rawExpected = getExpectedValue(testCases[i]);
+
+        if (compareOutputs(result.stdout, rawExpected)) {
           passedCount++;
         } else {
           if (failedTestCase === -1) failedTestCase = i;
