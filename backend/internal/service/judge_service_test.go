@@ -110,6 +110,12 @@ func makeImage(w, h int, c color.RGBA) image.Image {
 	return img
 }
 
+// The following tests cover various scenarios for compareScreenshots, including:
+// - Identical images → should yield zero diff ratio
+// - Completely different colours → should yield a high diff ratio
+// - Zero-dimension images → should return an error and ratio=1.0
+// - Different sizes → should account for size difference in ratio
+// - High pixel threshold → should ignore small differences and show zero diff for identical images
 func TestCompareScreenshots_IdenticalImages_DiffRatioIsZero(t *testing.T) {
 	img := makeImage(10, 10, color.RGBA{R: 255, G: 0, B: 0, A: 255})
 
@@ -167,6 +173,7 @@ func TestCompareScreenshots_SameImageHighThreshold_ZeroDiff(t *testing.T) {
 // resolveReferencePath (unexported)
 // ─────────────────────────────────────────────────────────────────────────────
 
+// TestResolveReferencePath_EmptyPath_ReturnsError tests that resolveReferencePath returns an error when given an empty path.
 func TestResolveReferencePath_EmptyPath_ReturnsError(t *testing.T) {
 	js := &JudgeService{outputDir: "screenshots"}
 

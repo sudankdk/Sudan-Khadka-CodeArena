@@ -53,6 +53,7 @@ func SetupRoutes(rh *rest.RestHandlers) {
 			"user": user,
 		})
 	})
+	pubRoutes.Put("/me", rh.Auth.Authorize, handler.UpdateSelf)
 
 	adminRoutes := app.Group("/admin/users", rh.Auth.Authorize, rh.Auth.RequireAdmin)
 	adminRoutes.Get("/", handler.AdminList)
@@ -247,4 +248,34 @@ func (u *UserHandlers) AdminStats(ctx *fiber.Ctx) error {
 		return rest.InternalError(ctx, err)
 	}
 	return rest.SuccessMessage(ctx, "user stats", stats)
+}
+
+func (u *UserHandlers) UpdateSelf(ctx *fiber.Ctx) error {
+	currentUser, err := u.svc.Auth.CurrentUserInfo(ctx)
+	if err != nil {
+		return rest.ErrorMessage(ctx, http.StatusUnauthorized, fmt.Errorf("not authenticated"))
+	}
+
+	var req dto.UserProfileUpdate
+	if err := ctx.BodyParser(&req); err != nil {
+		u.logger.Warn("Invalid profile update payload", zap.Error(err))
+		return rest.ErrorMessage(ctx, http.StatusBadRequest, fmt.Errorf("Invalid Payload"))
+	}
+
+	updates := dto.UserUpdate{
+		Username:           req.Username,
+		Email:              req.Email,
+		Password:           req.Password,
+		Bio:                req.Bio,
+		LanguagePreference: req.LanguagePreference,
+		ProfileImage:       req.ProfileImage,
+	}
+
+	updated, err := u.svc.UpdateUser(currentUser.ID, updates)
+	if err != nil {
+		u.logger.Error("Failed to update user profile", zap.Error(err))
+		return rest.InternalError(ctx, err)
+	}
+
+	return rest.SuccessMessage(ctx, "user updated", updated)
 }

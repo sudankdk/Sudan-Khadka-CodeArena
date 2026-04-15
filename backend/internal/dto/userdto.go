@@ -30,6 +30,16 @@ type UserUpdate struct {
 	SolvedCount        *int     `json:"solved_count"`
 	Bio                *string  `json:"bio"`
 	LanguagePreference *string  `json:"language_preference"`
+	ProfileImage       *string  `json:"profile_image"`
+}
+
+type UserProfileUpdate struct {
+	Username           *string `json:"username"`
+	Email              *string `json:"email"`
+	Password           *string `json:"password"`
+	Bio                *string `json:"bio"`
+	LanguagePreference *string `json:"language_preference"`
+	ProfileImage       *string `json:"profile_image"`
 }
 
 type UserStats struct {

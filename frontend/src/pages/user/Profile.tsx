@@ -1,10 +1,11 @@
 import UserDashboardLayout from '@/components/UserDashboardLayout';
 import useAuthStore from "@/services/auth/store/auth.store";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useUserStats, useSubmissions } from "@/hooks/useSubmissions";
 import { useBattleStats } from "@/hooks/useBattle";
 import EloTierBadge from "@/components/battle/EloTierBadge";
 import { NavLink } from 'react-router-dom';
+import { updateMyProfile } from "@/services/users/api";
 
 const BattleStatsCard = () => {
   const { data: battleStats, isLoading } = useBattleStats();
@@ -70,7 +71,18 @@ const BattleStatsCard = () => {
 
 const Profile = () => {
   const user = useAuthStore((state) => state.user);
+  const setUser = useAuthStore((state) => state.setUser);
   const [activeTab, setActiveTab] = useState("OVERVIEW");
+  const [profileForm, setProfileForm] = useState({
+    username: "",
+    email: "",
+    bio: "",
+    language_preference: "python",
+    password: "",
+  });
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [profileError, setProfileError] = useState<string | null>(null);
+  const [profileSuccess, setProfileSuccess] = useState<string | null>(null);
   const { data: userStats, isLoading: statsLoading } = useUserStats();
   const { data: submissionsData, isLoading: submissionsLoading } = useSubmissions(1, 20, { user_id: user?.id });
 
@@ -118,6 +130,79 @@ const Profile = () => {
     { level: "MEDIUM", solved: userStats?.medium_solved || 0, total: 1762, color: "#F7D046" },
     { level: "HARD", solved: userStats?.hard_solved || 0, total: 753, color: "#E54B4B" },
   ];
+
+  useEffect(() => {
+    if (!user) return;
+    setProfileForm({
+      username: user.username || "",
+      email: user.email || "",
+      bio: user.bio || "",
+      language_preference: user.language_preference || "python",
+      password: "",
+    });
+  }, [user]);
+
+  const handleProfileChange = (field: keyof typeof profileForm, value: string) => {
+    setProfileForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const buildProfilePayload = () => {
+    const payload: Record<string, string> = {};
+    const nextUsername = profileForm.username.trim();
+    const nextEmail = profileForm.email.trim();
+    const nextBio = profileForm.bio;
+
+    if (nextUsername && nextUsername !== (user?.username || "")) {
+      payload.username = nextUsername;
+    }
+    if (nextEmail && nextEmail !== (user?.email || "")) {
+      payload.email = nextEmail;
+    }
+    if (nextBio !== (user?.bio || "")) {
+      payload.bio = nextBio;
+    }
+    if (profileForm.language_preference && profileForm.language_preference !== (user?.language_preference || "")) {
+      payload.language_preference = profileForm.language_preference;
+    }
+    if (profileForm.password.trim()) {
+      payload.password = profileForm.password;
+    }
+
+    return payload;
+  };
+
+  const handleProfileSave = async () => {
+    if (!user) {
+      setProfileError("Please log in to update your profile.");
+      return;
+    }
+
+    const payload = buildProfilePayload();
+    if (Object.keys(payload).length === 0) {
+      setProfileSuccess("No changes to save.");
+      setProfileError(null);
+      return;
+    }
+
+    setSavingProfile(true);
+    setProfileError(null);
+    setProfileSuccess(null);
+
+    try {
+      const response = await updateMyProfile(payload);
+      const updated = (response as any)?.data ?? response;
+      if (updated?.id) {
+        setUser(updated);
+      }
+      setProfileForm((prev) => ({ ...prev, password: "" }));
+      setProfileSuccess("Profile updated.");
+    } catch (err: any) {
+      const message = err?.response?.data || err?.message || "Unable to update profile";
+      setProfileError(typeof message === "string" ? message : "Unable to update profile");
+    } finally {
+      setSavingProfile(false);
+    }
+  };
 
   return (
     <UserDashboardLayout>
@@ -168,7 +253,10 @@ const Profile = () => {
 
           {/* Edit Button */}
           <div>
-            <button className="px-4 py-2 border-2 border-[#333] text-gray-500 text-xs font-mono tracking-widest hover:border-[#F7D046] hover:text-[#F7D046] transition-colors">
+            <button
+              onClick={() => setActiveTab("SETTINGS")}
+              className="px-4 py-2 border-2 border-[#333] text-gray-500 text-xs font-mono tracking-widest hover:border-[#F7D046] hover:text-[#F7D046] transition-colors"
+            >
               EDIT PROFILE
             </button>
           </div>
@@ -431,6 +519,16 @@ const Profile = () => {
 
         {activeTab === "SETTINGS" && (
           <div className="max-w-xl space-y-6">
+            {profileError && (
+              <div className="border-2 border-[#E54B4B] px-4 py-3 text-[#E54B4B] text-xs font-mono">
+                {profileError}
+              </div>
+            )}
+            {profileSuccess && (
+              <div className="border-2 border-[#4ECDC4] px-4 py-3 text-[#4ECDC4] text-xs font-mono">
+                {profileSuccess}
+              </div>
+            )}
             <div className="border-2 border-dashed border-[#333] p-6">
               <p className="text-[10px] text-gray-600 tracking-widest mb-4">PROFILE SETTINGS</p>
               <div className="space-y-4">
@@ -438,7 +536,8 @@ const Profile = () => {
                   <label className="text-[10px] text-gray-500 tracking-widest block mb-2">USERNAME</label>
                   <input
                     type="text"
-                    defaultValue={user?.username || "CODER"}
+                    value={profileForm.username}
+                    onChange={(e) => handleProfileChange("username", e.target.value)}
                     className="w-full bg-transparent border-2 border-[#333] px-4 py-2 text-white text-xs font-mono tracking-wider focus:border-[#F7D046] focus:outline-none"
                   />
                 </div>
@@ -446,7 +545,8 @@ const Profile = () => {
                   <label className="text-[10px] text-gray-500 tracking-widest block mb-2">EMAIL</label>
                   <input
                     type="email"
-                    defaultValue={user?.email || "coder@codearena.dev"}
+                    value={profileForm.email}
+                    onChange={(e) => handleProfileChange("email", e.target.value)}
                     className="w-full bg-transparent border-2 border-[#333] px-4 py-2 text-white text-xs font-mono tracking-wider focus:border-[#F7D046] focus:outline-none"
                   />
                 </div>
@@ -455,7 +555,34 @@ const Profile = () => {
                   <textarea
                     rows={3}
                     placeholder="TELL YOUR STORY..."
+                    value={profileForm.bio}
+                    onChange={(e) => handleProfileChange("bio", e.target.value)}
                     className="w-full bg-transparent border-2 border-[#333] px-4 py-2 text-white text-xs font-mono tracking-wider focus:border-[#F7D046] focus:outline-none resize-none"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] text-gray-500 tracking-widest block mb-2">LANGUAGE PREFERENCE</label>
+                  <select
+                    value={profileForm.language_preference}
+                    onChange={(e) => handleProfileChange("language_preference", e.target.value)}
+                    className="w-full bg-transparent border-2 border-[#333] px-4 py-2 text-white text-xs font-mono tracking-wider focus:border-[#F7D046] focus:outline-none"
+                  >
+                    <option value="python">PYTHON</option>
+                    <option value="javascript">JAVASCRIPT</option>
+                    <option value="typescript">TYPESCRIPT</option>
+                    <option value="go">GO</option>
+                    <option value="java">JAVA</option>
+                    <option value="cpp">CPP</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-[10px] text-gray-500 tracking-widest block mb-2">NEW PASSWORD</label>
+                  <input
+                    type="password"
+                    value={profileForm.password}
+                    onChange={(e) => handleProfileChange("password", e.target.value)}
+                    placeholder="LEAVE BLANK TO KEEP CURRENT"
+                    className="w-full bg-transparent border-2 border-[#333] px-4 py-2 text-white text-xs font-mono tracking-wider focus:border-[#F7D046] focus:outline-none"
                   />
                 </div>
               </div>
@@ -468,8 +595,12 @@ const Profile = () => {
               </button>
             </div>
 
-            <button className="px-6 py-3 bg-[#F7D046] text-black text-xs font-bold tracking-widest hover:bg-[#f5c518] transition-colors">
-              SAVE CHANGES
+            <button
+              onClick={handleProfileSave}
+              disabled={savingProfile}
+              className="px-6 py-3 bg-[#F7D046] text-black text-xs font-bold tracking-widest hover:bg-[#f5c518] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {savingProfile ? "SAVING..." : "SAVE CHANGES"}
             </button>
           </div>
         )}

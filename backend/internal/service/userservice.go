@@ -136,6 +136,9 @@ func (u *UserService) UpdateUser(id uuid.UUID, req dto.UserUpdate) (domain.User,
 	if req.LanguagePreference != nil {
 		updates["language_preference"] = *req.LanguagePreference
 	}
+	if req.ProfileImage != nil {
+		updates["profile_image"] = *req.ProfileImage
+	}
 	if req.Password != nil && *req.Password != "" {
 		hashed, err := u.Auth.CreateHash(*req.Password)
 		if err != nil {

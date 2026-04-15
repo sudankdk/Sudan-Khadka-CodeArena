@@ -15,6 +15,7 @@ import (
 // GetEloTier (pure, exported)
 // ─────────────────────────────────────────────────────────────────────────────
 
+// TestGetEloTier verifies that various rating inputs correctly map to their expected ELO tiers, covering all defined thresholds and edge cases.
 func TestGetEloTier(t *testing.T) {
 	cases := []struct {
 		rating   float64
@@ -184,6 +185,7 @@ func TestGetBattleStats_ZeroMatches_WinRateIsZero(t *testing.T) {
 // GetBattleLeaderboard (uses mocked repos)
 // ─────────────────────────────────────────────────────────────────────────────
 
+// TestGetBattleLeaderboard_Success verifies that GetBattleLeaderboard correctly retrieves and maps leaderboard entries, including rank and tier calculations, using mocked repository responses.
 func TestGetBattleLeaderboard_Success(t *testing.T) {
 	battleRepo := new(MockBattleRepo)
 	svc := &BattleService{BattleRepo: battleRepo}

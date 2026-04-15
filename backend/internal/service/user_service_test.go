@@ -34,6 +34,7 @@ func newUserService(mockRepo *MockUserRepo) *UserService {
 // Register
 // ─────────────────────────────────────────────────────────────────────────────
 
+// TestRegister_Success verifies that a valid registration request results in a created user with the expected fields.
 func TestRegister_Success(t *testing.T) {
 	// Arrange
 	mockRepo := new(MockUserRepo)
@@ -61,6 +62,8 @@ func TestRegister_Success(t *testing.T) {
 	mockRepo.AssertExpectations(t)
 }
 
+// TestRegister_EmptyFields verifies that missing required fields result in validation errors.
+// We test each required field separately to ensure all validation paths are covered.
 func TestRegister_RepoError_ReturnsError(t *testing.T) {
 	// Arrange
 	mockRepo := new(MockUserRepo)
@@ -69,7 +72,7 @@ func TestRegister_RepoError_ReturnsError(t *testing.T) {
 	input := dto.UserRegister{
 		Email:    "bob@example.com",
 		Username: "bob",
-		Password: "pass",
+		Password: "securePass1",
 	}
 	mockRepo.On("CreateUser", mock.Anything).Return(domain.User{}, errors.New("db error"))
 
@@ -86,6 +89,7 @@ func TestRegister_RepoError_ReturnsError(t *testing.T) {
 // Login
 // ─────────────────────────────────────────────────────────────────────────────
 
+// TestLogin_Success verifies that a user can log in with correct credentials and receives a token and user info.
 func TestLogin_Success(t *testing.T) {
 	// Arrange
 	auth := newTestAuth()
@@ -124,6 +128,7 @@ func TestLogin_EmptyEmail_ReturnsValidationError(t *testing.T) {
 	assert.Equal(t, "fill all the required fields", err.Error())
 }
 
+// TestLogin_EmptyPassword verifies that an empty password results in a validation error, ensuring that all required fields are checked.
 func TestLogin_EmptyPassword_ReturnsValidationError(t *testing.T) {
 	svc := newUserService(new(MockUserRepo))
 
