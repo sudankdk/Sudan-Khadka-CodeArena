@@ -593,9 +593,6 @@ Sudan-Khadka-CodeArena/
 
 ## Screenshots
 
-### Application Logo
-![CodeArena Logo](screenshots/logo.png)
-
 ### Landing Page
 ![Landing Page](screenshots/landing_page.png)
 
@@ -605,10 +602,10 @@ Sudan-Khadka-CodeArena/
 ### Registration Page — Create a New Account
 ![Register Page](screenshots/register_page.png)
 
-### User Dashboard — Stats, Charts, and Recent Activity
+### User Dashboard — Stats, Subjects, and Recent Submissions
 ![User Dashboard](screenshots/user_dashboard.png)
 
-### Problem Solving — Monaco Code Editor with Test Cases
+### Problem Solving — Code Editor with Test Cases and AI Hints
 ![Problem Solving](screenshots/problem_solve.png)
 
 ### Roadmap — Topic-Based Learning Path with Progress Tracking
@@ -623,7 +620,10 @@ Sudan-Khadka-CodeArena/
 ### 1v1 Battle Arena — Real-Time Matchmaking and Coding Duels
 ![Battle Arena](screenshots/battle_arena.png)
 
-### Discussion Forum — Thread Detail with Tags and Voting
+### Discussion Forum — Community Threads with Tags
+![Discussions List](screenshots/discussions_list.png)
+
+### Discussion Thread — Detail View with Voting
 ![Discussion Thread](screenshots/discussion_thread.png)
 
 ### Discussion Comments — Nested Replies with Upvote/Downvote
@@ -631,11 +631,6 @@ Sudan-Khadka-CodeArena/
 
 ### Global Leaderboard (Kings) — Top Programmers by Contest Rating
 ![Global Leaderboard](screenshots/global_leaderboard.png)
-
-### Admin Dashboard — Platform Statistics and Management
-![Admin Dashboard](screenshots/admin_dashboard.png)
-
-> **Note:** Place the corresponding screenshot image files in the `screenshots/` directory at the project root with the filenames referenced above.
 
 ---
 
