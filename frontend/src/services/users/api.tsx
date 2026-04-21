@@ -17,6 +17,15 @@ export interface AdminUserPayload {
   language_preference?: string;
 }
 
+export interface UserProfilePayload {
+  username?: string;
+  email?: string;
+  password?: string;
+  bio?: string;
+  language_preference?: string;
+  profile_image?: string;
+}
+
 export interface AdminUserStats {
   total_users: number;
   admin_users: number;
@@ -47,4 +56,8 @@ export const createUser = async (payload: AdminUserPayload): Promise<ApiResponse
 
 export const updateUser = async (id: string, payload: Partial<AdminUserPayload>): Promise<ApiResponse<any>> => {
   return await userClient.put(`/admin/users/${id}`, payload);
+};
+
+export const updateMyProfile = async (payload: UserProfilePayload): Promise<ApiResponse<any>> => {
+  return await userClient.put("/users/me", payload);
 };

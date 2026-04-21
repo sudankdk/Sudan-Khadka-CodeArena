@@ -14,7 +14,6 @@ export const useCreateSubmission = () => {
   return useMutation({
     mutationFn: (submission: ICreateSubmission) => createSubmission(submission),
     onSuccess: () => {
-      // Invalidate user stats and submissions to refetch
       queryClient.invalidateQueries({ queryKey: ['userStats'] });
       queryClient.invalidateQueries({ queryKey: ['submissions'] });
     },

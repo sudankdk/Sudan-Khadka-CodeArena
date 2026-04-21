@@ -73,6 +73,8 @@ func TestNormalizeVisibility(t *testing.T) {
 // CreateRoadmap
 // ─────────────────────────────────────────────────────────────────────────────
 
+
+// TestCreateRoadmap_Success verifies that a valid CreateRoadmapDTO results in a roadmap being created with the expected fields, and that the repository methods are called as expected.
 func TestCreateRoadmap_Success(t *testing.T) {
 	// Arrange
 	rRepo := new(MockRoadmapRepo)

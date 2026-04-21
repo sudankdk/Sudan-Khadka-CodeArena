@@ -30,6 +30,16 @@ type UserUpdate struct {
 	SolvedCount        *int     `json:"solved_count"`
 	Bio                *string  `json:"bio"`
 	LanguagePreference *string  `json:"language_preference"`
+	ProfileImage       *string  `json:"profile_image"`
+}
+
+type UserProfileUpdate struct {
+	Username           *string `json:"username"`
+	Email              *string `json:"email"`
+	Password           *string `json:"password"`
+	Bio                *string `json:"bio"`
+	LanguagePreference *string `json:"language_preference"`
+	ProfileImage       *string `json:"profile_image"`
 }
 
 type UserStats struct {
@@ -41,4 +51,13 @@ type UserStats struct {
 	TotalWins       int     `json:"total_wins"`
 	TotalSolved     int     `json:"total_solved"`
 	ActiveThisMonth int     `json:"active_this_month"`
+}
+
+type PasswordResetRequest struct {
+	Email string `json:"email"`
+}
+
+type PasswordResetConfirm struct {
+	Token    string `json:"token"`
+	Password string `json:"password"`
 }

@@ -15,3 +15,11 @@ export const loginUser = async (data: IUserLogin): Promise<any> => {
 export const logoutUser = async (): Promise<any> => {
   return await authClient.post("/users/logout");
 };
+
+export const requestPasswordReset = async (email: string): Promise<any> => {
+  return await authClient.post("/users/password/forgot", { email });
+};
+
+export const resetPassword = async (token: string, password: string): Promise<any> => {
+  return await authClient.post("/users/password/reset", { token, password });
+};

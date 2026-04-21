@@ -4,6 +4,8 @@ import (
 	"errors"
 	"log"
 	"os"
+	"strconv"
+	"strings"
 
 	"github.com/joho/godotenv"
 	"github.com/markbates/goth"
@@ -23,6 +25,15 @@ type AppConfigs struct {
 	GOOGLEAPIKEY      string
 	GOOGLEAPIURL      string
 	REDISURL          string
+	FRONTENDURL       string
+	SMTPHost          string
+	SMTPPort          int
+	SMTPUser          string
+	SMTPPass          string
+	SMTPFrom          string
+	SMTPFromName      string
+	SMTPUseTLS        bool
+	PasswordResetTTL  int
 }
 
 func SetUpEnv() (AppConfigs, error) {
@@ -51,6 +62,29 @@ func SetUpEnv() (AppConfigs, error) {
 		redisURL = os.Getenv("REDIS_ADDR")
 	}
 
+	frontendURL := strings.TrimRight(os.Getenv("FRONTEND_URL"), "/")
+	if frontendURL == "" {
+		if os.Getenv("APP_ENV") == "dev" {
+			frontendURL = "http://localhost:5173"
+		} else {
+			frontendURL = "https://sudan-khadka-code-arena.vercel.app"
+		}
+	}
+
+	smtpPort := 587
+	if portStr := strings.TrimSpace(os.Getenv("SMTP_PORT")); portStr != "" {
+		if parsed, err := strconv.Atoi(portStr); err == nil {
+			smtpPort = parsed
+		}
+	}
+
+	resetTTL := 30
+	if ttlStr := strings.TrimSpace(os.Getenv("PASSWORD_RESET_TTL_MINUTES")); ttlStr != "" {
+		if parsed, err := strconv.Atoi(ttlStr); err == nil {
+			resetTTL = parsed
+		}
+	}
+
 	cfg := AppConfigs{
 		PORT:         port,
 		DSN:          dsn,
@@ -64,6 +98,15 @@ func SetUpEnv() (AppConfigs, error) {
 		GOOGLEAPIKEY:      os.Getenv("GOOGLE_API_KEY"),
 		GOOGLEAPIURL:      os.Getenv("GOOGLE_API_URL"),
 		REDISURL:          redisURL,
+		FRONTENDURL:       frontendURL,
+		SMTPHost:          os.Getenv("SMTP_HOST"),
+		SMTPPort:          smtpPort,
+		SMTPUser:          os.Getenv("SMTP_USER"),
+		SMTPPass:          os.Getenv("SMTP_PASS"),
+		SMTPFrom:          os.Getenv("SMTP_FROM"),
+		SMTPFromName:      os.Getenv("SMTP_FROM_NAME"),
+		SMTPUseTLS:        strings.EqualFold(os.Getenv("SMTP_USE_TLS"), "true"),
+		PasswordResetTTL:  resetTTL,
 	}
 
 	switch {

@@ -13,9 +13,9 @@ export type User = {
   language_preference: string;
   role: string;
   code?: string;
-  expiry?: string;            // ISO timestamp
-  created_at: string;         // ISO timestamp
-  updated_at: string;         // ISO timestamp
+  expiry?: string;            
+  created_at: string;         
+  updated_at: string;        
 };
 
 export type LoginResponse = {

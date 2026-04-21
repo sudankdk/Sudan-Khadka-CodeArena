@@ -1,5 +1,3 @@
-// Battle/Duel TypeScript interfaces — aligned with backend DTOs and WS message types.
-
 export interface IFrontendChallenge {
   id: string;
   title: string;

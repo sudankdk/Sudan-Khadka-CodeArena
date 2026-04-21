@@ -73,6 +73,7 @@ func StartServer(cfg configs.AppConfigs) {
 	logger.Info("Running database migrations")
 	if err := db.AutoMigrate(
 		&domain.User{},
+		&domain.PasswordReset{},
 		&domain.Problem{},
 		&domain.TestCases{},
 		&domain.BoilerPlate{},

@@ -30,6 +30,12 @@ func TestDefaultScoringConfig(t *testing.T) {
 // CalculateSubmissionPoints
 // ─────────────────────────────────────────────────────────────────────────────
 
+// Test various scenarios for CalculateSubmissionPoints, covering:
+// - No testcases passed → should return 0
+// - All testcases passed → should return full points
+// - Partial credit allowed but not all passed → should return proportional points
+// - Time penalty reduces points correctly
+// - Wrong attempt penalty reduces points correctly
 func TestCalculateSubmissionPoints_ZeroTestcasesPassed_ReturnsZero(t *testing.T) {
 	svc := newScoringService()
 	cfg := DefaultScoringConfig()
