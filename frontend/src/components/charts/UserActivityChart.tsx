@@ -1,5 +1,3 @@
-"use client";
-
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
 
 const activityData = [

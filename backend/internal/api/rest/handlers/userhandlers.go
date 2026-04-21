@@ -13,6 +13,7 @@ import (
 	"github.com/shareed2k/goth_fiber"
 	"github.com/sudankdk/codearena/internal/api/rest"
 	"github.com/sudankdk/codearena/internal/dto"
+	"github.com/sudankdk/codearena/internal/helper"
 	"github.com/sudankdk/codearena/internal/repo"
 	"github.com/sudankdk/codearena/internal/service"
 	"go.uber.org/zap"
@@ -26,10 +27,21 @@ type UserHandlers struct {
 
 func SetupRoutes(rh *rest.RestHandlers) {
 	app := rh.App
+	mailer := &helper.SMTPMailer{
+		Host:     rh.Configs.SMTPHost,
+		Port:     rh.Configs.SMTPPort,
+		Username: rh.Configs.SMTPUser,
+		Password: rh.Configs.SMTPPass,
+		From:     rh.Configs.SMTPFrom,
+		FromName: rh.Configs.SMTPFromName,
+		UseTLS:   rh.Configs.SMTPUseTLS,
+	}
 	svc := service.UserService{
-		Repo:   repo.NewUserRepo(rh.DB),
-		Auth:   rh.Auth,
-		Config: rh.Configs,
+		Repo:      repo.NewUserRepo(rh.DB),
+		ResetRepo: repo.NewPasswordResetRepo(rh.DB),
+		Auth:      rh.Auth,
+		Config:    rh.Configs,
+		Mailer:    mailer,
 	}
 	handler := UserHandlers{
 		svc:           svc,
@@ -43,6 +55,8 @@ func SetupRoutes(rh *rest.RestHandlers) {
 	pubRoutes.Post("/register", handler.Register)
 	pubRoutes.Post("/login", handler.Login)
 	pubRoutes.Post("/logout", rh.Auth.Authorize, handler.Logout)
+	pubRoutes.Post("/password/forgot", handler.RequestPasswordReset)
+	pubRoutes.Post("/password/reset", handler.ResetPassword)
 	pubRoutes.Get("/", handler.List)
 	pubRoutes.Get("/me", rh.Auth.Authorize, func(c *fiber.Ctx) error {
 		user, err := rh.Auth.CurrentUserInfo(c)
@@ -278,4 +292,37 @@ func (u *UserHandlers) UpdateSelf(ctx *fiber.Ctx) error {
 	}
 
 	return rest.SuccessMessage(ctx, "user updated", updated)
+}
+
+func (u *UserHandlers) RequestPasswordReset(ctx *fiber.Ctx) error {
+	var req dto.PasswordResetRequest
+	if err := ctx.BodyParser(&req); err != nil {
+		u.logger.Warn("Invalid password reset payload", zap.Error(err))
+		return rest.ErrorMessage(ctx, http.StatusBadRequest, fmt.Errorf("Invalid Payload"))
+	}
+	if strings.TrimSpace(req.Email) == "" {
+		return rest.ErrorMessage(ctx, http.StatusBadRequest, fmt.Errorf("email is required"))
+	}
+
+	if err := u.svc.RequestPasswordReset(req.Email); err != nil {
+		u.logger.Error("Failed to request password reset", zap.Error(err))
+		return rest.InternalError(ctx, err)
+	}
+
+	return rest.SuccessMessage(ctx, "password reset email sent", fiber.Map{"email": req.Email})
+}
+
+func (u *UserHandlers) ResetPassword(ctx *fiber.Ctx) error {
+	var req dto.PasswordResetConfirm
+	if err := ctx.BodyParser(&req); err != nil {
+		u.logger.Warn("Invalid password reset confirm payload", zap.Error(err))
+		return rest.ErrorMessage(ctx, http.StatusBadRequest, fmt.Errorf("Invalid Payload"))
+	}
+
+	if err := u.svc.ResetPassword(req.Token, req.Password); err != nil {
+		u.logger.Warn("Password reset failed", zap.Error(err))
+		return rest.ErrorMessage(ctx, http.StatusBadRequest, err)
+	}
+
+	return rest.SuccessMessage(ctx, "password updated", fiber.Map{"status": "ok"})
 }

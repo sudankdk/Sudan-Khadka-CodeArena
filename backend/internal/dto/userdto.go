@@ -52,3 +52,12 @@ type UserStats struct {
 	TotalSolved     int     `json:"total_solved"`
 	ActiveThisMonth int     `json:"active_this_month"`
 }
+
+type PasswordResetRequest struct {
+	Email string `json:"email"`
+}
+
+type PasswordResetConfirm struct {
+	Token    string `json:"token"`
+	Password string `json:"password"`
+}

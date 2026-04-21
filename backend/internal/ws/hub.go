@@ -10,13 +10,10 @@ import (
 
 // Hub maintains the set of active clients and broadcasts messages to rooms.
 type Hub struct {
-	// Registered clients mapped by user ID.
 	Clients map[uuid.UUID]*Client
 
-	// Match rooms: matchID -> set of clients in that room.
 	Rooms map[string]map[uuid.UUID]*Client
 
-	// Spectators: matchID -> set of spectator clients.
 	Spectators map[string]map[uuid.UUID]*Client
 
 	Register   chan *Client
@@ -24,7 +21,6 @@ type Hub struct {
 
 	mu sync.RWMutex
 
-	// onDisconnect is called when a client in an active match disconnects.
 	OnDisconnect func(client *Client)
 }
 
@@ -53,17 +49,14 @@ func (h *Hub) Run() {
 			h.mu.Lock()
 			existing := h.Clients[client.UserID]
 
-			// Only remove from Clients map if this is the SAME client instance.
-			// A newer connection may have already replaced it (e.g. page navigation).
+			
 			if existing == client {
 				delete(h.Clients, client.UserID)
 			}
 
-			// Always close the disconnecting client's send channel
 			close(client.Send)
 
-			// Remove this specific client from its room (check identity to
-			// avoid removing a newer connection that joined the same room).
+			
 			matchID := client.GetMatchID()
 			if matchID != "" {
 				if room, ok := h.Rooms[matchID]; ok {
@@ -80,7 +73,6 @@ func (h *Hub) Run() {
 				}
 			}
 
-			// Remove from spectator rooms
 			for roomID, spectators := range h.Spectators {
 				if spectators[client.UserID] == client {
 					delete(spectators, client.UserID)

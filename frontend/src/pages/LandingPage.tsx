@@ -26,7 +26,7 @@ const LandingPage = () => {
 
       {/* Left Vertical Date */}
       <div className="absolute left-6 top-1/2 -translate-y-1/2 rotate-90 text-xs tracking-widest opacity-70">
-        2077 · 02 · 02
+        2026 · 02 · 02
       </div>
 
       {/* Center Title */}

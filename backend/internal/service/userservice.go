@@ -1,8 +1,13 @@
 package service
 
 import (
+	"crypto/rand"
+	"crypto/sha256"
+	"encoding/base64"
 	"errors"
 	"fmt"
+	"net/url"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -14,9 +19,11 @@ import (
 )
 
 type UserService struct {
-	Repo   repo.UserRepo
-	Auth   helper.Auth
-	Config configs.AppConfigs
+	Repo      repo.UserRepo
+	ResetRepo repo.PasswordResetRepo
+	Auth      helper.Auth
+	Config    configs.AppConfigs
+	Mailer    helper.Mailer
 }
 
 func (u *UserService) Register(dto dto.UserRegister) (domain.User, error) {
@@ -189,4 +196,111 @@ func (u *UserService) UserStats() (dto.UserStats, error) {
 	}
 
 	return stats, nil
+}
+
+func (u *UserService) RequestPasswordReset(email string) error {
+	if strings.TrimSpace(email) == "" {
+		return errors.New("email is required")
+	}
+	if u.ResetRepo == nil || u.Mailer == nil {
+		return errors.New("password reset not configured")
+	}
+
+	user, err := u.Repo.FindUser(email)
+	if err != nil {
+		// Avoid leaking whether the account exists.
+		return nil
+	}
+
+	_ = u.ResetRepo.InvalidateForUser(user.ID)
+
+	token, tokenHash, err := generateResetToken()
+	if err != nil {
+		return err
+	}
+
+	reset := domain.PasswordReset{
+		UserID:    user.ID,
+		TokenHash: tokenHash,
+		ExpiresAt: time.Now().Add(u.passwordResetTTL()),
+	}
+	if err := u.ResetRepo.Create(&reset); err != nil {
+		return err
+	}
+
+	resetLink := u.passwordResetLink(token)
+	body := fmt.Sprintf(
+		"Hi %s,\n\nWe received a request to reset your Code Arena password.\n\nReset link: %s\n\nThis link expires in %d minutes. If you did not request this, you can ignore this email.",
+		user.Username,
+		resetLink,
+		int(u.passwordResetTTL().Minutes()),
+	)
+
+	return u.Mailer.Send(user.Email, "Reset your Code Arena password", body)
+}
+
+func (u *UserService) ResetPassword(token, newPassword string) error {
+	if strings.TrimSpace(token) == "" {
+		return errors.New("reset token is required")
+	}
+	if strings.TrimSpace(newPassword) == "" {
+		return errors.New("password is required")
+	}
+	if len(newPassword) < 6 {
+		return errors.New("password must be at least 6 characters")
+	}
+	if u.ResetRepo == nil {
+		return errors.New("password reset not configured")
+	}
+
+	reset, err := u.ResetRepo.FindValidByTokenHash(hashResetToken(token), time.Now())
+	if err != nil {
+		return errors.New("invalid or expired reset token")
+	}
+
+	hashed, err := u.Auth.CreateHash(newPassword)
+	if err != nil {
+		return fmt.Errorf("error hashing password: %v", err)
+	}
+
+	if _, err := u.Repo.UpdateUser(reset.UserID, map[string]interface{}{"password": hashed}); err != nil {
+		return err
+	}
+
+	if err := u.ResetRepo.MarkUsed(reset.ID); err != nil {
+		return err
+	}
+
+	_ = u.ResetRepo.InvalidateForUser(reset.UserID)
+	return nil
+}
+
+func (u *UserService) passwordResetTTL() time.Duration {
+	if u.Config.PasswordResetTTL > 0 {
+		return time.Duration(u.Config.PasswordResetTTL) * time.Minute
+	}
+	return 30 * time.Minute
+}
+
+func (u *UserService) passwordResetLink(token string) string {
+	base := strings.TrimRight(strings.TrimSpace(u.Config.FRONTENDURL), "/")
+	if base == "" {
+		base = "http://localhost:5173"
+	}
+	return fmt.Sprintf("%s/reset-password?token=%s", base, url.QueryEscape(token))
+}
+
+func generateResetToken() (string, string, error) {
+	buf := make([]byte, 32)
+	if _, err := rand.Read(buf); err != nil {
+		return "", "", err
+	}
+
+	token := base64.RawURLEncoding.EncodeToString(buf)
+	return token, hashResetToken(token), nil
+}
+
+func hashResetToken(token string) string {
+	sum := sha256.Sum256([]byte(token))
+	return fmt.Sprintf("%x", sum[:])
 }

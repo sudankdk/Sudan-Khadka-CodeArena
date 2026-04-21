@@ -29,7 +29,7 @@ func (ss *SubmissionService) CreateSubmission(userID uuid.UUID, req dto.CreateSu
 	submission := &domain.Submission{
 		UserID:          userID,
 		ProblemID:       req.ProblemID,
-		ContestID:       req.ContestID, // Will be NULL for practice, UUID for contest
+		ContestID:       req.ContestID,
 		Language:        req.Language,
 		Code:            req.Code,
 		Status:          req.Status,
@@ -44,9 +44,7 @@ func (ss *SubmissionService) CreateSubmission(userID uuid.UUID, req dto.CreateSu
 		return nil, err
 	}
 
-	// Update user's solved count if this is the first time solving this problem (non-contest)
 	if req.Status == domain.STATUS_ACCEPTED && req.ContestID == nil && !wasAlreadySolved {
-		// Get updated stats to sync user's solved count
 		stats, err := ss.Repo.GetUserStats(userID)
 		if err == nil {
 			// Update user's solved count in the database
