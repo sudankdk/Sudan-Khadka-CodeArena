@@ -21,7 +21,7 @@ func main() {
 	}
 	defer logger.Sync()
 
-	logger.Info("Starting Code Arena")
+	logger.Info("Starting Code Arena...")
 
 	// Load configurations
 	cfg, err := configs.SetUpEnv()
