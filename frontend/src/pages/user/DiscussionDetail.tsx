@@ -135,7 +135,7 @@ const DiscussionDetail = () => {
           <div className="border-2 border-[#E54B4B] p-6 text-center">
             <p className="text-[#E54B4B] text-xs font-mono tracking-widest mb-2">ERROR LOADING DISCUSSION</p>
             <p className="text-gray-500 text-xs">{error?.message || 'Discussion not found'}</p>
-            <NavLink to="/discussions" className="mt-4 inline-block text-[#4ECDC4] text-xs tracking-widest hover:underline">
+            <NavLink to="/discussion" className="mt-4 inline-block text-[#4ECDC4] text-xs tracking-widest hover:underline">
               ← BACK TO DISCUSSIONS
             </NavLink>
           </div>
@@ -153,7 +153,7 @@ const DiscussionDetail = () => {
       <div className="max-w-4xl">
         {/* Back Button */}
         <NavLink 
-          to="/discussions" 
+          to="/discussion" 
           className="inline-flex items-center gap-2 text-gray-500 text-xs tracking-widest hover:text-[#4ECDC4] transition-colors mb-6"
         >
           ← BACK TO DISCUSSIONS

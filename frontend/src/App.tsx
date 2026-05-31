@@ -1,4 +1,4 @@
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import Register from "./pages/Auth/register";
 import Login from "./pages/Auth/Login";
 import ForgotPassword from "./pages/Auth/ForgotPassword";
@@ -131,6 +131,7 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route path="/discussions" element={<Navigate to="/discussion" replace />} />
         <Route
           path="/discussion/:id"
           element={
